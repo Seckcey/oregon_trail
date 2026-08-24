@@ -5,3 +5,6 @@ dist/
 Thumbs.db
 .playwright-mcp/
 shot-*.png
+public/qa-states.json
+test-results/
+playwright-report/

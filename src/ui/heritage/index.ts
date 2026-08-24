@@ -76,7 +76,7 @@ export function createHeritageRenderer(): Renderer {
 
   function revealAll(): void {
     cancelTypewriter();
-    for (const line of el.lines().querySelectorAll<HTMLElement>('.line.pending')) {
+    for (const line of el.lines().querySelectorAll<HTMLElement>('.line')) {
       line.classList.remove('pending');
       line.textContent = line.dataset['full'] ?? '';
     }
