@@ -687,6 +687,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   .page-cover .panels { grid-row: auto; }
   .page-snack .page { grid-template-columns: 1fr; }
   .page-snack .panels { grid-row: auto; max-width: 320px; }
+  .colophon { justify-content: center; text-align: center; }
 }
 
 .mast-art { display: block; max-height: 64px; width: auto; max-width: 100%; margin: 0 auto; }

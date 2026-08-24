@@ -113,7 +113,14 @@ game earns shares by being good; the brand rides along.
   "Coastal" theme was built to a first cut and then **cancelled the same day** in favour of the
   comic-book direction (docs/PHASE3-COMIC-BRIEF.md); that work is parked on an unpushed local
   branch, not merged.
-- Phase 3 (comic renderer) and Phase 4 (networked memorials): not started.
+- **Phase 3 (the comic-book edition): SHIPPED 2026-08-24.** PR #3 put a scene hint and set-piece
+  numbers into `view()` and built the asset registry; PR #4 replaced the cancelled Coastal theme with
+  the **Comic** renderer (`src/ui/comic/`): every screen is a comic page — establishing shots with the
+  van and 8 West IT billboards, caption-box status, crew headshots by health, balloons from the crew,
+  tilted three-panel event strips with SFX lettering, Cover No. 1, the cliff-jump splash — drawn with
+  inked SVG placeholders for every slot in docs/ASSET-LIST.md until real art lands in public/assets/.
+  296 vitest tests plus a Playwright playthrough in both themes (`npm run e2e`). Heritage untouched.
+- Phase 4 (networked memorials): not started.
 
 ## Build plan
 
@@ -146,7 +153,9 @@ snack run) is a shader and a font.
 
 ## Reference
 
-- docs/PHASE2-BRIEF.md — Phase 2 scope (two themes + toggle, branding, full route) and the asset list
+- docs/PHASE2-BRIEF.md — Phase 2 scope (two themes + toggle, branding, full route)
+- docs/PHASE3-COMIC-BRIEF.md — Phase 3: the comic-book edition (what shipped, and how it is built)
+- docs/ASSET-LIST.md — every art slot with a ready-to-paste generation prompt
 - research/01-history.md — franchise history, IP ownership
 - research/02-mechanics.md — full 1985 mechanical teardown (the spec we're reskinning)
 - research/03-market.md — remakes, comps, representation lessons

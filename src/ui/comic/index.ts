@@ -183,8 +183,9 @@ export function createComicRenderer(): Renderer {
       if (inputField) {
         inputStartedAt = performance.now();
         submitLocked = false;
-        const field = inputField;
-        window.setTimeout(() => field.focus(), 0);
+        // Focus now, not on a timer: the field is rebuilt every render and the
+        // next keystroke (a fast typist, a test runner) must land in it.
+        inputField.focus();
       }
       const identity = pageIdentity(page);
       if (identity !== lastIdentity) {

@@ -6,7 +6,7 @@
 //   npx vite-node scripts/qa-states.ts
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { reduce, type Action } from '../src/sim/game';
+import type { Action } from '../src/sim/game';
 import type { GameState } from '../src/sim/types';
 import { arriveAt, departed, run } from '../test/helpers';
 
