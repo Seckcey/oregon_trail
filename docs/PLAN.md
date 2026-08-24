@@ -138,6 +138,7 @@ snack run) is a shader and a font.
 
 ## Reference
 
+- docs/PHASE2-BRIEF.md — Phase 2 scope (two themes + toggle, branding, full route) and the asset list
 - research/01-history.md — franchise history, IP ownership
 - research/02-mechanics.md — full 1985 mechanical teardown (the spec we're reskinning)
 - research/03-market.md — remakes, comps, representation lessons
