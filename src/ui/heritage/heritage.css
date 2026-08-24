@@ -186,3 +186,18 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* Theme toggle in the masthead — only rendered once a second theme is registered. */
+.masthead:has(.mast-theme) .mast-brand { margin-left: auto; }
+.mast-theme {
+  font: inherit;
+  font-size: 16px;
+  color: var(--phos);
+  background: transparent;
+  border: 1px dashed var(--phos-dim);
+  padding: 2px 10px;
+  cursor: pointer;
+  text-shadow: var(--glow);
+  letter-spacing: 1px;
+}
+.mast-theme:hover { background: var(--bg-panel); border-color: var(--phos); }

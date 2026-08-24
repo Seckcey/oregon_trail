@@ -1,15 +1,31 @@
-import './style.css';
-import { createGame, reduce, view, type Action, type Screen } from './sim/game';
+import { createGame, reduce, view, type Action } from './sim/game';
 import { computeScore } from './sim/score';
 import type { GameState } from './sim/types';
 import { addMemorials, loadMemorials, loadSave, storeSave } from './ui/persistence';
-import { renderScreen, wireGlobalInput, type TerminalHandlers } from './ui/terminal';
+import { parseQuery } from './ui/query';
+import { RENDERERS, availableThemes, type Renderer, type UiHandlers } from './ui/renderer';
+import { loadTheme, otherTheme, resolveTheme, saveTheme, toggleLabel, type ThemeId } from './ui/theme';
 
 function freshSeed(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-let state: GameState = createGame(freshSeed(), loadMemorials());
+function themeStorage(): Storage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function requireRoot(): HTMLElement {
+  const node = document.getElementById('app');
+  if (!node) throw new Error('index.html is missing the #app root');
+  return node;
+}
+
+const query = parseQuery(window.location.search);
+let state: GameState = createGame(query.seed ?? freshSeed(), loadMemorials());
 
 function shareText(s: GameState): string {
   const header = `THE 8 WEST TRAIL — day ${s.day}, mile ${s.mile} of 730`;
@@ -36,7 +52,19 @@ function flashShareButton(label: string): void {
   if (btn) btn.textContent = label;
 }
 
-const handlers: TerminalHandlers = {
+// ---------------------------------------------------------------------------
+// Themes: one sim, one Screen, one renderer per theme. The choice persists.
+// ---------------------------------------------------------------------------
+
+const root = requireRoot();
+let theme: ThemeId = resolveTheme({
+  stored: loadTheme(themeStorage()),
+  requested: query.theme,
+  available: availableThemes(),
+});
+let renderer: Renderer | null = null;
+
+const handlers: UiHandlers = {
   dispatch(action: Action): void {
     const prevPhase = state.phase;
     state = reduce(state, action);
@@ -70,12 +98,31 @@ const handlers: TerminalHandlers = {
     }
     return buttons;
   },
+  themeToggle() {
+    if (availableThemes().length < 2) return null;
+    return { label: toggleLabel(theme), onClick: () => switchTheme(otherTheme(theme)) };
+  },
 };
 
-function render(): void {
-  const screen: Screen = view(state);
-  renderScreen(screen, handlers);
+function mountTheme(id: ThemeId): void {
+  const create = RENDERERS[id];
+  if (!create) throw new Error(`no renderer registered for theme "${id}"`);
+  renderer?.unmount();
+  document.documentElement.dataset['theme'] = id;
+  renderer = create();
+  renderer.mount(root, handlers);
+  render();
 }
 
-wireGlobalInput(handlers);
-render();
+function switchTheme(id: ThemeId): void {
+  if (id === theme) return;
+  theme = id;
+  saveTheme(themeStorage(), id);
+  mountTheme(id);
+}
+
+function render(): void {
+  renderer?.render(view(state));
+}
+
+mountTheme(theme);
