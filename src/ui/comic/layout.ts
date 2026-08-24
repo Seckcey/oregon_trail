@@ -153,16 +153,26 @@ function stripPanels(screen: Screen, cast: number[]): { panels: Panel[]; leftove
   const spin = hash(eventId) % STRIP_TILTS.length;
   const tilt = (i: number) => STRIP_TILTS[(i + spin) % STRIP_TILTS.length]!;
   const stripId = eventStripFor(eventId);
+  // The opening frame carries its caption along the top, like a real first panel.
+  const opener = (art: ArtRef): Panel => {
+    const p = panel('frame-0', art, 'third', [], tilt(0));
+    p.head = words[0]!;
+    return p;
+  };
   if (stripId) {
     return {
-      panels: [0, 1, 2].map((i) => panel(`frame-${i}`, { kind: 'event', stripId, frame: i as 0 | 1 | 2, cast }, 'third', words[i]!, tilt(i))),
+      panels: [
+        opener({ kind: 'event', stripId, frame: 0, cast }),
+        panel('frame-1', { kind: 'event', stripId, frame: 1, cast }, 'third', words[1]!, tilt(1)),
+        panel('frame-2', { kind: 'event', stripId, frame: 2, cast }, 'third', words[2]!, tilt(2)),
+      ],
       leftover: [],
     };
   }
   const moods = (screen.status?.crew ?? []).map((m) => moodOf(m.label));
   return {
     panels: [
-      panel('frame-0', regionArt(scene), 'third', words[0]!, tilt(0)),
+      opener(regionArt(scene)),
       panel('frame-1', { kind: 'van', pose: scene.van }, 'third', words[1]!, tilt(1)),
       panel('frame-2', { kind: 'crew', cast, moods }, 'third', words[2]!, tilt(2)),
     ],
@@ -215,13 +225,13 @@ export function layoutPage(screen: Screen): ComicPage {
     case 'crossing':
       panels = [
         screen.set?.kind === 'crossing' && screen.set.river === 'yuma'
-          ? panel('river', { kind: 'scene', sceneId: 'yuma-decision' }, 'wide')
+          ? panel('river', { kind: 'scene', sceneId: 'yuma-decision' }, 'splash')
           : panel('river', regionArt(scene), 'wide'),
       ];
       break;
     case 'snack': {
       const round = screen.set?.kind === 'snack' ? screen.set.round : 0;
-      panels = [panel('stand', { kind: 'event', stripId: 'snack-stand', frame: (round % 3) as 0 | 1 | 2 }, 'wide')];
+      panels = [panel('stand', { kind: 'event', stripId: 'snack-stand', frame: (round % 3) as 0 | 1 | 2, cast }, 'third')];
       break;
     }
     case 'grave':

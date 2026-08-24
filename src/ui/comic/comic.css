@@ -83,6 +83,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: center;
+  color: var(--ink);
   background: var(--paper);
   border: 3px solid var(--ink);
   padding: 4px 10px;
@@ -553,6 +554,22 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 /* Overlays keep the road behind them and drop a sheet on top. */
 .page-overlay .panel.wide { aspect-ratio: 8 / 2; }
 
+/* Frank's strips arrive as one 3:1 image: each frame shows its own third. */
+.panel-art > img.real.strip-frame { width: 300%; left: 0; }
+.panel-art > img.real.strip-frame.f1 { transform: translateX(-33.333%); }
+.panel-art > img.real.strip-frame.f2 { transform: translateX(-66.667%); }
+
+/* The snack run: the stand on the left, the word to shout and the field on the right. */
+.page-snack .page {
+  display: grid;
+  grid-template-columns: minmax(200px, 36%) 1fr;
+  gap: 4px var(--gutter);
+  align-items: start;
+}
+.page-snack .title-caption { grid-column: 1 / -1; }
+.page-snack .panels { grid-row: 2 / span 6; margin: 0; }
+.page-snack .shout-word { margin-top: 4px; }
+
 /* The cover: art on the left, the pitch and the burst on the right. */
 .page-cover .title-caption { display: none; }
 .page-cover .page {
@@ -668,6 +685,8 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   .stage .billboard { width: 30%; }
   .page-cover .page { grid-template-columns: 1fr; }
   .page-cover .panels { grid-row: auto; }
+  .page-snack .page { grid-template-columns: 1fr; }
+  .page-snack .panels { grid-row: auto; max-width: 320px; }
 }
 
 .mast-art { display: block; max-height: 64px; width: auto; max-width: 100%; margin: 0 auto; }

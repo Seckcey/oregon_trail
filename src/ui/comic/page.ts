@@ -29,7 +29,8 @@ export interface PageContext {
 
 function artHtml(ref: ArtRef, resolver: AssetResolver): string {
   const src = artSource(ref, resolver);
-  const real = src.url ? `<img class="real" src="${esc(src.url)}" alt="${esc(src.alt)}" loading="lazy" decoding="async">` : '';
+  const frame = ref.kind === 'event' ? ` strip-frame f${ref.frame}` : '';
+  const real = src.url ? `<img class="real${frame}" src="${esc(src.url)}" alt="${esc(src.alt)}" loading="lazy" decoding="async">` : '';
   return `<div class="panel-art" aria-label="${esc(src.alt)}">${src.placeholder}${real}</div>`;
 }
 
@@ -143,8 +144,10 @@ function rowsHtml(lines: string[]): string {
   const cells = lines
     .filter((l) => l.trim().length > 0)
     .map((l) => {
+      const stop = /^([■·]) mile\s+(\d+)\s+(.+)$/.exec(l);
+      if (stop) return `<div class="k">${stop[1]} mile ${stop[2]}</div><div class="v">${esc(stop[3]!)}</div>`;
       const m = /^(\S.*?)\s{2,}(\S.*)$/.exec(l);
-      if (!m) return `<div class="full${/YOU ARE HERE/.test(l) ? ' here' : ''}">${esc(l)}</div>`;
+      if (!m) return `<div class="full${/YOU ARE HERE/.test(l) ? ' here' : ''}">${esc(l.trim())}</div>`;
       return `<div class="k">${esc(m[1]!)}</div><div class="v">${esc(m[2]!.replace(/\s{2,}/g, ' '))}</div>`;
     })
     .join('');
