@@ -5,6 +5,7 @@ import {
   fordRisk,
   isRiverId,
   resolveFloat,
+  type RiverId,
   resolveFord,
   riskLabel,
   RIVERS,
@@ -15,7 +16,8 @@ import { rollPoolEvent } from './events';
 import { GRADE, gradeStep, speedLabel, startGrade, tempLabel, type GradeMove } from './grade';
 import { addCondition, deathCauseFor, tickMember, type DayContext } from './health';
 import { chance, createRng, nextInt, pick, seedFromString } from './rng';
-import { computeScore } from './score';
+import { sceneOf, type SceneHint } from './scene';
+import { computeScore, type ScoreBreakdown } from './score';
 import { snackTotal, snackWordsFor, snackYield } from './snack';
 import { fmtCents, priceCentsAt, purchase, repairQuote, STORE_ITEMS, type StoreItemId } from './store';
 import { dailyFoodNeed, dailyWaterNeed, fuelNeed, milesForDay } from './travel';
@@ -32,6 +34,7 @@ import type {
   PendingEvent,
   Rations,
   Stop,
+  SummitRoute,
   Weather,
 } from './types';
 import { DAYS_IN_MONTH, healthStatus, MONTH_NAMES, TUNING } from './types';
@@ -96,6 +99,58 @@ export interface StatusData {
 
 export type ScreenArt = 'title' | 'grave' | 'victory' | 'crossing' | 'grade' | 'summit' | 'hazard' | null;
 
+/** Structured numbers behind the set-piece screens, so renderers never parse prose. */
+export type SetPiece =
+  | {
+      kind: 'crossing';
+      river: RiverId;
+      depthFt: number;
+      safeFt: number;
+      currentMph: number;
+      daysWaited: number;
+      ferryName: string;
+      ferryCents: number;
+      fordRisk: number;
+      floatRisk: number;
+    }
+  | {
+      kind: 'grade';
+      brakeTemp: number;
+      fadeTemp: number;
+      smokingTemp: number;
+      speed: number;
+      maxSpeed: number;
+      steep: boolean[];
+      segment: number;
+    }
+  | {
+      kind: 'snack';
+      word: string;
+      round: number;
+      rounds: number;
+      last: { word: string; typed: string; hit: boolean; lbs: number } | null;
+      gainedLbs: number;
+    }
+  | {
+      kind: 'store';
+      outfitting: boolean;
+      stopName: string;
+      cashCents: number;
+      items: { id: StoreItemId; label: string; unitLabel: string; cents: number }[];
+      tuneUp: { cents: number; points: number } | null;
+    }
+  | { kind: 'grave'; cause: string; epitaph: string; names: string[]; day: number; mile: number }
+  | {
+      kind: 'victory';
+      survivors: string[];
+      celebration: Celebration | null;
+      summitRoute: SummitRoute | null;
+      score: ScoreBreakdown;
+      occupation: Occupation;
+      days: number;
+      miles: number;
+    };
+
 export interface Screen {
   title: string;
   lines: string[];
@@ -103,6 +158,10 @@ export interface Screen {
   input: { prompt: string; kind: 'name' | 'epitaph' | 'snack'; placeholder: string } | null;
   status: StatusData | null;
   art: ScreenArt;
+  /** What a graphical renderer needs to draw the moment. See scene.ts. */
+  scene: SceneHint;
+  /** Numbers behind the set pieces (crossing, grade, snack, store, grave, victory). */
+  set: SetPiece | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -444,9 +503,9 @@ function completeDay(s: GameState, opts: DayOptions): void {
 
   // Pool events, then plain-day flavor
   if (opts.allowPool) {
-    const lines = rollPoolEvent(s);
-    if (lines) {
-      notice(s, 'pool', lines);
+    const fired = rollPoolEvent(s);
+    if (fired) {
+      notice(s, fired.id, fired.lines);
       return;
     }
   }
@@ -1183,8 +1242,10 @@ function statusOf(s: GameState): StatusData {
   };
 }
 
-function screen(partial: Partial<Screen>): Screen {
+function screen(s: GameState, partial: Partial<Screen>): Screen {
   return {
+    scene: sceneOf(s),
+    set: null,
     title: '',
     lines: [],
     choices: [],
@@ -1215,10 +1276,35 @@ function eventArt(id: string): ScreenArt {
   return null;
 }
 
+function graveSet(s: GameState): SetPiece {
+  return {
+    kind: 'grave',
+    cause: s.deathCause ?? 'THE ROAD',
+    epitaph: s.epitaph,
+    names: s.crew.map((m) => m.name),
+    day: s.day,
+    mile: s.mile,
+  };
+}
+
+function victorySet(s: GameState): SetPiece {
+  const occupation = s.occupation!;
+  return {
+    kind: 'victory',
+    survivors: s.crew.filter((m) => m.alive).map((m) => m.name),
+    celebration: s.celebration,
+    summitRoute: s.summitRoute,
+    score: computeScore(s.crew, s.supplies, s.cash, occupation),
+    occupation,
+    days: s.day,
+    miles: s.mile,
+  };
+}
+
 export function view(s: GameState): Screen {
   switch (s.phase) {
     case 'title':
-      return screen({
+      return screen(s, {
         title: 'THE 8 WEST TRAIL',
         art: 'title',
         lines: [
@@ -1235,7 +1321,7 @@ export function view(s: GameState): Screen {
       });
 
     case 'occupation':
-      return screen({
+      return screen(s, {
         title: 'WHO SIGNS THE EXPENSE REPORT?',
         lines: [
           'Choose your role. Less money means more glory: the final score is multiplied.',
@@ -1252,7 +1338,7 @@ export function view(s: GameState): Screen {
       });
 
     case 'month':
-      return screen({
+      return screen(s, {
         title: 'WHEN DO YOU LEAVE LAS CRUCES?',
         lines: [
           'Spring is mild but the dust storms hunt the I-10 corridor.',
@@ -1270,7 +1356,7 @@ export function view(s: GameState): Screen {
       });
 
     case 'naming':
-      return screen({
+      return screen(s, {
         title: 'THE CREW',
         lines: [
           'Five seats in the van. Five names on the manifest.',
@@ -1313,8 +1399,21 @@ export function view(s: GameState): Screen {
       if (quote) {
         buys.push({ key: '7', label: `Tune-up the van (+${quote.points}, ${fmtCents(quote.cents)})`, action: { type: 'REPAIR' } });
       }
-      return screen({
+      return screen(s, {
         title: stopIndex === 0 && s.day === 0 ? 'OUTFITTING' : `SHOP — ${stop.name.toUpperCase()}`,
+        set: {
+          kind: 'store',
+          outfitting: stopIndex === 0 && s.day === 0,
+          stopName: stop.name,
+          cashCents: s.cash,
+          items: STORE_ITEMS.map((item) => ({
+            id: item.id,
+            label: item.label,
+            unitLabel: item.unitLabel,
+            cents: priceCentsAt(item.id, stopIndex),
+          })),
+          tuneUp: quote ? { cents: quote.cents, points: quote.points } : null,
+        },
         lines,
         choices: [
           ...buys,
@@ -1330,7 +1429,7 @@ export function view(s: GameState): Screen {
 
     case 'travel': {
       const w = s.weatherToday;
-      return screen({
+      return screen(s, {
         title: 'THE ROAD',
         lines: [
           `Day ${s.day}. ${MONTH_NAMES[s.month]} ${s.dayOfMonth}. ${w ? `Weather: ${w.label}.` : 'Morning, and the key is in the ignition.'}`,
@@ -1352,7 +1451,7 @@ export function view(s: GameState): Screen {
 
     case 'event': {
       const ev = s.pendingEvent!;
-      return screen({
+      return screen(s, {
         title: ev.title ?? '* * *',
         art: eventArt(ev.id),
         lines: ev.text,
@@ -1375,7 +1474,7 @@ export function view(s: GameState): Screen {
         { key: '6', label: 'Look at the map', action: { type: 'OPEN', screen: 'map' } },
       );
       if (special) choices.push({ key: '7', label: special.special.label, action: { type: 'STOP_SPECIAL' } });
-      return screen({
+      return screen(s, {
         title: stop.name.toUpperCase(),
         lines: [stop.flavor, ...(s.storeNotice ? ['', s.storeNotice] : [])],
         choices,
@@ -1388,9 +1487,21 @@ export function view(s: GameState): Screen {
       const spec = RIVERS[c.river];
       const ford = fordRisk(c);
       const float = floatRisk(c);
-      return screen({
+      return screen(s, {
         title: spec.title,
         art: 'crossing',
+        set: {
+          kind: 'crossing',
+          river: c.river,
+          depthFt: c.depthFt,
+          safeFt: spec.fordSafeFt,
+          currentMph: c.currentMph,
+          daysWaited: c.daysWaited,
+          ferryName: spec.ferryName,
+          ferryCents: spec.ferryCents,
+          fordRisk: ford,
+          floatRisk: float,
+        },
         lines: [
           spec.blurb,
           '',
@@ -1416,9 +1527,19 @@ export function view(s: GameState): Screen {
     case 'grade': {
       const g = s.grade!;
       const steepNext = g.steep[g.segment] ?? false;
-      return screen({
+      return screen(s, {
         title: 'THE 6% GRADE',
         art: 'grade',
+        set: {
+          kind: 'grade',
+          brakeTemp: g.brakeTemp,
+          fadeTemp: GRADE.fadeTemp,
+          smokingTemp: GRADE.smokingTemp,
+          speed: g.speed,
+          maxSpeed: GRADE.maxSpeed,
+          steep: [...g.steep],
+          segment: g.segment,
+        },
         lines: [
           g.lastLine ??
             'The sign at the top: 6% GRADE — NEXT 6 MILES — TRUCKS USE LOW GEAR. The van is not a truck, and it is not in low gear yet.',
@@ -1441,8 +1562,16 @@ export function view(s: GameState): Screen {
     case 'snack': {
       const snack = s.snack!;
       const last = snack.results[snack.results.length - 1];
-      return screen({
+      return screen(s, {
         title: 'THE SNACK RUN',
+        set: {
+          kind: 'snack',
+          word: snack.words[snack.round] ?? '',
+          round: snack.round,
+          rounds: snack.words.length,
+          last: last ? { word: last.word, typed: last.typed, hit: last.hit, lbs: last.lbs } : null,
+          gainedLbs: snack.gainedLbs,
+        },
         lines: [
           'A roadside stand shimmers into view. You have one shot at each order — call it out FAST and EXACTLY.',
           `Round ${snack.round + 1} of ${snack.words.length}.`,
@@ -1460,7 +1589,7 @@ export function view(s: GameState): Screen {
     }
 
     case 'supplies':
-      return screen({
+      return screen(s, {
         title: 'THE MANIFEST',
         lines: [
           `Cash        ${fmtCents(s.cash)}`,
@@ -1489,7 +1618,7 @@ export function view(s: GameState): Screen {
           lines.push(`  ↓ YOU ARE HERE — mile ${s.mile}`);
         }
       }
-      return screen({
+      return screen(s, {
         title: 'THE MAP',
         lines,
         choices: [{ key: '0', label: 'Back', action: { type: 'BACK' } }],
@@ -1498,7 +1627,7 @@ export function view(s: GameState): Screen {
     }
 
     case 'pace':
-      return screen({
+      return screen(s, {
         title: 'PACE',
         lines: [PACE_DESCRIPTIONS.steady, PACE_DESCRIPTIONS.strenuous, PACE_DESCRIPTIONS.grueling, '', `Current: ${s.pace}.`],
         choices: [
@@ -1511,7 +1640,7 @@ export function view(s: GameState): Screen {
       });
 
     case 'rations':
-      return screen({
+      return screen(s, {
         title: 'RATIONS',
         lines: [RATION_DESCRIPTIONS.filling, RATION_DESCRIPTIONS.meager, RATION_DESCRIPTIONS.barebones, '', `Current: ${s.rations}.`],
         choices: [
@@ -1524,7 +1653,7 @@ export function view(s: GameState): Screen {
       });
 
     case 'help':
-      return screen({
+      return screen(s, {
         title: 'HOW TO PLAY',
         lines: [
           'Get the crew from Las Cruces to Sunset Cliffs alive — 730 miles, until the 8 dead-ends at the Pacific. Then jump.',
@@ -1545,7 +1674,7 @@ export function view(s: GameState): Screen {
       });
 
     case 'about':
-      return screen({
+      return screen(s, {
         title: 'ABOUT',
         lines: [
           'THE 8 WEST TRAIL is a road-survival game from 8 West Ventures — the folks behind 8 West IT 365.',
@@ -1560,9 +1689,10 @@ export function view(s: GameState): Screen {
       });
 
     case 'epitaph':
-      return screen({
+      return screen(s, {
         title: 'THE ROAD HAS TAKEN EVERYONE',
         art: 'grave',
+        set: graveSet(s),
         lines: [
           `YOU HAVE DIED OF ${s.deathCause ?? 'THE ROAD'}.`,
           '',
@@ -1573,9 +1703,10 @@ export function view(s: GameState): Screen {
       });
 
     case 'dead':
-      return screen({
+      return screen(s, {
         title: 'HERE ENDS THE RUN',
         art: 'grave',
+        set: graveSet(s),
         lines: [
           `YOU HAVE DIED OF ${s.deathCause ?? 'THE ROAD'}.`,
           '',
@@ -1591,9 +1722,10 @@ export function view(s: GameState): Screen {
 
     case 'victory': {
       if (!s.occupation) throw new Error('victory without occupation');
-      return screen({
+      return screen(s, {
         title: 'SUNSET CLIFFS, SAN DIEGO',
         art: 'victory',
+        set: victorySet(s),
         lines: buildVictoryLines(s),
         choices: [{ key: '1', label: 'Run it again', action: { type: 'RESTART' } }],
         status: statusOf(s),
