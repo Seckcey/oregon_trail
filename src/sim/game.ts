@@ -1,21 +1,36 @@
-import { CREW_NAME_POOL, DRIVE_LINES, EPITAPH_DEFAULT, TOWN_TALK } from './data/text';
+import { CREW_NAME_POOL, DEATH_CAUSES, DRIVE_LINES, EPITAPH_DEFAULT, TOWN_TALK } from './data/text';
 import { ROUTE, stopAt } from './data/route';
+import {
+  floatRisk,
+  fordRisk,
+  isRiverId,
+  resolveFloat,
+  resolveFord,
+  riskLabel,
+  RIVERS,
+  rollRiver,
+  waitADay,
+} from './crossing';
 import { rollPoolEvent } from './events';
-import { deathCauseFor, tickMember, type DayContext } from './health';
+import { GRADE, gradeStep, speedLabel, startGrade, tempLabel, type GradeMove } from './grade';
+import { addCondition, deathCauseFor, tickMember, type DayContext } from './health';
 import { chance, createRng, nextInt, pick, seedFromString } from './rng';
 import { computeScore } from './score';
 import { snackTotal, snackWordsFor, snackYield } from './snack';
-import { fmtCents, priceCentsAt, purchase, STORE_ITEMS, type StoreItemId } from './store';
+import { fmtCents, priceCentsAt, purchase, repairQuote, STORE_ITEMS, type StoreItemId } from './store';
 import { dailyFoodNeed, dailyWaterNeed, fuelNeed, milesForDay } from './travel';
 import type {
   DepartureMonth,
+  EventChoice,
   GamePhase,
   GameState,
   Memorial,
   Month,
   Occupation,
   Pace,
+  PendingEvent,
   Rations,
+  Stop,
   Weather,
 } from './types';
 import { DAYS_IN_MONTH, healthStatus, MONTH_NAMES, TUNING } from './types';
@@ -25,12 +40,15 @@ import { heatOnly, rollWeather } from './weather';
 // Actions and screens
 // ---------------------------------------------------------------------------
 
+export type CrossMethod = 'ford' | 'float' | 'ferry' | 'wait';
+
 export type Action =
   | { type: 'START_NEW' }
   | { type: 'CHOOSE_OCCUPATION'; occupation: Occupation }
   | { type: 'CHOOSE_MONTH'; month: DepartureMonth }
   | { type: 'SUBMIT_NAME'; name: string }
   | { type: 'BUY'; item: StoreItemId; units: number }
+  | { type: 'REPAIR' }
   | { type: 'LEAVE_STORE' }
   | { type: 'DRIVE' }
   | { type: 'REST' }
@@ -42,7 +60,10 @@ export type Action =
   | { type: 'EVENT_CONTINUE' }
   | { type: 'STOP_SHOP' }
   | { type: 'STOP_TALK' }
+  | { type: 'STOP_SPECIAL' }
   | { type: 'STOP_LEAVE' }
+  | { type: 'CROSS'; method: CrossMethod }
+  | { type: 'GRADE_STEP'; move: GradeMove }
   | { type: 'SNACK_START' }
   | { type: 'SNACK_SUBMIT'; typed: string; ms: number }
   | { type: 'SUBMIT_EPITAPH'; text: string }
@@ -72,13 +93,15 @@ export interface StatusData {
   crew: { name: string; label: string }[];
 }
 
+export type ScreenArt = 'title' | 'grave' | 'victory' | 'crossing' | 'grade' | 'summit' | 'hazard' | null;
+
 export interface Screen {
   title: string;
   lines: string[];
   choices: ScreenChoice[];
   input: { prompt: string; kind: 'name' | 'epitaph' | 'snack'; placeholder: string } | null;
   status: StatusData | null;
-  art: 'title' | 'grave' | 'victory' | null;
+  art: ScreenArt;
 }
 
 // ---------------------------------------------------------------------------
@@ -99,6 +122,7 @@ export function createGame(seed: string, memorials: Memorial[] = []): GameState 
   return {
     phase: 'title',
     returnPhase: 'travel',
+    resumePhase: 'travel',
     seed,
     rng,
     month: 5,
@@ -123,6 +147,9 @@ export function createGame(seed: string, memorials: Memorial[] = []): GameState 
     snack: null,
     snackRunsSinceStop: 0,
     usedEventIds: [],
+    crossing: null,
+    grade: null,
+    summitRoute: null,
     memorials,
     memorialSeenDay: 0,
     runMemorials: [],
@@ -158,26 +185,131 @@ function aliveCount(s: GameState): number {
   return s.crew.filter((m) => m.alive).length;
 }
 
-function notice(s: GameState, id: string, text: string[], choices: { label: string }[] | null = null): void {
-  s.pendingEvent = { id, text, choices };
+function healAll(s: GameState, points: number): void {
+  for (let i = 0; i < s.crew.length; i++) {
+    const m = s.crew[i]!;
+    if (m.alive) s.crew[i] = { ...m, health: Math.max(0, Math.min(100, m.health + points)) };
+  }
+}
+
+function wearVan(s: GameState, points: number): void {
+  s.van.condition = Math.max(5, s.van.condition - points);
+}
+
+function parkedWeather(s: GameState): void {
+  s.weatherToday = heatOnly(rollWeather(s.rng, s.month, s.mile));
+}
+
+function notice(
+  s: GameState,
+  id: string,
+  text: string[],
+  choices: EventChoice[] | null = null,
+  title: string | null = null,
+): void {
+  s.pendingEvent = { id, text, choices, title };
   s.phase = 'event';
   for (const t of text) log(s, t);
 }
 
+function recordDeath(s: GameState, name: string, cause: string): void {
+  s.runMemorials.push({
+    names: [name],
+    mile: s.mile,
+    day: s.day,
+    cause,
+    epitaph: `REST EASY, ${name.toUpperCase()}`,
+  });
+}
+
+/** Where the road picks up after a day that ended in a notice. */
+function resumeFor(phase: GamePhase): GamePhase {
+  if (phase === 'stop') return 'stop';
+  if (phase === 'crossing') return 'crossing';
+  return 'travel';
+}
+
 function arrive(s: GameState): void {
-  const stop = stopAt(s.nextStopIndex);
-  s.atStopIndex = s.nextStopIndex;
+  const index = s.nextStopIndex;
+  const stop = stopAt(index);
   s.mile = stop.mile;
   s.snackRunsSinceStop = 0;
   s.pendingArrival = false;
-  if (stop.mile >= TUNING.phase1EndMile) {
+  if (stop.kind === 'finish') {
+    s.atStopIndex = index;
     s.phase = 'victory';
     s.gameOver = true;
-    log(s, `You made it to ${stop.name}. Phase 1 complete.`);
+    log(s, `You made it to ${stop.name}. The 8 dead-ends at the Pacific, and you are parked on it.`);
     return;
   }
-  s.phase = 'stop';
   log(s, `You reach ${stop.name}, mile ${stop.mile}.`);
+  if (stop.kind === 'hazard' || stop.kind === 'climax') {
+    // No town here: the place itself is the event, and the road carries on past it.
+    s.atStopIndex = null;
+    s.nextStopIndex = index + 1;
+    fireArrivalEvent(s, stop);
+    return;
+  }
+  s.atStopIndex = index;
+  s.phase = 'stop';
+  if (stop.id === 'casa-grande') {
+    log(s, 'Casa Grande: the 10 lets go, and the 8 begins. From here on, the highway has your name on it.');
+  }
+}
+
+function fireArrivalEvent(s: GameState, stop: Stop): void {
+  switch (stop.id) {
+    case 'imperial-dunes': {
+      if (chance(s.rng, TUNING.dunesClosureChance)) {
+        notice(
+          s,
+          'dunes',
+          [
+            stop.flavor,
+            'Today the wind is up. A CHP cruiser sits crossways at the on-ramp with its lights going: SAND ON ROADWAY — I-8 CLOSED. Beyond it the highway is a suggestion under a moving beige tide.',
+          ],
+          [{ label: 'Push through the sand on the frontage road' }, { label: 'Wait for the wind to drop and the plows to come' }],
+          'THE IMPERIAL SAND DUNES',
+        );
+      } else {
+        notice(
+          s,
+          'dunes',
+          [stop.flavor, 'Today the wind is down. The dunes hold still for you, gold and enormous, and the road runs through them clean.'],
+          [{ label: 'Drive on through' }],
+          'THE IMPERIAL SAND DUNES',
+        );
+      }
+      return;
+    }
+    case 'in-ko-pah':
+      notice(
+        s,
+        'in-ko-pah',
+        [
+          stop.flavor,
+          'Eleven miles of climb, no shade, no shoulder to speak of. Semis crawl it at twenty with their flashers on. You have a 1985 Econoline and opinions.',
+        ],
+        [{ label: 'Low gear, all the way up — slow, and kind to the van' }, { label: 'Floor it — fast, hot, and hard on everything' }],
+        'THE IN-KO-PAH GRADE',
+      );
+      return;
+    case 'laguna-summit':
+      notice(
+        s,
+        'summit',
+        [
+          stop.flavor,
+          '',
+          'Two ways down. The interstate drops six percent for six miles — fast, free, and hard on the brakes. Or Old Highway 80 winds down the back way through Descanso and Alpine — slow, safe, and at the mercy of the weather.',
+        ],
+        [{ label: 'Ride the 6% grade' }, { label: 'Old Highway 80 — the slow way down' }],
+        'LAGUNA SUMMIT',
+      );
+      return;
+    default:
+      s.phase = 'travel';
+  }
 }
 
 interface DayOptions {
@@ -194,7 +326,7 @@ interface DayOptions {
  * must already be in weatherToday.
  */
 function completeDay(s: GameState, opts: DayOptions): void {
-  const phaseBefore: GamePhase = s.phase === 'event' ? 'travel' : s.phase;
+  s.resumePhase = resumeFor(s.phase);
   const weather: Weather = s.weatherToday ?? { label: 'mild', heat: 0, event: 'none' };
   advanceCalendar(s);
 
@@ -282,15 +414,7 @@ function completeDay(s: GameState, opts: DayOptions): void {
 
   // A death interrupts everything else.
   if (newlyDead.length > 0) {
-    for (const d of newlyDead) {
-      s.runMemorials.push({
-        names: [d.name],
-        mile: s.mile,
-        day: s.day,
-        cause: d.cause,
-        epitaph: `REST EASY, ${d.name.toUpperCase()}`,
-      });
-    }
+    for (const d of newlyDead) recordDeath(s, d.name, d.cause);
     s.pendingArrival = arrived;
     const names = newlyDead.map((d) => d.name).join(' and ');
     const causes = newlyDead.map((d) => d.cause.toLowerCase()).join(', ');
@@ -319,12 +443,12 @@ function completeDay(s: GameState, opts: DayOptions): void {
   if (!opts.resting && chance(s.rng, 0.25)) {
     log(s, pick(s.rng, DRIVE_LINES));
   }
-  s.phase = phaseBefore === 'stop' ? 'stop' : 'travel';
+  s.phase = s.resumePhase;
 }
 
 function driveDay(s: GameState): void {
   if (s.supplies.fuel <= 0) {
-    s.weatherToday = heatOnly(rollWeather(s.rng, s.month, s.mile));
+    parkedWeather(s);
     if (s.cash >= 8500) {
       notice(s, 'gas-tow', [
         'The needle has been lying. The van coasts onto the shoulder, out of gas, miles from anything.',
@@ -368,6 +492,324 @@ function driveDay(s: GameState): void {
   completeDay(s, { miles, resting: false, allowPool: true });
 }
 
+// ---------------------------------------------------------------------------
+// The road west of Tucson: hazards and the summit
+// ---------------------------------------------------------------------------
+
+function resolveDunes(s: GameState, ev: PendingEvent, index: number): void {
+  if (!ev.choices || ev.choices.length === 1) {
+    s.phase = 'travel';
+    return;
+  }
+  parkedWeather(s);
+  if (index === 0) {
+    if (chance(s.rng, TUNING.dunesStuckChance)) {
+      wearVan(s, 10);
+      log(s, 'The frontage road is a rumor under the sand. Forty minutes in, the van buries itself to the hubs. You dig. You dig all day. Nothing is faster than sand.');
+      completeDay(s, { miles: 0, resting: false, allowPool: false, extraHealthAll: -3, extraWater: 2 });
+    } else {
+      wearVan(s, 4);
+      log(s, 'Low range, no stopping, sand hissing off the doors like rain. You punch through the drifts with the crew shouting and come out the far side with the paint sanded to primer.');
+      completeDay(s, { miles: 25, resting: false, allowPool: false });
+    }
+    return;
+  }
+  log(s, 'You pull into the lee of the van, rig a tarp, and let the wind have its day. By evening the plows are out and the road is a road again.');
+  completeDay(s, { miles: 0, resting: true, allowPool: false });
+}
+
+function resolveInKoPah(s: GameState, index: number): void {
+  if (index === 0) {
+    log(s, 'First gear, flashers on, twenty miles an hour with the semis. The engine sings one long note for the whole climb, and the climb takes all day and half the next.');
+    parkedWeather(s);
+    completeDay(s, { miles: 10, resting: false, allowPool: false });
+    if (s.phase !== 'travel') return;
+    parkedWeather(s);
+    completeDay(s, { miles: 10, resting: false, allowPool: false });
+    return;
+  }
+  parkedWeather(s);
+  wearVan(s, TUNING.inKoPahFloorWear);
+  log(s, 'You floor it. The van screams up the grade past the crawling semis, temperature needle climbing with the altitude, every rattle it owns going at once.');
+  if ((s.weatherToday?.heat ?? 0) >= 2 && chance(s.rng, TUNING.inKoPahBoilChance)) {
+    if (s.supplies.hoses > 0) {
+      s.supplies.hoses -= 1;
+      s.supplies.water = Math.max(0, s.supplies.water - 3);
+      log(s, 'Halfway up, steam: the radiator boils over and takes the hose with it. You fit the spare on the shoulder with trucks blasting past, and pour three gallons of drinking water into the engine.');
+    } else {
+      wearVan(s, 15);
+      s.supplies.water = Math.max(0, s.supplies.water - 5);
+      log(s, 'Halfway up, steam: the radiator boils over. No spare hose. Duct tape, five gallons of drinking water, and a prayer to the god of Econolines.');
+    }
+  }
+  completeDay(s, { miles: 20, resting: false, allowPool: false });
+}
+
+function startDescent(s: GameState): void {
+  s.summitRoute = 'grade';
+  s.grade = startGrade(s.rng, s.weatherToday?.heat ?? 1);
+  s.phase = 'grade';
+  log(s, 'You take the interstate down. Six percent, six miles, and the whole Pacific side of the mountain opening up below the hood.');
+}
+
+function takeOld80(s: GameState): void {
+  s.summitRoute = 'old80';
+  log(s, 'You take Old Highway 80 — the road the 8 replaced — down the back way through the oaks, one switchback at a time.');
+  let washout = chance(s.rng, TUNING.old80WashoutChance);
+  for (const miles of [8, 7]) {
+    const w = rollWeather(s.rng, s.month, s.mile);
+    if (w.event !== 'none') washout = true;
+    s.weatherToday = heatOnly(w);
+    completeDay(s, { miles, resting: false, allowPool: false });
+    if (s.phase !== 'travel') return;
+  }
+  if (washout) {
+    log(s, 'A wash has taken a bite out of Old 80 below Descanso. A county crew waves you back to wait, and the day goes with it.');
+    parkedWeather(s);
+    completeDay(s, { miles: 0, resting: false, allowPool: false });
+    if (s.phase !== 'travel') return;
+  }
+  s.mile = TUNING.summitDescentEndMile;
+  notice(
+    s,
+    'old80-done',
+    [
+      'Old Highway 80 lets you down easy: oaks, then chaparral, then the first palm tree, then Alpine and the interstate again — the van cool and the brakes untouched.',
+      'Slow and sure. The trucks that know better nodded as you passed.',
+    ],
+    null,
+    'OLD HIGHWAY 80',
+  );
+}
+
+function finishGrade(s: GameState): void {
+  const g = s.grade!;
+  s.grade = null;
+  s.mile = TUNING.summitDescentEndMile;
+  if (g.outcome === 'clean') {
+    notice(
+      s,
+      'grade-done',
+      [
+        'The grade lets go. The road flattens into Alpine, the brakes tick as they cool, and somebody in the back starts breathing again.',
+        'Six miles, six percent, and not a rotor harmed. The crew applauds the driver. The driver applauds the van.',
+      ],
+      null,
+      'THE 6% GRADE',
+    );
+    return;
+  }
+  if (g.outcome === 'smoking') {
+    wearVan(s, TUNING.smokingVanDamage);
+    notice(
+      s,
+      'grade-done',
+      [
+        'You roll into Alpine trailing a thin blue smoke and a smell like a burning tire fort. The brakes held — barely, and not for free.',
+        'You let them cool in the shade of a gas station while the crew pretends that was fine.',
+      ],
+      null,
+      'THE 6% GRADE',
+    );
+    return;
+  }
+  wearVan(s, TUNING.rampVanDamage);
+  for (let i = 0; i < s.crew.length; i++) {
+    const m = s.crew[i]!;
+    if (m.alive) s.crew[i] = addCondition(m, 'injury', 3);
+  }
+  const why =
+    g.rampReason === 'fade'
+      ? 'The pedal goes to the floor and stays there — the brakes are gone, cooked to nothing.'
+      : 'The van is going faster than a van should, and the next curve is not going to negotiate.';
+  log(s, `${why} RUNAWAY TRUCK RAMP, 1/4 MILE. You take it.`);
+  completeDay(s, { miles: 0, resting: false, allowPool: false });
+  if (s.phase === 'travel') {
+    notice(
+      s,
+      'grade-ramp',
+      [
+        why,
+        'You aim for the runaway ramp and hit the gravel at speed. The van buries its nose, the crew hits the seatbacks, and everything in the back comes forward to say hello.',
+        'Everyone is bruised. The van is bent. It takes the rest of the day and a wrecker with 8 WEST IT — ROADSIDE DIV. on the door to drag you back to the highway.',
+      ],
+      null,
+      'THE RUNAWAY RAMP',
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// River crossings
+// ---------------------------------------------------------------------------
+
+function beginCrossing(s: GameState, stop: Stop): boolean {
+  if (!isRiverId(stop.id)) return false;
+  s.crossing = rollRiver(s.rng, stop.id, s.month);
+  s.phase = 'crossing';
+  log(s, `You come down to the bank of ${RIVERS[stop.id].name}.`);
+  return true;
+}
+
+function swamp(s: GameState, line: string): void {
+  s.supplies.food = Math.round(s.supplies.food * 0.8);
+  s.supplies.fuel = Math.round(s.supplies.fuel * 0.9);
+  wearVan(s, 15);
+  log(s, line);
+}
+
+function resolveCrossing(s: GameState, method: CrossMethod): void {
+  const c = s.crossing!;
+  const spec = RIVERS[c.river];
+  switch (method) {
+    case 'wait': {
+      s.crossing = waitADay(s.rng, c);
+      log(s, 'You camp on the bank and watch the river think it over.');
+      parkedWeather(s);
+      completeDay(s, { miles: 0, resting: false, allowPool: false });
+      return;
+    }
+    case 'ferry': {
+      if (s.cash < spec.ferryCents) {
+        s.storeNotice = 'The ferryman counts your cash twice and shakes his head. No IOUs on the river.';
+        return;
+      }
+      s.cash -= spec.ferryCents;
+      s.crossing = null;
+      s.phase = 'travel';
+      log(s, `${spec.ferryName} takes the van across for ${fmtCents(spec.ferryCents)}. It takes the day, and it takes nothing else.`);
+      parkedWeather(s);
+      completeDay(s, { miles: 0, resting: false, allowPool: false });
+      return;
+    }
+    case 'float': {
+      const r = resolveFloat(s.rng, c);
+      s.crossing = null;
+      s.phase = 'travel';
+      if (r.success) {
+        log(s, 'You bribe a flatbed, chain the van down, and float it across like a very expensive raft. It works. Nobody breathes until the far bank.');
+      } else {
+        swamp(s, 'The flatbed lists in the current and the van slides off in the shallows of the far side — across, but soaked, battered, and lighter.');
+      }
+      parkedWeather(s);
+      completeDay(s, { miles: 0, resting: false, allowPool: false });
+      return;
+    }
+    case 'ford': {
+      const r = resolveFord(s.rng, c);
+      s.crossing = null;
+      s.phase = 'travel';
+      if (r.success) {
+        log(s, `You ford ${spec.name} in low range, water at the rocker panels, and climb the far bank dripping and cheering.`);
+        return;
+      }
+      if (r.severity === 1) {
+        swamp(s, 'Deeper than it looked. Water over the floorboards, the engine coughing, the van wallowing to the far bank on momentum and prayer.');
+        parkedWeather(s);
+        completeDay(s, { miles: 0, resting: false, allowPool: false });
+        if (s.phase === 'travel') {
+          notice(
+            s,
+            'ford-swamped',
+            [
+              'Deeper than it looked. Water over the floorboards, the engine coughing, the van wallowing to the far bank on momentum and prayer.',
+              'You spend the day on the bank drying everything you own. Some of the food is river now. So is some of the gas.',
+            ],
+            null,
+            spec.title,
+          );
+        }
+        return;
+      }
+      // The van rolls.
+      s.supplies.food = Math.round(s.supplies.food * 0.6);
+      s.supplies.water = Math.round(s.supplies.water * 0.6);
+      s.supplies.fuel = Math.round(s.supplies.fuel * 0.7);
+      wearVan(s, 35);
+      const lines = [
+        'The current takes the van broadside. It rolls once, slow as a nightmare, and comes to rest on its side in the shallows of the far bank.',
+      ];
+      if (r.drowned) {
+        const alive = s.crew.map((m, i) => (m.alive ? i : -1)).filter((i) => i >= 0);
+        const i = alive[nextInt(s.rng, 0, alive.length - 1)]!;
+        const lost = s.crew[i]!;
+        s.crew[i] = { ...lost, health: 0, alive: false, conditions: [] };
+        recordDeath(s, lost.name, DEATH_CAUSES.drowning);
+        lines.push(`${lost.name} does not come up. The river keeps what it takes.`);
+        if (aliveCount(s) === 0) {
+          for (const t of lines) log(s, t);
+          s.deathCause = DEATH_CAUSES.drowning;
+          s.phase = 'epitaph';
+          log(s, 'The road has taken everyone.');
+          return;
+        }
+      }
+      lines.push('A wrecker with 8 WEST IT — ROADSIDE DIV. on the door rights the van by nightfall. Everything you own has been in the river. Some of it is still there.');
+      for (const t of lines) log(s, t);
+      parkedWeather(s);
+      completeDay(s, { miles: 0, resting: false, allowPool: false });
+      if (s.phase === 'travel') notice(s, 'ford-rolled', lines, null, spec.title);
+      return;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stop specials: the one thing a landmark is famous for
+// ---------------------------------------------------------------------------
+
+interface StopSpecial {
+  label: string;
+  once: boolean;
+  costCents: number;
+  apply(s: GameState): void;
+}
+
+const STOP_SPECIALS: Record<string, StopSpecial> = {
+  dateland: {
+    label: 'Date shakes for everyone ($15)',
+    once: true,
+    costCents: TUNING.dateShakeCents,
+    apply(s) {
+      healAll(s, TUNING.dateShakeHealth);
+      log(s, 'Five date shakes, cold enough to hurt and sweet enough to forgive the desert. The crew goes quiet in the good way. Everyone feels better than they have since Texas Canyon.');
+    },
+  },
+  'center-of-the-world': {
+    label: 'Stand on the Center of the World ($3)',
+    once: true,
+    costCents: TUNING.centerOfWorldCents,
+    apply(s) {
+      healAll(s, 2);
+      log(s, 'You pay three dollars, stand on the bronze plaque at the exact Center of the World, and receive a certificate saying so. It is laminated. Nobody can argue with laminated.');
+    },
+  },
+  jacumba: {
+    label: 'Soak a day in the hot springs (rest — heals double)',
+    once: false,
+    costCents: 0,
+    apply(s) {
+      log(s, 'A day in the hot springs at Jacumba: the mineral water takes the road out of everyone’s shoulders, and the van cools in the shade of a palm older than the highway.');
+      parkedWeather(s);
+      completeDay(s, { miles: 0, resting: true, allowPool: false, extraHealthAll: TUNING.restHealthGain });
+    },
+  },
+};
+
+function specialAt(s: GameState): { id: string; special: StopSpecial } | null {
+  if (s.phase !== 'stop' || s.atStopIndex === null) return null;
+  const stop = stopAt(s.atStopIndex);
+  const special = STOP_SPECIALS[stop.id];
+  if (!special) return null;
+  if (special.once && s.usedEventIds.includes(`special:${stop.id}`)) return null;
+  if (s.cash < special.costCents) return null;
+  return { id: stop.id, special };
+}
+
+// ---------------------------------------------------------------------------
+// Event resolution
+// ---------------------------------------------------------------------------
+
 function resolveEventChoice(s: GameState, index: number): void {
   const ev = s.pendingEvent;
   s.pendingEvent = null;
@@ -404,6 +846,20 @@ function resolveEventChoice(s: GameState, index: number): void {
     }
     return;
   }
+  if (ev.id === 'dunes') {
+    resolveDunes(s, ev, index);
+    return;
+  }
+  if (ev.id === 'in-ko-pah') {
+    resolveInKoPah(s, index);
+    return;
+  }
+  if (ev.id === 'summit') {
+    if (index === 0) startDescent(s);
+    else takeOld80(s);
+    return;
+  }
+  s.phase = s.resumePhase;
 }
 
 function resolveEventContinue(s: GameState): void {
@@ -431,7 +887,7 @@ function resolveEventContinue(s: GameState): void {
     arrive(s);
     return;
   }
-  s.phase = 'travel';
+  s.phase = s.resumePhase;
 }
 
 function finishSnackRun(s: GameState): void {
@@ -441,7 +897,7 @@ function finishSnackRun(s: GameState): void {
   s.supplies.food = Math.min(TUNING.foodMax, s.supplies.food + gained);
   s.snackRunsSinceStop += 1;
   const overshoot = snack.results.reduce((a, r) => a + r.lbs, 0);
-  s.weatherToday = heatOnly(rollWeather(s.rng, s.month, s.mile));
+  parkedWeather(s);
   s.snack = null;
   const lines =
     overshoot > gained
@@ -512,6 +968,24 @@ export function reduce(state: GameState, action: Action): GameState {
       return s;
     }
 
+    case 'REPAIR': {
+      if (s.phase !== 'store') return s;
+      const quote = repairQuote(s.van.condition, s.atStopIndex ?? 0);
+      if (!quote) {
+        s.storeNotice = 'The mechanic looks under the hood and finds nothing to bill you for. Suspicious.';
+        return s;
+      }
+      if (s.cash < quote.cents) {
+        s.storeNotice = 'Your wallet says no. The mechanic shrugs and goes back to his radio.';
+        return s;
+      }
+      s.cash -= quote.cents;
+      s.van.condition = Math.min(100, s.van.condition + quote.points);
+      s.storeNotice = `Tune-up done: +${quote.points} to the van, ${fmtCents(quote.cents)} to the mechanic. He says something about the belts.`;
+      log(s, `Tune-up at the shop: the van is back to ${Math.round(s.van.condition)}/100 for ${fmtCents(quote.cents)}.`);
+      return s;
+    }
+
     case 'LEAVE_STORE':
       if (s.day === 0) {
         s.day = 1;
@@ -529,7 +1003,7 @@ export function reduce(state: GameState, action: Action): GameState {
 
     case 'REST': {
       if (s.gameOver) return s;
-      s.weatherToday = heatOnly(rollWeather(s.rng, s.month, s.mile));
+      parkedWeather(s);
       completeDay(s, { miles: 0, resting: true, allowPool: false });
       return s;
     }
@@ -575,11 +1049,35 @@ export function reduce(state: GameState, action: Action): GameState {
       return s;
     }
 
-    case 'STOP_LEAVE':
+    case 'STOP_SPECIAL': {
+      const found = specialAt(s);
+      if (!found) return s;
+      if (found.special.once) s.usedEventIds.push(`special:${found.id}`);
+      s.cash -= found.special.costCents;
+      found.special.apply(s);
+      return s;
+    }
+
+    case 'STOP_LEAVE': {
       if (s.phase !== 'stop') return s;
-      s.nextStopIndex = (s.atStopIndex ?? s.nextStopIndex - 1) + 1;
+      const index = s.atStopIndex ?? s.nextStopIndex - 1;
+      const stop = stopAt(index);
+      s.nextStopIndex = index + 1;
       s.atStopIndex = null;
-      s.phase = 'travel';
+      if (!beginCrossing(s, stop)) s.phase = 'travel';
+      return s;
+    }
+
+    case 'CROSS':
+      if (s.phase !== 'crossing' || !s.crossing) return s;
+      resolveCrossing(s, action.method);
+      return s;
+
+    case 'GRADE_STEP':
+      if (s.phase !== 'grade' || !s.grade) return s;
+      s.grade = gradeStep(s.grade, action.move);
+      if (s.grade.lastLine) log(s, s.grade.lastLine);
+      if (s.grade.outcome !== null) finishGrade(s);
       return s;
 
     case 'SNACK_START':
@@ -677,6 +1175,14 @@ const RATION_DESCRIPTIONS: Record<Rations, string> = {
   barebones: 'Bare-bones — 1 lb each per day. Survivable. Barely. For a while.',
 };
 
+function eventArt(id: string): ScreenArt {
+  if (id === 'summit') return 'summit';
+  if (id === 'dunes' || id === 'in-ko-pah') return 'hazard';
+  if (id === 'grade-done' || id === 'grade-ramp' || id === 'old80-done') return 'grade';
+  if (id === 'ford-swamped' || id === 'ford-rolled') return 'crossing';
+  return null;
+}
+
 export function view(s: GameState): Screen {
   switch (s.phase) {
     case 'title':
@@ -687,7 +1193,7 @@ export function view(s: GameState): Screen {
           'Las Cruces to the Pacific. 730 miles. One 1985 Econoline.',
           'A road game from 8 WEST IT — in loving memory of every green screen in every school computer lab.',
           '',
-          'Phase 1: The Desert Leg — Las Cruces to Tucson.',
+          'Seventeen stops. One river. One 6% grade. The 8 dead-ends at the beach — and so, one way or another, will you.',
         ],
         choices: [
           { key: '1', label: 'Hit the road', action: { type: 'START_NEW' } },
@@ -718,7 +1224,7 @@ export function view(s: GameState): Screen {
         title: 'WHEN DO YOU LEAVE LAS CRUCES?',
         lines: [
           'Spring is mild but the dust storms hunt the I-10 corridor.',
-          'Summer is honest: it simply tries to kill you. July brings the monsoon.',
+          'Summer is honest: it simply tries to kill you. July brings the monsoon, and the monsoon raises the rivers.',
           'The old hands leave in May.',
         ],
         choices: [
@@ -748,6 +1254,7 @@ export function view(s: GameState): Screen {
     case 'store': {
       const stopIndex = s.atStopIndex ?? 0;
       const stop = stopAt(stopIndex);
+      const quote = repairQuote(s.van.condition, stopIndex);
       const lines = [
         stopIndex === 0
           ? 'THE OUTFITTER, LAS CRUCES. Everything ends in .85 — the owner says it’s a tribute.'
@@ -758,8 +1265,9 @@ export function view(s: GameState): Screen {
           (item, i) =>
             `${i + 1}) ${item.label.padEnd(16)} ${fmtCents(priceCentsAt(item.id, stopIndex))} per ${item.unitLabel}`,
         ),
+        ...(quote ? [`7) ${'Tune-up'.padEnd(16)} ${fmtCents(quote.cents)} for +${quote.points} van condition`] : []),
         '',
-        `Aboard: ${s.supplies.food} lbs food · ${s.supplies.water} gal water · ${s.supplies.fuel} gal fuel · spares ${s.supplies.tires}t/${s.supplies.belts}b/${s.supplies.hoses}h`,
+        `Aboard: ${s.supplies.food} lbs food · ${s.supplies.water} gal water · ${s.supplies.fuel} gal fuel · spares ${s.supplies.tires}t/${s.supplies.belts}b/${s.supplies.hoses}h · van ${Math.round(s.van.condition)}/100`,
         ...(s.storeNotice ? ['', s.storeNotice] : []),
       ];
       const buys: ScreenChoice[] = [
@@ -770,6 +1278,9 @@ export function view(s: GameState): Screen {
         { key: '5', label: 'Buy a belt', action: { type: 'BUY', item: 'belt', units: 1 } },
         { key: '6', label: 'Buy a radiator hose', action: { type: 'BUY', item: 'hose', units: 1 } },
       ];
+      if (quote) {
+        buys.push({ key: '7', label: `Tune-up the van (+${quote.points}, ${fmtCents(quote.cents)})`, action: { type: 'REPAIR' } });
+      }
       return screen({
         title: stopIndex === 0 && s.day === 0 ? 'OUTFITTING' : `SHOP — ${stop.name.toUpperCase()}`,
         lines,
@@ -810,7 +1321,8 @@ export function view(s: GameState): Screen {
     case 'event': {
       const ev = s.pendingEvent!;
       return screen({
-        title: '* * *',
+        title: ev.title ?? '* * *',
+        art: eventArt(ev.id),
         lines: ev.text,
         choices: ev.choices
           ? ev.choices.map((c, i) => ({ key: String(i + 1), label: c.label, action: { type: 'EVENT_CHOICE', index: i } }))
@@ -821,6 +1333,7 @@ export function view(s: GameState): Screen {
 
     case 'stop': {
       const stop = stopAt(s.atStopIndex ?? 0);
+      const special = specialAt(s);
       const choices: ScreenChoice[] = [{ key: '1', label: 'Back on the road', action: { type: 'STOP_LEAVE' } }];
       if (stop.hasShop) choices.push({ key: '2', label: 'Shop for supplies', action: { type: 'STOP_SHOP' } });
       choices.push(
@@ -829,10 +1342,66 @@ export function view(s: GameState): Screen {
         { key: '5', label: 'Check supplies', action: { type: 'OPEN', screen: 'supplies' } },
         { key: '6', label: 'Look at the map', action: { type: 'OPEN', screen: 'map' } },
       );
+      if (special) choices.push({ key: '7', label: special.special.label, action: { type: 'STOP_SPECIAL' } });
       return screen({
         title: stop.name.toUpperCase(),
         lines: [stop.flavor, ...(s.storeNotice ? ['', s.storeNotice] : [])],
         choices,
+        status: statusOf(s),
+      });
+    }
+
+    case 'crossing': {
+      const c = s.crossing!;
+      const spec = RIVERS[c.river];
+      const ford = fordRisk(c);
+      const float = floatRisk(c);
+      return screen({
+        title: spec.title,
+        art: 'crossing',
+        lines: [
+          spec.blurb,
+          '',
+          `Depth: ${c.depthFt.toFixed(1)} ft (the ferry hand's rule says ${spec.fordSafeFt} ft). Current: ${c.currentMph} mph.`,
+          c.daysWaited > 0 ? `You have waited ${c.daysWaited} ${c.daysWaited === 1 ? 'day' : 'days'} on this bank. The river has come down some.` : '',
+          '',
+          `Fording it ${riskLabel(ford)}. Floating the van across on a flatbed ${riskLabel(float)}.`,
+          `${spec.ferryName} will take you across for ${fmtCents(spec.ferryCents)}. You'd lose the day.`,
+          ...(s.storeNotice ? ['', s.storeNotice] : []),
+        ].filter((l, i, arr) => l !== '' || (i > 0 && arr[i - 1] !== '')),
+        choices: [
+          { key: '1', label: 'Ford it', action: { type: 'CROSS', method: 'ford' } },
+          { key: '2', label: 'Float the van across on a flatbed', action: { type: 'CROSS', method: 'float' } },
+          { key: '3', label: `Take the ferry (${fmtCents(spec.ferryCents)})`, action: { type: 'CROSS', method: 'ferry' } },
+          { key: '4', label: 'Wait a day for the river to drop', action: { type: 'CROSS', method: 'wait' } },
+          { key: '5', label: 'Check supplies', action: { type: 'OPEN', screen: 'supplies' } },
+          { key: '6', label: 'Look at the map', action: { type: 'OPEN', screen: 'map' } },
+        ],
+        status: statusOf(s),
+      });
+    }
+
+    case 'grade': {
+      const g = s.grade!;
+      const steepNext = g.steep[g.segment] ?? false;
+      return screen({
+        title: 'THE 6% GRADE',
+        art: 'grade',
+        lines: [
+          g.lastLine ??
+            'The sign at the top: 6% GRADE — NEXT 6 MILES — TRUCKS USE LOW GEAR. The van is not a truck, and it is not in low gear yet.',
+          '',
+          `The profile, as the sign at the top drew it: ${g.steep.map((st, i) => (i < g.segment ? '✓' : st ? 'STEEP' : 'easy')).join(' → ')}`,
+          `Stretch ${g.segment + 1} of ${GRADE.segments}: ${steepNext ? 'STEEP — the road drops away like a bad idea.' : 'a gentle run between the curves.'}`,
+          `Brakes: ${Math.round(g.brakeTemp)}° (${tempLabel(g.brakeTemp)}) · Speed: ${speedLabel(g.speed)}`,
+          '',
+          'Ride the brakes to shed speed (they heat up). Downshift to hold it (a little heat). Let it roll to cool them (and speed up).',
+        ],
+        choices: [
+          { key: '1', label: 'Ride the brakes', action: { type: 'GRADE_STEP', move: 'brake' } },
+          { key: '2', label: 'Downshift', action: { type: 'GRADE_STEP', move: 'downshift' } },
+          { key: '3', label: 'Let it roll', action: { type: 'GRADE_STEP', move: 'coast' } },
+        ],
         status: statusOf(s),
       });
     }
@@ -867,7 +1436,7 @@ export function view(s: GameState): Screen {
           `Water       ${s.supplies.water} gal`,
           `Fuel        ${s.supplies.fuel} gal`,
           `Spares      ${s.supplies.tires} tire · ${s.supplies.belts} belt · ${s.supplies.hoses} hose`,
-          `Van         ${s.van.condition}/100`,
+          `Van         ${Math.round(s.van.condition)}/100`,
           '',
           ...s.crew.map(
             (m) =>
@@ -882,8 +1451,7 @@ export function view(s: GameState): Screen {
       const lines: string[] = ['LAS CRUCES → OCEAN BEACH · 730 MILES', ''];
       for (const stop of ROUTE) {
         const here = s.mile >= stop.mile ? '■' : '·';
-        const marker = stop.phase2 ? '(phase 2 — uncharted)' : '';
-        lines.push(`${here} mile ${String(stop.mile).padStart(3)}  ${stop.name} ${marker}`.trimEnd());
+        lines.push(`${here} mile ${String(stop.mile).padStart(3)}  ${stop.name}`);
         const next = ROUTE[ROUTE.indexOf(stop) + 1];
         if (next && s.mile > stop.mile && s.mile < next.mile) {
           lines.push(`  ↓ YOU ARE HERE — mile ${s.mile}`);
@@ -927,17 +1495,19 @@ export function view(s: GameState): Screen {
       return screen({
         title: 'HOW TO PLAY',
         lines: [
-          'Get the crew from Las Cruces to Tucson alive. (Phase 1 of the full run to the Pacific.)',
+          'Get the crew from Las Cruces to Ocean Beach alive — 730 miles, until the 8 dead-ends at the Pacific.',
           '',
           '· Every DRIVE is one day: the van moves, everyone eats and drinks, the desert rolls its dice.',
           '· PACE trades health for miles. RATIONS trade food for health.',
           '· Heat is the enemy. Water is the answer. Watch both.',
-          '· Spares (tire, belt, hose) turn disasters into anecdotes.',
+          '· Spares (tire, belt, hose) turn disasters into anecdotes. Shops sell a TUNE-UP for the van, too.',
           '· The SNACK RUN spends a day to type for your supper. You can only carry 100 lbs.',
           '· RESTING heals — and doubles the healing of the sick and bitten.',
+          '· RIVERS: ford it under two and a half feet, float it on a flatbed, pay the ferry, or wait for the water to drop.',
+          '· The DUNES close the road when the wind is up. The IN-KO-PAH grade eats vans. LAGUNA SUMMIT is the big decision.',
           '· When someone dies, they stay dead. This is that kind of game.',
           '',
-          'Score at Tucson: crew health + supplies + cash, times your role multiplier.',
+          'Score at the beach: crew health + supplies + cash, times your role multiplier.',
         ],
         choices: [{ key: '0', label: 'Back', action: { type: 'BACK' } }],
       });
@@ -990,7 +1560,7 @@ export function view(s: GameState): Screen {
     case 'victory': {
       if (!s.occupation) throw new Error('victory without occupation');
       return screen({
-        title: 'TUCSON, ARIZONA',
+        title: 'OCEAN BEACH, SAN DIEGO',
         art: 'victory',
         lines: buildVictoryLines(s),
         choices: [{ key: '1', label: 'Run it again', action: { type: 'RESTART' } }],
@@ -1004,8 +1574,15 @@ function buildVictoryLines(s: GameState): string[] {
   const occupation = s.occupation!;
   const score = computeScore(s.crew, s.supplies, s.cash, occupation);
   const survivors = s.crew.filter((m) => m.alive);
+  const descent =
+    s.summitRoute === 'old80'
+      ? 'You came down the mountain on Old Highway 80 — the slow way, the sure way, the way the trucks that know better take.'
+      : s.summitRoute === 'grade'
+        ? 'You rode the 6% grade down with the brakes talking the whole way, and the brakes held.'
+        : 'You came down the mountain somehow. The log is vague on the details.';
   return [
-    'The saguaros escort you into TUCSON like an honor guard. Phase 1 complete.',
+    'The 8 dead-ends at the sand. You park the van where the road gives up and the Pacific begins, and nobody says anything for a while.',
+    descent,
     '',
     `Survivors: ${survivors.length ? survivors.map((m) => m.name).join(', ') : 'none'} — ${s.day} days, ${s.mile} miles.`,
     '',
@@ -1016,6 +1593,6 @@ function buildVictoryLines(s: GameState): string[] {
     `  Subtotal ..... ${score.subtotal}  x${score.multiplier} (${occupation.toUpperCase()})`,
     `  TOTAL ........ ${score.total}`,
     '',
-    'PHASE 2: THE ROAD TO YUMA — coming soon to this very highway.',
+    `PHASE ${TUNING.buildPhase} ROUTE · LAS CRUCES → OCEAN BEACH · brought to you by 8 WEST IT 365`,
   ];
 }

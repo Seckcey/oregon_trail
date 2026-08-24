@@ -24,6 +24,11 @@ export const TOWN_TALK = [
   'A rockhound near the counter: "Rest a day when they’re sick. The road will still be there. They might not."',
   'Sign on the register: IN GOD WE TRUST. EVERYONE ELSE PAYS CASH. Prices are higher out here and climbing.',
   'An old-timer nods at the horizon: "Monsoon builds all afternoon, then owns the evening. Cross the washes early."',
+  'A ferry hand at the counter, boots still wet: "Two and a half feet. That’s the number. Under it, ford. Over it, you pay me."',
+  'A date farmer with sugar on his hat: "The dunes shut the 8 when the wind comes up. Don’t fight sand. Sand has all day."',
+  'A trucker with a Jacumba cap: "Six percent, six miles. Low gear or the runaway ramp — your brakes don’t get a vote."',
+  'A mechanic in a valley shop: "Below sea level the heat’s different. It doesn’t rise. It waits."',
+  'Somebody’s grandmother, unprompted: "Get the tune-up. A van that far gone won’t make the summit, and the summit don’t care."',
 ];
 
 export const REST_LINES = [
@@ -49,6 +54,7 @@ export const DEATH_CAUSES = {
   injury: 'THE ROAD',
   thirst: 'THIRST',
   hunger: 'HUNGER',
+  drowning: 'THE RIVER',
 } as const;
 
 export const EPITAPH_DEFAULT = 'THE BEACH WAS THAT WAY.';

@@ -4,7 +4,7 @@
 
 import type { GameState, Memorial } from '../sim/types';
 
-const SAVE_KEY = '8wt.save.v1';
+const SAVE_KEY = '8wt.save.v2'; // v2: Phase 2 state shape (crossing, grade, resumePhase)
 const MEMORIAL_KEY = '8wt.memorials.v1';
 const MEMORIAL_CAP = 60;
 

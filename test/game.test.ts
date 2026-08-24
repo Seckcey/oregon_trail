@@ -359,18 +359,19 @@ describe('death', () => {
 // victory
 // ---------------------------------------------------------------------------
 
-describe('victory', () => {
-  test('reaching Tucson ends Phase 1 in glory and a score', () => {
+describe('the end of the desert leg', () => {
+  // Phase 1 ended the run here. Phase 2 opened the road: Tucson is a town
+  // like any other, and the finish is Ocean Beach (see test/west.test.ts).
+  test('reaching Tucson is a milestone stop, not the finish', () => {
     let s = departed();
     s = structuredClone(s);
     s.mile = 270;
     s.nextStopIndex = 4;
-    const won = driveUntil(s, (x) => x.phase === 'victory', 20);
-    expect(won.phase).toBe('victory');
-    expect(won.mile).toBe(275);
-    const text = view(won).lines.join(' ');
-    expect(text).toContain('SCORE');
-    expect(text).toContain('TUCSON');
+    const there = driveUntil(s, (x) => x.phase === 'stop' && x.mile === 275, 20);
+    expect(there.phase).toBe('stop');
+    expect(there.mile).toBe(275);
+    expect(there.gameOver).toBe(false);
+    expect(view(there).title).toBe('TUCSON');
   });
 });
 

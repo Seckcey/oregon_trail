@@ -78,6 +78,28 @@ export function purchase(
   };
 }
 
+// ---------------------------------------------------------------------------
+// The tune-up: cash for van condition, 25 points at a time, priced like
+// everything else — higher the farther west you are.
+// ---------------------------------------------------------------------------
+
+const REPAIR_CENTS_PER_POINT = 150;
+const REPAIR_MAX_POINTS = 25;
+const REPAIR_MIN_POINTS = 5; // under this the mechanic won't bother
+
+export interface RepairQuote {
+  points: number;
+  cents: number;
+}
+
+/** What the shop will do for the van, or null if there's nothing worth fixing. */
+export function repairQuote(condition: number, stopIndex: number): RepairQuote | null {
+  const points = Math.min(REPAIR_MAX_POINTS, Math.max(0, Math.round(100 - condition)));
+  if (points < REPAIR_MIN_POINTS) return null;
+  const raw = points * REPAIR_CENTS_PER_POINT * Math.pow(ESCALATION_PER_SHOP, shopNumber(stopIndex));
+  return { points, cents: Math.round(raw / 5) * 5 };
+}
+
 export function fmtCents(cents: number): string {
   const dollars = Math.floor(cents / 100);
   const rem = Math.abs(cents % 100);

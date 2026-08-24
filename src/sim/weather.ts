@@ -26,7 +26,15 @@ const MONSOON_MONTHS: readonly Month[] = [7, 8];
 const MONSOON_MIN_MILE = 150;
 const MONSOON_CHANCE = 0.12;
 
+// The Imperial Valley, Yuma to El Centro, sits below sea level and the heat
+// sits on it: one tier hotter than the calendar says, all season.
+const VALLEY_MILES: readonly [number, number] = [540, 625];
+
 export const HEAT_LABELS = ['mild', 'warm', 'hot', 'scorching'] as const;
+
+export function regionHeatBonus(mile: number): 0 | 1 {
+  return mile >= VALLEY_MILES[0] && mile <= VALLEY_MILES[1] ? 1 : 0;
+}
 
 /** The same day, seen from a parked van: storms don't apply, heat does. */
 export function heatOnly(w: Weather): Weather {
@@ -39,7 +47,10 @@ export function rollWeather(rng: RngState, month: Month, mile: number): Weather 
   // Bias toward the top of the range in July: the worst month is the worst.
   const roll = nextFloat(rng);
   const biased = month === 7 ? Math.pow(roll, 0.6) : roll;
-  const heat = Math.min(3, Math.max(0, min + Math.floor(biased * (max - min + 1)))) as Weather['heat'];
+  const heat = Math.min(
+    3,
+    Math.max(0, min + Math.floor(biased * (max - min + 1)) + regionHeatBonus(mile)),
+  ) as Weather['heat'];
 
   let event: Weather['event'] = 'none';
   if (DUST_MONTHS.includes(month) && mile < DUST_MAX_MILE && chance(rng, DUST_CHANCE)) {

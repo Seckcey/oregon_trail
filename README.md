@@ -23,7 +23,7 @@ See [docs/PLAN.md](docs/PLAN.md) for the full game design and build plan, and
 ```
 npm install
 npm run dev      # local dev server
-npm test         # 103 sim tests (vitest)
+npm test         # 211 tests (vitest): sim, route, crossings, the grade, UI plumbing
 npm run build    # typecheck + production bundle in dist/
 ```
 
