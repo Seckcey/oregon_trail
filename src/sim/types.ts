@@ -2,6 +2,9 @@
 // The sim is pure and deterministic: state in, state out, all randomness
 // flows through the seeded RNG stored in GameState.
 
+import type { CrossingState } from './crossing';
+import type { GradeState } from './grade';
+
 export type Occupation = 'ceo' | 'sysadmin' | 'intern';
 export type Pace = 'steady' | 'strenuous' | 'grueling';
 export type Rations = 'filling' | 'meager' | 'barebones';
@@ -51,7 +54,6 @@ export interface Stop {
   mile: number;
   kind: StopKind;
   hasShop: boolean;
-  phase2: boolean; // beyond the Phase 1 slice
   flavor: string;
 }
 
@@ -64,6 +66,8 @@ export type GamePhase =
   | 'travel'
   | 'event'
   | 'stop'
+  | 'crossing'
+  | 'grade'
   | 'snack'
   | 'supplies'
   | 'map'
@@ -83,6 +87,7 @@ export interface PendingEvent {
   id: string;
   text: string[];
   choices: EventChoice[] | null; // null = single "continue"
+  title: string | null; // null = the anonymous "* * *" notice
 }
 
 export interface SnackResult {
@@ -113,9 +118,15 @@ export interface LogEntry {
   text: string;
 }
 
+export type SummitRoute = 'grade' | 'old80';
+
+/** How you went off the cliffs at the finish. */
+export type Celebration = 'cannonball' | 'swan' | 'towels';
+
 export interface GameState {
   phase: GamePhase;
   returnPhase: GamePhase; // where sub-screens (supplies/map/pace/rations) return to
+  resumePhase: GamePhase; // where the road resumes after a day-consuming notice
   seed: string;
   rng: { s: number };
 
@@ -147,6 +158,11 @@ export interface GameState {
   snackRunsSinceStop: number;
   usedEventIds: string[];
 
+  crossing: CrossingState | null; // on a river bank
+  grade: GradeState | null; // on the 6% descent
+  summitRoute: SummitRoute | null; // which way you came down the mountain
+  celebration: Celebration | null; // the jump at Sunset Cliffs
+
   memorials: Memorial[]; // environment: past runs' graves (injected at init)
   memorialSeenDay: number; // last day a memorial line fired
   runMemorials: Memorial[]; // this run's dead, for the UI to persist
@@ -167,7 +183,7 @@ export interface GameState {
 
 export const TUNING = {
   crewSize: 5,
-  phase1EndMile: 275, // Tucson
+  buildPhase: 2, // printed on the score screen so runs stay comparable across builds
 
   startingCashCents: { ceo: 250000, sysadmin: 100000, intern: 40000 } as Record<Occupation, number>,
   scoreMultiplier: { ceo: 1, sysadmin: 2, intern: 3 } as Record<Occupation, number>,
@@ -209,6 +225,19 @@ export const TUNING = {
   snackDiminish: 0.6, // multiplier per prior run since last stop
 
   healthPoints: { good: 500, fair: 400, poor: 300, critical: 200 },
+
+  // The road west of Tucson
+  dateShakeCents: 1500,
+  dateShakeHealth: 10,
+  centerOfWorldCents: 300,
+  dunesClosureChance: 0.45,
+  dunesStuckChance: 0.5,
+  inKoPahFloorWear: 8,
+  inKoPahBoilChance: 0.45,
+  old80WashoutChance: 0.3,
+  summitDescentEndMile: 705, // Alpine: where both ways down the mountain rejoin the 8
+  smokingVanDamage: 10,
+  rampVanDamage: 30,
 
   logMax: 120,
 } as const;

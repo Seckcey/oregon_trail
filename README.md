@@ -13,7 +13,7 @@ to be shared. Everyone who plays it will know exactly what game it's tipping its
 **Phase 1 is live at [8wt.8westit.com](https://8wt.8westit.com)** — the Desert Leg, Las Cruces
 to Tucson: outfitting, pace/rations/water, dust storms and monsoons, breakdowns, the snack run,
 deaths and roadside memorials, scoring, and localStorage saves. Phases 2-4 (the full route to
-Ocean Beach, art pass, networked memorials) are next.
+Sunset Cliffs, art pass, networked memorials) are next.
 
 See [docs/PLAN.md](docs/PLAN.md) for the full game design and build plan, and
 [research/](research/) for the underlying research (history, mechanics, market).
@@ -23,7 +23,7 @@ See [docs/PLAN.md](docs/PLAN.md) for the full game design and build plan, and
 ```
 npm install
 npm run dev      # local dev server
-npm test         # 103 sim tests (vitest)
+npm test         # 211 tests (vitest): sim, route, crossings, the grade, UI plumbing
 npm run build    # typecheck + production bundle in dist/
 ```
 

@@ -41,6 +41,13 @@ function segmentBounds(s: GameState): { lo: number; hi: number } {
   return { lo: prev ? prev.mile : 0, hi: next ? next.mile - 1 : s.mile };
 }
 
+function healAll(s: GameState, points: number): void {
+  for (let i = 0; i < s.crew.length; i++) {
+    const m = s.crew[i]!;
+    if (m.alive) s.crew[i] = { ...m, health: Math.min(100, m.health + points) };
+  }
+}
+
 export const POOL_EVENTS: PoolEvent[] = [
   {
     id: 'flat-tire',
@@ -230,13 +237,34 @@ export const POOL_EVENTS: PoolEvent[] = [
     when: (s) => s.mile >= 100 && s.mile <= 190,
     weight: () => 1.5,
     fire: (s) => {
-      for (let i = 0; i < s.crew.length; i++) {
-        const m = s.crew[i]!;
-        if (m.alive) s.crew[i] = { ...m, health: Math.min(100, m.health + 3) };
-      }
+      healAll(s, 3);
       return [
         'A brown sign by a forgotten frontage road: HISTORIC US ROUTE 80.',
         'The 8 was the 80, once — the same dirt that ran clear to the coast. The crew goes quiet in a good way. Everyone feels a little better about the mission.',
+      ];
+    },
+  },
+  {
+    id: 'border-checkpoint',
+    once: true,
+    when: (s) => s.mile >= 590 && s.mile <= 700,
+    weight: () => 1.5,
+    fire: () => [
+      'A Border Patrol checkpoint across every lane of the 8. The dog takes a professional interest in the carnitas.',
+      'Twenty minutes, a few questions, a wave-through. The dog looks personally disappointed.',
+    ],
+  },
+  {
+    id: 'sea-level',
+    once: true,
+    when: (s) => s.mile >= 600 && s.mile <= 635,
+    weight: () => 1.5,
+    fire: (s) => {
+      s.supplies.water = Math.max(0, s.supplies.water - 2);
+      healAll(s, 2);
+      return [
+        'A green sign on the shoulder: SEA LEVEL. You are below it, and still dropping.',
+        'Someone passes the jug around on principle. Everyone drinks. Everyone feels, briefly, like a submarine.',
       ];
     },
   },
