@@ -114,6 +114,19 @@ snack run) is a shader and a font.
 4. **The trail remembers.** Small persistence service: shared roadside memorials + leaderboard
    with email capture.
 
+## Deployment
+
+- **Host:** `coastline` VM (Ubuntu, Docker-based — everything on the box runs as a container).
+- **Port:** `1985` — free on coastline as of 2026-08-24, chosen for the year of the classic
+  Apple IIe edition. The game ships as a static bundle in a container mapped to
+  `127.0.0.1:1985 -> 80`.
+- **Public URL:** `8wt.8westit.com`, via the existing remotely-managed Cloudflare tunnel
+  (`cloudflared.service`, token-based). Frank adds the ingress rule in the Cloudflare Zero
+  Trust dashboard: `8wt.8westit.com -> http://localhost:1985`.
+- Approved 2026-08-24: the Las Cruces start / "the 8 was the 80" geography framing, and the
+  homage-with-our-own-name trademark posture (gameplay unmistakably Oregon Trail; their mark
+  never printed in our marketing).
+
 ## Reference
 
 - research/01-history.md — franchise history, IP ownership
