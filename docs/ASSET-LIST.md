@@ -25,6 +25,11 @@ real art replaces them as it lands.*
    drawn by the game in CSS/SVG so the words can change. Prompts say "no speech balloons".
 6. **Resolution:** biggest available. Wide panels ≥ 2400 px wide; sprites ≥ 1600 px long side.
 7. **Priority:** ★★★ = the look can't land without it · ★★ = depth and delight · ★ = polish.
+8. **Use Claude Imagine (the tool that made the masthead) for every prompt.** Claude chat and
+   ChatGPT can't generate images — they'll try to collage your uploads instead.
+9. **Skip these — I build them from your other art:** A4 share card, A5 "presents" plate,
+   A6 parent-company plate, and everything in section 17 (marketing) except the variant covers.
+   They are layout jobs, not drawings.
 
 ---
 
