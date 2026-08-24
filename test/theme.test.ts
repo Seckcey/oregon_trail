@@ -32,26 +32,30 @@ const throwingStore: KeyValueStore = {
 };
 
 describe('theme ids', () => {
-  it('coastal is the default (marketing wants the flash)', () => {
-    expect(DEFAULT_THEME).toBe('coastal');
+  it('the comic book is the default (marketing wants the flash)', () => {
+    expect(DEFAULT_THEME).toBe('comic');
   });
 
   it('recognises exactly the two theme ids', () => {
-    expect(isThemeId('coastal')).toBe(true);
+    expect(isThemeId('comic')).toBe(true);
     expect(isThemeId('heritage')).toBe(true);
-    expect(isThemeId('COASTAL')).toBe(false);
+    expect(isThemeId('COMIC')).toBe(false);
     expect(isThemeId('')).toBe(false);
     expect(isThemeId(null)).toBe(false);
     expect(isThemeId(42)).toBe(false);
   });
 
+  it('the cancelled Coastal theme is not a theme id any more', () => {
+    expect(isThemeId('coastal')).toBe(false);
+  });
+
   it('otherTheme flips between the two', () => {
-    expect(otherTheme('coastal')).toBe('heritage');
-    expect(otherTheme('heritage')).toBe('coastal');
+    expect(otherTheme('comic')).toBe('heritage');
+    expect(otherTheme('heritage')).toBe('comic');
   });
 
   it('toggle label invites the player to the theme they are NOT on', () => {
-    expect(toggleLabel('coastal')).toBe('Play it like 1985');
+    expect(toggleLabel('comic')).toBe('Play it like 1985');
     expect(toggleLabel('heritage')).toBe('Back to color');
   });
 });
@@ -63,7 +67,12 @@ describe('loadTheme', () => {
 
   it('returns the stored theme', () => {
     expect(loadTheme(memoryStore({ [THEME_STORAGE_KEY]: 'heritage' }))).toBe('heritage');
-    expect(loadTheme(memoryStore({ [THEME_STORAGE_KEY]: 'coastal' }))).toBe('coastal');
+    expect(loadTheme(memoryStore({ [THEME_STORAGE_KEY]: 'comic' }))).toBe('comic');
+  });
+
+  it('migrates a remembered "coastal" choice to the comic book', () => {
+    // Phase 2 shipped with coastal as the stored default; those players get the comic.
+    expect(loadTheme(memoryStore({ [THEME_STORAGE_KEY]: 'coastal' }))).toBe('comic');
   });
 
   it('ignores garbage in storage', () => {
@@ -82,8 +91,12 @@ describe('saveTheme', () => {
     const store = memoryStore();
     saveTheme(store, 'heritage');
     expect(store.data[THEME_STORAGE_KEY]).toBe('heritage');
-    saveTheme(store, 'coastal');
-    expect(store.data[THEME_STORAGE_KEY]).toBe('coastal');
+    saveTheme(store, 'comic');
+    expect(store.data[THEME_STORAGE_KEY]).toBe('comic');
+  });
+
+  it('keeps the Phase 2 storage key so remembered choices survive the pivot', () => {
+    expect(THEME_STORAGE_KEY).toBe('8wt.theme.v1');
   });
 
   it('never throws when storage is unavailable', () => {
@@ -93,10 +106,10 @@ describe('saveTheme', () => {
 });
 
 describe('resolveTheme', () => {
-  const both = ['coastal', 'heritage'] as const;
+  const both = ['comic', 'heritage'] as const;
 
   it('falls back to the default when nothing is stored or requested', () => {
-    expect(resolveTheme({ stored: null, requested: null, available: both })).toBe('coastal');
+    expect(resolveTheme({ stored: null, requested: null, available: both })).toBe('comic');
   });
 
   it('prefers the stored theme over the default', () => {
@@ -104,14 +117,14 @@ describe('resolveTheme', () => {
   });
 
   it('lets a ?theme= request beat the stored theme', () => {
-    expect(resolveTheme({ stored: 'heritage', requested: 'coastal', available: both })).toBe('coastal');
-    expect(resolveTheme({ stored: 'coastal', requested: 'heritage', available: both })).toBe('heritage');
+    expect(resolveTheme({ stored: 'heritage', requested: 'comic', available: both })).toBe('comic');
+    expect(resolveTheme({ stored: 'comic', requested: 'heritage', available: both })).toBe('heritage');
   });
 
   it('only ever resolves to a theme that has a renderer registered', () => {
-    // Step A of Phase 2: only Heritage is registered, Coastal comes later.
-    expect(resolveTheme({ stored: 'coastal', requested: null, available: ['heritage'] })).toBe('heritage');
-    expect(resolveTheme({ stored: null, requested: 'coastal', available: ['heritage'] })).toBe('heritage');
+    // Step A of Phase 3: only Heritage is registered, the Comic renderer comes in Step B.
+    expect(resolveTheme({ stored: 'comic', requested: null, available: ['heritage'] })).toBe('heritage');
+    expect(resolveTheme({ stored: null, requested: 'comic', available: ['heritage'] })).toBe('heritage');
     expect(resolveTheme({ stored: 'heritage', requested: null, available: ['heritage'] })).toBe('heritage');
   });
 

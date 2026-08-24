@@ -24,7 +24,7 @@ export interface Renderer {
   unmount(): void;
 }
 
-/** Every theme with a renderer. Coastal joins this table when it lands. */
+/** Every theme with a renderer. The Comic renderer joins this table in Phase 3 Step B. */
 export const RENDERERS: Partial<Record<ThemeId, () => Renderer>> = {
   heritage: createHeritageRenderer,
 };

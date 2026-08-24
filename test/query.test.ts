@@ -9,7 +9,7 @@ describe('parseQuery', () => {
 
   it('reads a valid ?theme=', () => {
     expect(parseQuery('?theme=heritage').theme).toBe('heritage');
-    expect(parseQuery('?theme=coastal').theme).toBe('coastal');
+    expect(parseQuery('?theme=comic').theme).toBe('comic');
   });
 
   it('ignores an unknown ?theme=', () => {
