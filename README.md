@@ -10,9 +10,36 @@ to be shared. Everyone who plays it will know exactly what game it's tipping its
 
 ## Status
 
-Planning. See [docs/PLAN.md](docs/PLAN.md) for the full game design and build plan, and
-[research/](research/) for the underlying research on the original Oregon Trail (history,
-mechanics, market).
+**Phase 1 is live at [8wt.8westit.com](https://8wt.8westit.com)** — the Desert Leg, Las Cruces
+to Tucson: outfitting, pace/rations/water, dust storms and monsoons, breakdowns, the snack run,
+deaths and roadside memorials, scoring, and localStorage saves. Phases 2-4 (the full route to
+Ocean Beach, art pass, networked memorials) are next.
+
+See [docs/PLAN.md](docs/PLAN.md) for the full game design and build plan, and
+[research/](research/) for the underlying research (history, mechanics, market).
+
+## Development
+
+```
+npm install
+npm run dev      # local dev server
+npm test         # 103 sim tests (vitest)
+npm run build    # typecheck + production bundle in dist/
+```
+
+The simulation (`src/sim/`) is pure, deterministic, and fully tested — seeded RNG, no DOM.
+The UI (`src/ui/`, `src/main.ts`) renders the sim's Screen model and forwards input.
+
+## Deploy (coastline)
+
+The VM builds and serves the game with Docker on `127.0.0.1:1985`, which the Cloudflare
+tunnel maps to 8wt.8westit.com:
+
+```
+git archive --format=tar.gz -o /tmp/8wt.tar.gz HEAD
+scp /tmp/8wt.tar.gz coastline:/tmp/
+ssh coastline "tar xzf /tmp/8wt-deploy.tar.gz -C ~/apps/eight-west-trail && cd ~/apps/eight-west-trail && docker compose up -d --build"
+```
 
 ## Repo layout
 

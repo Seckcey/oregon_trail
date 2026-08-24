@@ -98,6 +98,15 @@ game earns shares by being good; the brand rides along.
 - **Leaderboard = funnel:** optional email to claim a leaderboard spot; roadside memorials make
   every death land on a real mile of the brand's highway.
 
+## Build status
+
+- **Phase 1: SHIPPED 2026-08-24.** Live at https://8wt.8westit.com (coastline:1985 via the
+  Cloudflare tunnel). Deterministic TypeScript sim core (103 vitest tests, built TDD),
+  phosphor-terminal UI, localStorage saves and local roadside memorials, share-your-story copy.
+  Note one deliberate deviation from the table above: the ransomware event costs $185 for
+  "a guy who knows computers" instead of a lost day (cleaner in the sim), wink intact.
+- Phase 2-4: not started.
+
 ## Build plan
 
 Tech: **TypeScript, deterministic simulation core with seeded RNG** (replayable, testable),
