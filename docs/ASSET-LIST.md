@@ -1,722 +1,513 @@
-# THE 8 WEST TRAIL — Master Asset List & Generation Prompts
+# THE 8 WEST TRAIL — Master Asset List & Generation Prompts (COMIC-BOOK EDITION)
 
-*Lead design, 2026-08-24. Every asset the Coastal theme and the marketing push want, each with a
-ready-to-paste Claude Imagine prompt. Nothing here blocks the build — the game ships SVG
-placeholders in every slot and real art replaces them as it lands.*
+*Lead design, revised 2026-08-24 for the comic-book art direction (supersedes the travel-poster
+list). Every asset the Comic theme and the marketing push want, each with a ready-to-paste Claude
+Imagine prompt. Nothing here blocks the build — the game ships SVG placeholders in every slot and
+real art replaces them as it lands.*
 
 ---
 
 ## 0. How to use this document
 
-1. **Paste the prompt block verbatim** into Claude Imagine. Generate 3–4 variations; keep the one
-   that matches the Style Bible best (consistency across assets matters more than any single
-   image being perfect).
-2. **Save with the exact filename** listed, into `public/assets/<category>/`. Formats: WebP for
-   scenes (quality 80–85), PNG for anything that will be cut out or layered, SVG only if the
-   tool gives you vectors (it usually won't — I'll vectorize logos/icons myself with Adobe tools).
-3. **Backgrounds:** anything marked **CUTOUT** should be generated on a *flat, solid, plain
-   background* (the prompt says which color). I'll remove it. Don't ask the tool for
-   "transparent" — it fakes a checkerboard.
-4. **Text in images:** image tools mangle words. Where text is essential (billboards, postcards,
-   signs) the prompt gives *exact, short* strings. Expect to regenerate or I'll fix typography in
-   post. Every text-bearing asset also asks for a **clean plate** (same image, no text) so I can
-   overlay real type in-game.
-5. **Resolution:** generate at the largest size available; minimums are listed. Landscape scenes
-   want at least 2400 px wide; sprites at least 1600 px on the long side.
-6. **Priority:** ★★★ = the brand can't land without it · ★★ = depth and delight · ★ = polish.
-   If you only do ten things, do every ★★★.
+1. **Paste the prompt block verbatim** into Claude Imagine. Wherever a prompt says `[COMIC LOCK]`,
+   `[VAN LOCK]`, or `[CREW LOCK]`, paste the matching paragraph from section 1 in its place.
+   Generate 3–4 variations; keep the one that matches the Style Bible best — consistency across
+   assets matters more than any single image being perfect.
+2. **Save with the exact filename** listed, into `public/assets/<category>/`. PNG for anything cut
+   out or layered; WebP (quality 85) for full scenes; SVG only if the tool gives real vectors (it
+   won't — I vectorize logos, SFX lettering, and icons myself with Adobe tools).
+3. **Backgrounds:** anything marked **CUTOUT** is generated on a *flat, solid neon-green #00FF00
+   background* and I key it out. Don't ask for "transparent" — the tool fakes a checkerboard.
+4. **Text in images:** image tools mangle words. Where text is essential (SFX lettering, covers,
+   signs) the prompt gives *exact, short* strings. Expect to regenerate; I'll fix letters in post.
+   Every text-bearing asset also asks for a **clean plate** (same image, no text) so I can set real
+   comic lettering in-engine.
+5. **Speech balloons:** never in the generated art. Balloons, captions, and panel borders are
+   drawn by the game in CSS/SVG so the words can change. Prompts say "no speech balloons".
+6. **Resolution:** biggest available. Wide panels ≥ 2400 px wide; sprites ≥ 1600 px long side.
+7. **Priority:** ★★★ = the look can't land without it · ★★ = depth and delight · ★ = polish.
 
 ---
 
-## 1. The Style Bible (read once; every prompt repeats the lock)
+## 1. The Style Bible — "Saturday Morning Mystery Comic"
 
-**The world:** a sun-bleached Americana road trip, seen through the eyes of someone who loved
-1980s national-park travel posters and modern flat app design in equal measure. Bold, clean,
-warm, a little wistful. Classy first, flashy second — the flash comes from color and motion,
-never from clutter.
+**The world:** an all-ages comic book about five friends, a terrible van, and 730 miles of
+desert. Bold ink, flat bright color, big expressions, giant sound effects, panels that tilt when
+the action does. Funny first, thrilling second, always readable at a glance. Classy in the way a
+well-drawn comic is classy: confident lines, nothing muddy.
 
-**Palette (from the 8 West Ventures brand, extended for the desert):**
+**IP discipline:** the *style* is a homage to classic mystery-gang comics; the *content* is ours.
+Original characters only. The van is white with a red-over-blue stripe — never teal/green,
+never flowers, never psychedelic. No famous dogs. Every prompt says so.
+
+**Palette:**
 
 | Token | Hex | Use |
 |---|---|---|
-| Interstate red | `#C41E2A` | brand, shields, danger |
-| Ocean-wave blue | `#1F8FD6` | brand, water, sky base |
-| Highway-sign green | `#147A4D` | guide signs, buttons, "go" |
-| Desert sand | `#E9C46A` | ground, warmth |
-| Sunset coral | `#F4845F` | dusk, alerts, heat |
-| Sky gradient | `#7ECBFF → #FFD08A` | day skies |
-| Ink navy | `#0C1830` | text, night, shadows |
-| Bone white | `#FFFFFF` | signs, van body |
+| Ink black | `#111111` | outlines, lettering |
+| Interstate red | `#C41E2A` | brand, danger, SFX fills |
+| Ocean-wave blue | `#1F8FD6` | brand, water, cool shadows |
+| Sunflower yellow | `#FFC72C` | caption boxes, SFX, sun |
+| Lime green | `#7AC143` | desert plants, "go" |
+| Sky blue | `#5BC0EB` | skies |
+| Hot orange | `#F58220` | dust, sunsets, heat |
+| Grape purple | `#6A4C93` | night, mountains, spooky |
+| Paper white | `#FFFFFF` | page, van body |
 
-**Light:** late-afternoon sun from the upper-left (we are driving *west*, into it). Long warm
-shadows. Skies do the emotional work.
+**Lettering (Google Fonts, loaded by the game):** **Bangers** for SFX and titles, **Luckiest
+Guy** for cover masthead, **Comic Neue** for balloons and body. Caption boxes are yellow with a
+black border; narration is set in small caps.
 
-**The STYLE LOCK sentence** (it is inside every prompt below — do not shorten it):
+### The three LOCK paragraphs (paste where prompts say so)
 
-> Sun-bleached Americana road-trip illustration: flat vector-style shapes with soft painterly
-> gradients, bold clean silhouettes, minimal outlines, subtle paper grain, late-afternoon desert
-> light from the upper left with long warm shadows. Palette: interstate red #C41E2A, ocean-wave
-> blue #1F8FD6, highway-sign green #147A4D, desert sand #E9C46A, sunset coral #F4845F, sky
-> gradient #7ECBFF to #FFD08A, ink navy #0C1830, white. 1980s national-park travel-poster DNA
-> meets modern flat app clarity. Same illustrated universe as the other 8 West Trail assets. No
-> photorealism. No text unless specified.
+**[COMIC LOCK]**
+> Saturday-morning comic-book illustration: bold, uniform black ink outlines; flat, saturated
+> cel-shaded colors with simple hard-edged two-tone shadows; exaggerated cartoon proportions
+> and big expressive faces; dynamic low or tilted camera angles; motion lines, speed lines, and
+> dust puffs for action; a subtle halftone-dot texture in the shadows; clean bright backgrounds.
+> Palette: ink black, interstate red #C41E2A, ocean-wave blue #1F8FD6, sunflower yellow
+> #FFC72C, lime green #7AC143, sky blue #5BC0EB, hot orange #F58220, grape purple #6A4C93,
+> white. In the spirit of classic all-ages mystery-gang comics, but with original characters
+> and an original van. No gradients, no painterly texture, no photorealism, no speech balloons,
+> no text unless specified. Same illustrated universe as the other 8 West Trail assets.
 
-**The VAN LOCK** (every van appearance): a boxy 1985 Ford Econoline cargo van, white body with a
-wide red-over-blue racing stripe along the beltline, chrome bumpers, round headlights, a roof
-rack carrying two blue water jugs and a spare tire, slightly sagging rear suspension, and a
-magnetic door sign reading **8 WEST IT** in bold navy with a small red-and-blue interstate-style
-shield.
+**[VAN LOCK]**
+> The van: a boxy 1985 Ford Econoline cargo van drawn with bold ink outlines and slightly
+> cartoon-squashed proportions, big round friendly headlights, a WHITE body with a wide
+> red-over-blue racing stripe along the beltline, chrome bumpers, a roof rack carrying two blue
+> water jugs and a spare tire, a slightly sagging rear end, and a magnetic door sign reading
+> "8 WEST IT" in bold navy capitals beside a small red-and-blue interstate-style shield. Never
+> teal or green, never flowers, never psychedelic paint.
 
-**The CREW LOCK** (every portrait): friendly modern cartoon portrait, head and shoulders, simple
-shapes, warm believable skin tones, expressive eyes, flat color with soft shading, on a plain
-circular desert-sand background.
+**[CREW LOCK]**
+> Original cartoon character in classic mystery-comic style: bold ink outlines, big expressive
+> eyes and eyebrows, exaggerated body language, flat cel colors with hard two-tone shading,
+> simple readable silhouette, consistent with the other 8 West Trail crew.
 
 ---
 
 ## 2. Brand & identity — ★★★
 
-### A1 · Title lockup, horizontal — `brand/title-lockup.png` (→ I vectorize)
-Where: title screen, masthead, share cards. Min 3000×1000, 3:1. **Text is essential.**
+### A1 · Comic-cover title masthead — `brand/masthead.png` (→ I vectorize)
+3:1, min 3000×1000. **Text essential.**
 ```
-Logo design for a video game titled "THE 8 WEST TRAIL". A wide horizontal lockup: on the left, a
-classic American interstate highway shield shape, red crown on top and blue body, containing a
-large bold white numeral "8" and the small word "WEST" above it; to the right, the words "THE 8
-WEST TRAIL" in heavy condensed slab-serif capitals, ink navy, with a thin white highway dashed
-center-line running through the letters like a road; beneath in small clean sans-serif capitals,
-"PRESENTED BY 8 WEST IT". Flat vector style, crisp edges, on a plain solid white background, no
-shadows, no scene. Sun-bleached Americana road-trip illustration: flat vector-style shapes with
-soft painterly gradients, bold clean silhouettes, minimal outlines, subtle paper grain, late-
-afternoon desert light from the upper left with long warm shadows. Palette: interstate red
-#C41E2A, ocean-wave blue #1F8FD6, highway-sign green #147A4D, desert sand #E9C46A, sunset coral
-#F4845F, sky gradient #7ECBFF to #FFD08A, ink navy #0C1830, white. 1980s national-park travel-
-poster DNA meets modern flat app clarity. Same illustrated universe as the other 8 West Trail
-assets. No photorealism.
+Comic-book cover masthead logo: the words "THE 8 WEST TRAIL" in huge chunky comic display
+lettering with a thick black outline, a second thinner white outline, and a hard drop shadow;
+the "8" is drawn inside a red-and-blue American interstate highway shield that leans slightly;
+the letters are yellow #FFC72C fading to orange #F58220 with a subtle halftone; a thin black
+speed-line burst behind the lettering. On a plain solid white background, no scene. [COMIC LOCK]
 ```
-Also generate: **A1-white** (same, white lettering on solid ink-navy background) for dark scenes.
+Also **A1-plate**: the same masthead on solid neon-green #00FF00 (CUTOUT for overlaying on covers).
 
-### A2 · Title lockup, stacked — `brand/title-stacked.png`
-Where: mobile title, app icon source, splash. Square 1:1, min 2000×2000.
+### A2 · Issue cover — the title screen — `brand/cover-01.png` ★★★
+Comic cover proportions 2:3, min 2000×3000. **This is the title screen.** Text: masthead only
+(I overlay the real masthead), plus a corner box.
 ```
-Stacked square logo for the video game "THE 8 WEST TRAIL": a large American interstate highway
-shield (red crown, blue body) with a bold white "8" and small "WEST" above it fills the upper
-two-thirds; below it, "THE 8 WEST TRAIL" in heavy condensed slab-serif capitals on two lines,
-ink navy; a tiny line of small capitals at the very bottom reads "AN 8 WEST VENTURES COMPANY".
-Flat vector style, crisp edges, plain solid white background, centered, no scene. [STYLE LOCK]
+A comic-book cover, portrait 2:3. Leave the top 22 percent of the page clear white for a
+masthead. Scene: the white 8 West IT van (see van description) skids around a desert highway
+curve toward the viewer at a dramatic low angle, tires smoking, dust puffing, five cartoon
+friends visible through the windshield — one pointing ahead excitedly, one screaming, one
+calmly reading a map, one asleep, one holding a taco — a giant saguaro cactus and a red-and-blue
+"8" interstate shield sign flashing past, purple mountains, a blazing orange sunset sky with
+speed lines. Upper right corner: a small white box reading "No. 1". Bottom edge: a thin strip
+reading "8 WEST IT PRESENTS". [COMIC LOCK] [VAN LOCK]
 ```
-*(Wherever you see `[STYLE LOCK]`, paste the full lock sentence from section 1.)*
+Also generate the **clean plate** (no "No. 1", no strip) as `brand/cover-01-plate.png`.
 
 ### A3 · App icon / favicon — `brand/icon.png`
-Square, min 1024×1024. **CUTOUT-free** — solid design fills the square.
+1:1, min 1024×1024.
 ```
-App icon: a single American interstate highway shield, red crown, deep blue body, bold white
-numeral "8" centered, tiny white "WEST" text above the numeral, on a solid sunset-coral #F4845F
-square with softly rounded corners. Flat vector style, high contrast, readable at 32 pixels, no
-other elements. [STYLE LOCK]
+App icon: a red-and-blue American interstate highway shield with a big white "8", drawn with a
+thick black comic ink outline and a hard black drop shadow, on a solid sunflower-yellow #FFC72C
+square with softly rounded corners, a few short black speed lines behind it. Readable at 32
+pixels. [COMIC LOCK]
 ```
 
 ### A4 · Social share card — `brand/og-card.png`
-1200×630 exactly (1.9:1). Text essential, keep it short.
+1200×630 exactly.
 ```
-Social media preview card, wide 1.9:1. Left third: the 8 West Trail interstate shield logo (red
-crown, blue body, white "8"). Center: a white 1985 Ford Econoline cargo van with a red-over-blue
-racing stripe, roof rack with blue water jugs and a spare tire, driving left-to-right on a
-two-lane desert highway toward distant purple mountains and a huge coral-and-gold sunset sky.
-Top right, heavy slab-serif capitals: "THE 8 WEST TRAIL". Bottom right, small capitals: "A ROAD
-GAME FROM 8 WEST IT". [STYLE LOCK] + [VAN LOCK]
-```
-Also generate a **clean plate** (no text) as `brand/og-card-plate.png`.
-
-### A5 · "Presented by 8 West IT" end plate — `brand/presented-by.png`
-16:9, min 1920×1080. Used on victory, death, and the intro sting.
-```
-A cinematic end-card: centered on a deep ink-navy background, a small glowing lighthouse beam
-sweeps from the left; center text in clean white geometric sans-serif capitals, "PRESENTED BY",
-and beneath it larger, "8 WEST IT", with a small red-and-blue interstate shield between the two
-lines; subtle radial vignette; a faint dotted highway center-line runs across the bottom edge.
-Minimal, elegant, lots of empty space. [STYLE LOCK]
+A wide comic-book panel, 1.9:1, thick black panel border with a white gutter margin: the white
+8 West IT van drives left-to-right on a two-lane desert highway toward purple mountains under an
+orange sunset, dust puffing behind the tires, speed lines, a cartoon roadrunner racing alongside.
+Leave the upper-left third clear sky for lettering. No text. [COMIC LOCK] [VAN LOCK]
 ```
 
-### A6 · Parent company plate (subtle) — `brand/ventures-plate.png`
-6:1 strip, min 2400×400. Monochrome, quiet.
+### A5 · "8 WEST IT PRESENTS" end plate — `brand/presented-by.png`
+16:9, min 1920×1080.
 ```
-A tiny, elegant single-line credit plate: the words "AN 8 WEST VENTURES COMPANY" in thin,
-widely letter-spaced white capitals, a small outline-only interstate shield to the left of the
-text, on a solid ink-navy background. Extremely minimal, like a film credit. [STYLE LOCK]
+A comic-book end-page: a black background with a subtle halftone dot pattern, a yellow caption
+box in the center with a thick black border reading "8 WEST IT PRESENTS" in bold comic
+lettering, and beneath it a small red-and-blue interstate shield; a thin white speed-line burst
+radiating from behind the box. Minimal. [COMIC LOCK]
 ```
 
-### A7 · Splash / loading art — `brand/splash.png`
-9:16 portrait for phones, min 1080×1920; and a 16:9 variant `brand/splash-wide.png`.
+### A6 · Parent-company plate (subtle) — `brand/ventures-plate.png`
+6:1, min 2400×400.
 ```
-Loading screen illustration: a lone white 1985 Ford Econoline van with a red-over-blue stripe and
-a roof rack, seen from behind at dawn, parked at the very start of an empty two-lane highway
-that runs dead straight to the horizon between pecan orchards; the Organ Mountains jagged in the
-distance; a huge pale-gold sky with the last stars fading; a green highway guide sign on the
-right shoulder reads "OCEAN BEACH 730". Quiet, hopeful, epic. [STYLE LOCK] + [VAN LOCK]
+A tiny, quiet comic-style credit strip: a small outline-only interstate shield and the words "AN
+8 WEST VENTURES COMPANY" in thin black comic lettering inside a narrow white caption box with a
+thin black border, on a solid white background. Nothing else. [COMIC LOCK]
 ```
+
+### A7 · Splash / loading page — `brand/splash.png` (9:16) and `brand/splash-wide.png` (16:9)
+```
+A full-page comic splash: the white 8 West IT van seen from behind at dawn, parked at the very
+start of a dead-straight highway between pecan orchards, the jagged Organ Mountains in the
+distance, a huge pale-yellow sky with two fading stars; on the right shoulder a green highway
+guide sign reading "SUNSET CLIFFS 730". A yellow caption box at the top reads "LAS CRUCES, NEW
+MEXICO. DAY ONE." [COMIC LOCK] [VAN LOCK]
+```
+Plus the clean plate (no caption, blank sign) as `-plate`.
 
 ---
 
-## 3. The van — hero sprite — ★★★
+## 3. The van — hero sprite and action poses — ★★★
 
-All van sprites: **CUTOUT** on a *flat solid neon-green #00FF00 background*, side view, full
-vehicle in frame with margin, no ground shadow (I add shadows in-engine). Min 2400×1200, 2:1.
+All van sprites: **CUTOUT** on flat solid neon-green #00FF00, no ground, no shadow (I add
+shadows in-engine). Min 2400×1200 unless noted.
 
-### B1 · Van, clean — `van/van-clean.png`
-```
-Product-style side view of a boxy 1985 Ford Econoline cargo van, driver's side facing left,
-perfectly horizontal, whole vehicle in frame with margin. White body, a wide red-over-blue racing
-stripe along the beltline, chrome bumpers, round headlights, black rubber trim, a roof rack
-carrying two blue water jugs and a spare tire, the rear suspension sagging slightly under load.
-On the driver's door, a magnetic sign reading "8 WEST IT" in bold navy capitals beside a small
-red-and-blue interstate-style shield. Flat vector illustration, no ground, no shadow, on a flat
-solid neon-green #00FF00 background. [STYLE LOCK]
-```
-
-### B2 · Van, dusty — `van/van-dusty.png`
-```
-Exactly the same side-view 1985 Ford Econoline van as before (white body, red-over-blue stripe,
-roof rack with two blue water jugs and a spare tire, "8 WEST IT" door sign with a small
-interstate shield), now coated in pale desert dust from the wheel arches up to the windows, a
-finger-drawn smiley in the dust on the rear panel, a bug-splattered windshield. Flat vector
-illustration, no ground, no shadow, on a flat solid neon-green #00FF00 background. [STYLE LOCK]
-```
-
-### B3 · Van, battered — `van/van-battered.png`
-```
-Exactly the same side-view 1985 Ford Econoline van (white, red-over-blue stripe, roof rack with
-water jugs and spare tire, "8 WEST IT" door sign with shield), now beaten up: a tiny donut spare
-on the rear wheel, a crumpled front bumper held with duct tape, a cracked side window patched
-with cardboard, the roof rack missing its spare tire, a wisp of steam from the hood. Still
-proudly rolling. Flat vector illustration, no ground, no shadow, flat solid neon-green #00FF00
-background. [STYLE LOCK]
-```
-
-### B4 · Wheel (for rolling animation) — `van/van-wheel.png`
-Square 1:1, min 1000×1000.
-```
-A single van wheel in side view: a black tire with a simple tread pattern and a plain silver
-steel wheel with five lug nuts and a small chrome center cap, perfectly circular, centered, flat
-vector illustration, on a flat solid neon-green #00FF00 background. [STYLE LOCK]
-```
-
-### B5 · Van, front three-quarter hero — `van/van-hero.png`
-4:3, min 2400×1800. For the title screen and marketing.
-```
-Front three-quarter view of a boxy 1985 Ford Econoline van (white body, red-over-blue racing
-stripe, chrome bumper, round headlights, roof rack with two blue water jugs and a spare tire,
-"8 WEST IT" magnetic door sign with a small interstate shield) angled toward the viewer, parked
-on cracked desert asphalt, low camera, heroic and slightly comic. Flat vector illustration on a
-flat solid neon-green #00FF00 background, no scene. [STYLE LOCK]
-```
-
-### B6 · Van at night — `van/van-night.png`
-Same as B1 spec, for the Laguna grade / finale.
-```
-Same side-view 1985 Ford Econoline van (white, red-over-blue stripe, roof rack, "8 WEST IT" door
-sign), at night: headlights and taillights glowing, warm cabin light in the windows, cool blue
-moonlight on the body, brake lights bright red. Flat vector illustration, no ground, no shadow,
-flat solid neon-green #00FF00 background. [STYLE LOCK]
-```
-
-### B7 · Dashboard cockpit frame — `van/dashboard.png` ★★
-21:9 ultrawide, min 3440×1440. This becomes the modern travel screen's HUD: the status bar lives
-in the gauges.
-```
-First-person view from the driver's seat of a 1985 Ford Econoline van: a wide, simple cream-and-
-navy vinyl dashboard filling the bottom third of the frame with a large round speedometer, a fuel
-gauge, a temperature gauge, and three small square empty indicator lights; a thin two-spoke
-steering wheel at the lower left; a rearview mirror hanging at the top center with a tiny
-interstate-shield air freshener; the windshield above is EMPTY plain solid neon-green #00FF00
-(the road scene is composited later). A small "8 WEST IT" sticker on the glove box. Flat vector
-illustration, clean readable gauges with no numbers. [STYLE LOCK]
-```
+| filename | Prompt |
+|---|---|
+| `van/van-clean.png` | *"Side view, driver's side facing left, perfectly horizontal, the whole vehicle in frame with margin. [VAN LOCK] Clean and proud, headlights like friendly eyes. Flat solid neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/van-dusty.png` | *"Exactly the same side-view van as before, now coated in pale desert dust up to the windows, a finger-drawn smiley in the dust on the rear panel, bug splats on the windshield. [VAN LOCK] Neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/van-battered.png` | *"Exactly the same side-view van, beaten up: a tiny donut spare on the rear wheel, a crumpled bumper held on with duct tape, a cracked window patched with cardboard, the roof rack missing its spare tire, a wisp of steam from the hood, but still proudly rolling. [VAN LOCK] Neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/van-wheel.png` (1:1) | *"A single cartoon van wheel in side view: black tire with a simple tread, plain silver steel wheel with five lug nuts and a chrome center cap, thick ink outline, perfectly circular and centered, neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/van-hero.png` (4:3) ★★★ | *"Front three-quarter view of the van angled toward the viewer, low heroic camera, headlights gleaming, a little cartoon wobble in the lines like it just came to a stop, dust puffs at the tires. [VAN LOCK] Neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/van-skid.png` ★★★ | *"Side view of the van mid-skid: tilted onto two wheels, tires smoking, speed lines streaming off the back, the roof-rack water jugs flying loose on their straps. [VAN LOCK] Neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/van-airborne.png` ★★ | *"Side view of the van airborne off a bump: all four wheels off the ground, front end lifted, motion lines beneath, a spare tire and a taco flying off the roof rack. [VAN LOCK] Neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/van-steam.png` ★★ | *"Side view of the van stopped with the hood popped open, a huge white cartoon cloud of steam billowing up, the headlights drooping like sad eyes. [VAN LOCK] Neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/van-splash.png` ★★ (P2) | *"Side view of the van fording a river: water up to the doors, a big cartoon bow wave splashing forward, a fish flying out of the spray. [VAN LOCK] Neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/van-night.png` ★★ | *"Side view of the van at night: headlights throwing bright yellow cones, brake lights glowing red, warm light in the windows, the body in cool purple shadow. [VAN LOCK] Neon-green #00FF00 background. [COMIC LOCK]"* |
+| `van/dashboard.png` (21:9, min 3440×1440) ★★ | *"First-person view from the driver's seat of a cartoon 1985 van: a simple cream-and-navy vinyl dashboard fills the bottom third with a big round speedometer, a fuel gauge, a temperature gauge, and three square blank indicator lights, all with thick ink outlines and no numbers; a two-spoke steering wheel lower left; a rearview mirror top center with a tiny interstate-shield air freshener; the windshield above is EMPTY flat solid neon-green #00FF00. A small '8 WEST IT' sticker on the glove box. [COMIC LOCK]"* |
 
 ---
 
-## 4. Region backdrops (parallax panoramas) — ★★★
+## 4. The crew — characters, not just portraits — ★★★
 
-Ultrawide 8:3, min 3200×1200. Each region: full scene first; then, if the tool cooperates, the
-same scene as **three layers** — `-sky` (sky and far mountains only), `-mid` (middle-distance
-land and landmarks, sky area flat neon-green), `-road` (road and roadside foreground only,
-everything else neon-green). Full scene alone is fine for v1. The road always runs left-to-right
-along the bottom quarter, seen from slightly above and behind (the van sprite drives on it).
+Comics need bodies. Each crew member gets a **model sheet** (the master), a **headshot**
+(status bar), and **pose sheets** (for panels). All CUTOUT on neon-green #00FF00.
 
-### C01 · Mesilla Valley, dawn — `regions/01-mesilla.webp`
-```
-Ultrawide panoramic landscape: a two-lane highway runs left to right across the bottom quarter;
-beyond it, rows of pecan orchards in bright green, an adobe farmhouse with red chile ristras
-hanging by the door, and in the distance the jagged granite spires of the Organ Mountains under
-a dawn sky, pale gold at the horizon fading to soft blue, the last two stars still out. [STYLE
-LOCK]
-```
+### The twelve (use these exact descriptions every time so they stay consistent)
 
-### C02 · The dust flats — `regions/02-dust-flats.webp`
-```
-Ultrawide panoramic landscape: a straight two-lane highway across the bottom, dead flat desert
-scrub in sand and sage on both sides stretching to a razor-flat horizon, a leaning barbed-wire
-fence, a distant water tower, a yellow diamond road sign, and on the far right edge a faint brown
-haze beginning to lift off the ground. Big hard blue sky, harsh midday light, heat shimmer
-implied by the wavy horizon line. [STYLE LOCK]
-```
+| id | Character |
+|---|---|
+| 01 | **Wes** — a woman in her 50s, silver-streaked black hair under a red bandana, aviator sunglasses pushed up, denim work shirt, sleeves rolled; the road boss, unflappable |
+| 02 | **Dot** — a Black woman in her 30s, short natural hair, round tortoiseshell glasses, crisp yellow polo, a lanyard with a badge; the planner, holds the clipboard |
+| 03 | **Cache** — a lanky young man, red beard, green trucker cap, gray hoodie, headphones around his neck; the sysadmin, permanently mildly alarmed |
+| 04 | **Sol** — a Latino man in his 40s, thick mustache, straw cowboy hat, orange western shirt with pearl snaps; knows every diner, laughs with his whole face |
+| 05 | **Piper** — a South Asian woman in her 20s, long braid, bright yellow rain shell, a camera on a strap; the photographer, always leaning out a window |
+| 06 | **Hank** — an older white man, white beard, loud Hawaiian shirt, reading glasses on a cord, sandals with socks; came for the beach |
+| 07 | **Sky** — a nonbinary person, teal undercut, nose ring, black band tee, purple jeans; the intern who types 140 words a minute |
+| 08 | **Ping** — an East Asian man in his 30s, tousled hair, white tee, a small interstate-shield tattoo on his forearm, a rag in his back pocket; the mechanic |
+| 09 | **Rosa** — a Native American woman in her 40s, long dark hair, turquoise earrings, a blue fleece vest, a folded paper map always in hand; the navigator |
+| 10 | **Bo** — a heavyset white guy in his 20s, buzzcut, enormous grin, a navy "8 WEST IT" company polo; the new hire, eats everything |
+| 11 | **Marge** — a woman in her 60s, cropped gray hair, wide sun hat, binoculars around her neck, khaki vest; the birder, notices everything |
+| 12 | **Kit** — a teenage boy, curly hair, braces, a backwards blue baseball cap, an oversized hoodie; somebody's kid, insisted on coming |
 
-### C03 · Texas Canyon — `regions/03-texas-canyon.webp`
+### Prompt frames
+
+**Model sheet** — `crew/NN-model.png`, 16:9, min 2400×1350:
 ```
-Ultrawide panoramic landscape: the highway curves gently through a field of enormous rounded
-granite boulders stacked and balanced on each other like a giant's abandoned marbles, warm tan
-and rust, with dark shadows in the gaps; scrub oak and yucca between them; a low afternoon sun
-throwing long shadows; a rest-area picnic ramada in the middle distance. [STYLE LOCK]
+Character model sheet for an original comic character: [CHARACTER]. Three full-body views in a
+row on a flat solid neon-green #00FF00 background — front, three-quarter, and side — standing
+relaxed, same outfit and colors in all three, plus two small head studies in the corner showing a
+big grin and a worried face. [CREW LOCK] [COMIC LOCK]
 ```
 
-### C04 · Sonoran saguaro / Tucson valley — `regions/04-sonoran.webp`
+**Headshot** — `crew/NN.png`, 1:1, min 1024×1024:
 ```
-Ultrawide panoramic landscape: the highway descends into a wide valley forest of tall saguaro
-cacti with raised arms, ocotillo and palo verde, the low white domes of a Spanish mission
-glowing in the distance, the Santa Catalina mountains blue-purple behind, a sky going from gold
-at the horizon to deep blue overhead. [STYLE LOCK]
-```
-
-### C05 · Picacho Peak and the farmland — `regions/05-picacho.webp`
-```
-Ultrawide panoramic landscape: a dramatic lone volcanic peak with a distinctive notched, tilted
-summit rises on the left; to the right, flat irrigated cotton fields in neat green rows, a
-center-pivot irrigation arm, and a green highway sign; a two-lane road across the bottom; a big
-bright afternoon sky with a few flat-bottomed clouds. [STYLE LOCK]
+Head-and-shoulders portrait of [CHARACTER], neutral-friendly expression, looking slightly toward
+camera, inside a simple circle, on a flat solid neon-green #00FF00 background. [CREW LOCK]
+[COMIC LOCK]
 ```
 
-### C06 · Gila Bend and Dateland lowlands — `regions/06-lowlands.webp`
+**Mood headshots** (★★) — `crew/NN-rough.png`, `crew/NN-critical.png`: same as headshot with
+*"...sunburned, sweating, exhausted"* and *"...pale green, wrapped in a blanket, spiral eyes"*.
+
+**Pose sheet** (★★) — `crew/NN-poses.png`, 16:9, min 2400×1350:
 ```
-Ultrawide panoramic landscape: low bone-dry desert with a dry sandy riverbed (the Gila) crossed
-by a small concrete bridge, a grove of tall date palms around a tiny roadside stand with a
-hand-painted sign, black volcanic hills in the distance, a mid-century space-age motel sign with
-a stylized rocket far off on the right, blazing white-gold sky. [STYLE LOCK]
+A comic pose sheet of [CHARACTER], five full-body poses in a row on a flat solid neon-green
+#00FF00 background: (1) cheering with both arms up, (2) panicking mid-run with legs a blur,
+(3) slumped asleep on an invisible seat, (4) pointing dramatically off to the left, (5) sitting
+cross-legged eating a taco. Same outfit and colors throughout. [CREW LOCK] [COMIC LOCK]
 ```
 
-### C07 · Yuma and the Colorado River — `regions/07-yuma.webp`
-```
-Ultrawide panoramic landscape: a wide, fast green-blue river (the Colorado) crossed by an old
-steel truss bridge, cottonwoods along the banks, the sandstone walls of an old territorial
-prison on a bluff, a small paddle ferry landing, farm fields beyond; the highway approaches the
-bridge from the left; warm late light on the water. [STYLE LOCK]
-```
-
-### C08 · Imperial Dunes — `regions/08-dunes.webp`
-```
-Ultrawide panoramic landscape: enormous golden sand dunes with sharp wind-carved ridges rolling
-away to the horizon, the highway cutting through with sand drifting across the asphalt, a
-"BLOWING SAND" yellow diamond sign, a tiny dune buggy on a distant crest, a hazy pale sky with
-wind streaks. [STYLE LOCK]
-```
-
-### C09 · Imperial Valley, below sea level — `regions/09-imperial-valley.webp`
-```
-Ultrawide panoramic landscape: vast flat farm fields in stripes of green and gold, irrigation
-canals with straight water, distant packing sheds, a green highway sign on a post reading "SEA
-LEVEL" with a horizontal line, hazy white heat, the Laguna Mountains a faint blue wall on the
-far right horizon. [STYLE LOCK]
-```
-
-### C10 · In-Ko-Pah boulders and Jacumba — `regions/10-in-ko-pah.webp`
-```
-Ultrawide panoramic landscape: the highway climbs steeply into a mountain of piled tan granite
-boulders, a runaway-truck ramp of deep gravel branching off to the right, a strange stone tower
-built of boulders on a summit, the flat valley floor falling away far below on the left, a
-cooler sky, first pines appearing. [STYLE LOCK]
-```
-
-### C11 · Laguna Summit, the pines — `regions/11-laguna.webp`
-```
-Ultrawide panoramic landscape: a mountain highway at the summit among tall Jeffrey pines and
-black oak, a yellow sign reading "6% GRADE" with a truck-on-a-slope symbol, the road dropping
-away steeply to the right toward a distant hazy coastal plain and, on the very far horizon, a
-thin silver line of the Pacific Ocean; cool blue-and-gold evening light. [STYLE LOCK]
-```
-
-### C12 · Ocean Beach, the end of the 8 — `regions/12-ocean-beach.webp`
-```
-Ultrawide panoramic landscape: the highway ends at a beach — a long wooden pier stretches into
-a calm Pacific Ocean, palm trees lean in a sea breeze, a lifeguard tower, surfers, an enormous
-coral-gold-and-violet sunset sky with the sun touching the water, gulls, and a green highway
-sign reading "END 8" at the sand's edge. Triumphant and calm. [STYLE LOCK]
-```
-
-### C13 · Night variants — `regions/10-in-ko-pah-night.webp`, `11-laguna-night.webp` ★★
-Regenerate C10 and C11 with: *"...at night: a deep ink-navy sky full of stars, a bright moon,
-the road lit only by headlight cones, distant city glow on the horizon."*
+### Group shots — ★★★
+- `crew/group-windshield.png` (16:9, CUTOUT): *"The five default crew — Wes, Dot, Cache, Sol, and Piper (see descriptions) — crammed shoulder to shoulder as seen through a van windshield, framed by the windshield's thick ink outline, each with a different expression (excited, calm, alarmed, laughing, snapping a photo), neon-green #00FF00 background outside the glass. [CREW LOCK] [COMIC LOCK]"*
+- `crew/group-lineup.png` (21:9, CUTOUT): *"All twelve crew characters standing in a row like a team lineup, varied heights and poses, on a flat solid neon-green #00FF00 background. [CREW LOCK] [COMIC LOCK]"*
 
 ---
 
-## 5. Weather plates — ★★
+## 5. Establishing-shot panels (the twelve regions) — ★★★
 
-Ultrawide 8:3, min 3200×1200. Layered over regions; semi-transparent in-engine.
+The Comic theme's travel screen is a wide splash panel with the van sprite composited on the
+road. **8:3, min 3200×1200**, drawn *as a comic panel* (thick black border with a white margin is
+fine — I crop). The road runs left to right across the bottom quarter, seen slightly from above
+and behind. No van in these (it's composited). No text.
 
-### D1 · Dust-storm wall — `weather/dust-wall.png` (CUTOUT, neon-green background)
-```
-A towering wall of brown desert dust rolling toward the viewer, filling the frame from the
-ground to the top, dense billowing ochre and umber with a bright dusty-gold edge at the top
-where the sun still hits it, the base a boiling roll of dark sand. No ground, no sky visible
-above it, on a flat solid neon-green #00FF00 background where the storm does not cover. [STYLE
-LOCK]
-```
+| filename | Scene (prefix each with "A wide comic-book establishing-shot panel:" and suffix with "[COMIC LOCK]") |
+|---|---|
+| `regions/01-mesilla.webp` | a two-lane highway across the bottom; rows of bright green pecan orchards, an adobe farmhouse with red chile ristras by the door, the jagged Organ Mountains in the distance under a dawn sky, yellow at the horizon to sky-blue, two fading stars |
+| `regions/02-dust-flats.webp` | a dead-straight highway across dead-flat sand-and-sage desert to a razor horizon, a leaning barbed-wire fence, a distant water tower, a yellow diamond road sign, a faint brown haze lifting on the far right; harsh noon light, wavy heat lines |
+| `regions/03-texas-canyon.webp` | the highway curving through a field of enormous rounded granite boulders stacked like a giant's marbles, tan and rust with deep purple shadows, scrub oak and yucca, a picnic ramada |
+| `regions/04-sonoran.webp` | the highway descending into a valley forest of tall saguaros with raised arms, ocotillo, palo verde, the white domes of a Spanish mission glowing far off, purple mountains, an orange-to-blue sky |
+| `regions/05-picacho.webp` | a lone volcanic peak with a notched tilted summit on the left; neat rows of green cotton fields and a center-pivot irrigation arm on the right; big bright sky with flat-bottomed clouds |
+| `regions/06-lowlands.webp` | bone-dry desert with a sandy dry riverbed crossed by a small concrete bridge, a grove of tall date palms around a tiny roadside stand, black volcanic hills, a mid-century motel sign with a rocket far off; blazing yellow-white sky |
+| `regions/07-yuma.webp` | a wide fast green-blue river crossed by an old steel truss bridge, cottonwoods on the banks, an adobe territorial prison on a bluff, a little paddle ferry at a landing, the highway approaching the bridge from the left |
+| `regions/08-dunes.webp` | enormous golden dunes with knife-edged ridges rolling to the horizon, the highway cut through with sand drifting across the asphalt, a "BLOWING SAND" yellow diamond sign, a tiny dune buggy on a distant crest, wind streaks in a pale sky |
+| `regions/09-imperial-valley.webp` | vast flat farm fields in stripes of green and yellow, straight irrigation canals, distant packing sheds, a green sign on a post reading "SEA LEVEL", the Laguna Mountains a faint purple wall on the far horizon |
+| `regions/10-in-ko-pah.webp` | the highway climbing steeply into a mountain of piled tan boulders, a runaway-truck ramp of deep gravel branching right, a strange stone tower on a summit, the valley floor falling away far below on the left, first pines |
+| `regions/11-laguna.webp` | a mountain highway at the summit among tall pines and black oaks, a yellow "6% GRADE" sign with a truck-on-a-slope symbol, the road dropping steeply right toward a hazy coastal plain and a thin silver line of ocean, cool purple-and-gold evening light |
+| `regions/12-sunset-cliffs.webp` ★★★ | the road ends at the edge of the continent: golden sandstone cliffs dropping to a blue Pacific with white surf, sea caves, ice plant and palms, a lifeguard truck, a low orange sun on the water, gulls, and a green highway sign at the road's end reading "END 8" |
 
-### D2 · Monsoon cell — `weather/monsoon.png` (CUTOUT)
-```
-A massive dark-teal monsoon thunderhead with a flat anvil top, a gray curtain of heavy rain
-falling from it in slanted streaks, a single bright lightning bolt, on a flat solid neon-green
-#00FF00 background below and around it. [STYLE LOCK]
-```
-
-### D3 · Heat shimmer strip — `weather/heat.png` ★
-```
-An abstract horizontal band of desert heat shimmer: wavy transparent-looking ripples in pale
-gold and white on a flat solid neon-green #00FF00 background, very subtle, wide and thin. [STYLE
-LOCK]
-```
-
-### D4 · Star field — `weather/stars.png` ★
-```
-A seamless deep ink-navy night sky full of small crisp white stars of varying sizes and a faint
-band of the Milky Way, no ground, no moon, tileable horizontally. [STYLE LOCK]
-```
+**Night variants** (★★): regenerate 10 and 11 with *"...at night: a deep grape-purple sky full of
+stars and a big cartoon moon, the road lit only by headlight cones, city glow on the horizon."*
 
 ---
 
-## 6. Stop postcards (17) — ★★★ for the six majors, ★★ for the rest
+## 6. Weather plates — ★★
 
-Vintage "greetings from" travel postcard. 8:5, min 1600×1000. Text: only the place name in big
-retro letters. Generate a **clean plate** (no lettering) for each as `stops/<id>-plate.webp`.
-Standard prompt frame:
+8:3, min 3200×1200, CUTOUT on neon-green #00FF00 where the weather doesn't cover.
 
-> *"A vintage travel postcard illustration, 8:5 landscape, with the place name in big
-> retro block letters across the top: '[NAME]'. Scene: [SCENE]. Slightly faded, a thin white
-> border with rounded corners, a tiny 'THE 8 WEST TRAIL' stamp in the corner. [STYLE LOCK]"*
+| filename | Prompt |
+|---|---|
+| `weather/dust-wall.png` | *"A towering cartoon wall of brown desert dust rolling toward the viewer, billowing orange and umber with a bright yellow lit edge on top, a boiling roll of dark sand at the base, drawn with bold ink outlines and halftone, on a flat solid neon-green #00FF00 background wherever the dust does not cover. [COMIC LOCK]"* |
+| `weather/monsoon.png` | *"A massive dark purple-teal cartoon thunderhead with a flat anvil top, a gray curtain of slanted rain streaks, one jagged yellow lightning bolt with a black outline, on a flat solid neon-green #00FF00 background below and around it. [COMIC LOCK]"* |
+| `weather/heat.png` ★ | *"A thin horizontal band of cartoon heat shimmer: wavy pale-yellow ripple lines with thin ink outlines, on a flat solid neon-green #00FF00 background. [COMIC LOCK]"* |
+| `weather/stars.png` ★ | *"A seamless deep grape-purple night sky full of small crisp white cartoon stars of three sizes and a faint Milky Way band, tileable horizontally, no ground, no moon. [COMIC LOCK]"* |
+
+---
+
+## 7. Stop postcards (17) — ★★★ for the six majors, ★★ for the rest
+
+Now drawn as **single comic panels with a yellow caption box** naming the stop. 8:5, min
+1600×1000. Each also as a **clean plate** (no caption) — `stops/<id>-plate.webp`.
+
+Frame: *"A single comic-book panel with a thick black border, 8:5. A yellow caption box in the
+top-left corner reads '[NAME]' in bold comic lettering. Scene: [SCENE]. [COMIC LOCK]"*
 
 | id / filename | NAME | SCENE |
 |---|---|---|
-| `stops/las-cruces.webp` ★★★ | LAS CRUCES | the Organ Mountains' granite needles at sunrise behind an adobe plaza, strings of red chile ristras, a pecan orchard, and the white van parked at a general store with an "OUTFITTER" sign |
-| `stops/deming.webp` | DEMING | a chrome-and-neon roadside diner with a giant duck mascot on the roof, a duck race banner, trucks in the lot, dust on the horizon |
-| `stops/lordsburg.webp` | LORDSBURG | a wind-bent 1960s motel sign with half its bulbs out, tumbleweed frozen mid-roll, a brown dust haze swallowing the road west |
-| `stops/texas-canyon.webp` | TEXAS CANYON | enormous balanced granite boulders stacked improbably, a tiny figure taking a photo, long shadows |
-| `stops/tucson.webp` ★★★ | TUCSON | a forest of saguaro cacti with raised arms in front of a white mission church, purple mountains, a gold sky, a road sign shaped like an arrow saying "WEST" |
+| `stops/las-cruces.webp` ★★★ | LAS CRUCES | the Organ Mountains' granite needles at sunrise behind an adobe plaza, strings of red chile ristras, a pecan orchard, a general store with an "OUTFITTER" sign and a chalkboard of prices |
+| `stops/deming.webp` | DEMING | a chrome-and-neon roadside diner with a giant cartoon duck mascot on the roof, a "DUCK RACES" banner, big rigs in the lot, dust on the horizon |
+| `stops/lordsburg.webp` | LORDSBURG | a wind-bent 1960s motel sign with half its bulbs out, a tumbleweed frozen mid-roll, a brown dust haze swallowing the road west |
+| `stops/texas-canyon.webp` | TEXAS CANYON | enormous balanced granite boulders stacked impossibly, a tiny figure taking a photo of a boulder the size of a house |
+| `stops/tucson.webp` ★★★ | TUCSON | a forest of saguaros with raised arms in front of a white mission church, purple mountains, an orange sky, an arrow-shaped sign reading "WEST" |
 | `stops/picacho-peak.webp` | PICACHO PEAK | the notched volcanic peak at golden hour above a field of orange poppies |
-| `stops/casa-grande.webp` | CASA GRANDE | a highway junction with a big green sign and an interstate "8" shield pointing west, cotton fields, an ancient adobe ruin under a modern protective roof in the distance |
+| `stops/casa-grande.webp` | CASA GRANDE | a highway junction with a big green sign and a red-and-blue interstate "8" shield pointing west, cotton fields, an ancient adobe ruin under a modern steel roof |
 | `stops/gila-bend.webp` | GILA BEND | a mid-century space-age motel with a rocket-shaped neon sign and a flying-saucer roof, a dry riverbed bridge, black lava hills |
-| `stops/dateland.webp` | DATELAND | a roadside stand under tall date palms with a hand-painted "DATE SHAKES" sign, a frosty shake in a paper cup in the foreground |
-| `stops/yuma.webp` ★★★ | YUMA | an old steel truss bridge over the wide green Colorado River, an adobe territorial prison on the bluff, a paddle ferry, cottonwoods |
-| `stops/center-of-the-world.webp` | CENTER OF THE WORLD | a small pink granite pyramid on a plaza, a bronze plaque, a maze of engraved granite walls, endless flat desert, one very serious sundial |
-| `stops/imperial-dunes.webp` | IMPERIAL DUNES | knife-edged golden sand dunes with the highway half-buried, a dune buggy airborne off a crest |
-| `stops/el-centro.webp` ★★★ | EL CENTRO | a green "ELEVATION SEA LEVEL" sign on a post in the middle of flat green farm fields with a straight irrigation canal, hazy heat |
+| `stops/dateland.webp` | DATELAND | a roadside stand under tall date palms with a hand-painted "DATE SHAKES" sign, a frosty shake in a paper cup huge in the foreground |
+| `stops/yuma.webp` ★★★ | YUMA | an old steel truss bridge over the wide green Colorado River, an adobe territorial prison on the bluff, a little paddle ferry, cottonwoods |
+| `stops/center-of-the-world.webp` | CENTER OF THE WORLD | a small pink granite pyramid on a plaza with a bronze plaque, a maze of engraved granite walls, endless flat desert, one very serious sundial |
+| `stops/imperial-dunes.webp` | IMPERIAL DUNES | knife-edged golden dunes with the highway half-buried, a dune buggy airborne off a crest with speed lines |
+| `stops/el-centro.webp` ★★★ | EL CENTRO | a green "ELEVATION SEA LEVEL" sign on a post in the middle of flat green farm fields with a straight irrigation canal, heat lines everywhere |
 | `stops/in-ko-pah.webp` | IN-KO-PAH | a mountain of piled tan boulders with a hand-built stone tower on top, a deep gravel runaway-truck ramp, the valley floor far below |
-| `stops/jacumba.webp` | JACUMBA | a steaming hot-spring pool at a small desert resort at dusk, string lights, boulders, the border hills |
+| `stops/jacumba.webp` | JACUMBA | a steaming hot-spring pool at a small desert resort at dusk, string lights, boulders, purple border hills |
 | `stops/laguna-summit.webp` ★★★ | LAGUNA SUMMIT | tall pines at a mountain summit, a yellow "6% GRADE" sign, the road plunging toward a hazy coastal plain and a silver sliver of ocean |
-| `stops/ocean-beach.webp` ★★★ | OCEAN BEACH | a long wooden pier into a calm Pacific at sunset, palm trees, surfers, gulls, and a small green sign at the sand reading "END 8" |
+| `stops/sunset-cliffs.webp` ★★★ | SUNSET CLIFFS | golden sandstone cliffs at the end of the road, white surf forty feet below, a green sign reading "END 8", a huge orange sun on the Pacific |
 
 ---
 
-## 7. Billboards & signage — the marketing core — ★★★
+## 8. SFX lettering pack — ★★★ (pure comic; the game slams these on screen)
 
-Billboards are seen roadside as the van drives; they are the loudest 8 West IT placement in the
-game. **Aspect 3:1, min 2400×800.** Each: a wooden-and-steel roadside billboard structure seen
-slightly from below, the face carrying the design. Generate every one **twice**: with text, and
-a **clean plate** with an empty white face (`billboards/plate-blank.png` once is enough).
+Each word as chunky comic sound-effect lettering, **CUTOUT** on neon-green #00FF00, 3:1 or 2:1,
+min 2400 px wide. I vectorize these so they can scale and animate. Frame:
 
-Standard frame:
+*"Comic-book sound-effect lettering of the single word '[WORD]' in huge chunky, tilted,
+overlapping capital letters with a thick black outline, a second white outline, a hard black
+drop shadow, and a [COLOR] fill with a subtle halftone; a small black speed-line burst behind
+it; on a flat solid neon-green #00FF00 background; nothing else. [COMIC LOCK]"*
 
-> *"A classic American roadside highway billboard on two steel posts, seen slightly from below
-> against a plain flat neon-green #00FF00 background (no scene). The billboard face design:
-> [DESIGN]. Clean flat vector poster style, high contrast, readable at a glance. [STYLE LOCK]"*
+| filename | WORD | COLOR | Used for |
+|---|---|---|---|
+| `sfx/screech.png` | SCREEECH | yellow-to-orange | skids, storm choices |
+| `sfx/krashh.png` | KRASHH | red | crashes, the grade |
+| `sfx/vroom.png` | VROOOM | blue | departure, tailwind |
+| `sfx/bang.png` | BANG! | red | flat tire |
+| `sfx/hisss.png` | HISSSSS | white-to-gray | radiator |
+| `sfx/snap.png` | SNAP! | orange | belt |
+| `sfx/kaching.png` | KA-CHING! | green | store purchases |
+| `sfx/zzz.png` | ZZZ | purple | rest day |
+| `sfx/chomp.png` | CHOMP! | orange | snack run hits |
+| `sfx/sploosh.png` | SPLOOSH | blue | river fording |
+| `sfx/whoosh.png` | WHOOSH | tan | dust storm |
+| `sfx/kraka-boom.png` | KRAKA-BOOM | purple-and-yellow | monsoon lightning |
+| `sfx/rattle.png` | RATTLE RATTLE | green | snakebite |
+| `sfx/beep-beep.png` | BEEP BEEP | yellow | tow truck |
+| `sfx/wah-wah.png` | WAH-WAAAH | gray | deaths (sad trombone) |
+| `sfx/hooray.png` | HOORAY! | rainbow | victory |
+
+---
+
+## 9. Billboards & signage — the marketing core — ★★★
+
+Billboards scroll past roadside while driving — the loudest 8 West IT placement in the game.
+3:1, min 2400×800, CUTOUT on neon-green #00FF00: a wooden-and-steel roadside billboard on two
+posts seen slightly from below, drawn with thick ink outlines. Generate each **with text** and one
+**blank-face plate** (`billboards/plate-blank.png`) for in-engine lettering.
+
+Frame: *"A classic American roadside billboard on two steel posts seen slightly from below,
+drawn with a thick black comic outline, on a flat solid neon-green #00FF00 background (no scene).
+The billboard face design: [DESIGN]. Bold, flat, poster-simple, readable at a glance. [COMIC LOCK]"*
 
 | filename | DESIGN (exact text in quotes) |
 |---|---|
-| `billboards/8westit-01.png` | white face, huge navy slab-serif headline "WE FIX IT BEFORE IT BREAKS." with a small red-and-blue interstate shield and the words "8 WEST IT 365" bottom right |
-| `billboards/8westit-02.png` | ink-navy face, a glowing lighthouse beam sweeping across, headline in white "365 DAYS. ZERO FIRE DRILLS." and "8 WEST IT 365" in the corner |
-| `billboards/8westit-03.png` | sunset-coral face, an illustration of the white 8 West IT van with a laptop riding in the passenger seat wearing a seatbelt, headline "YOUR IT, RIDING SHOTGUN." and "8 WEST IT 365" |
-| `billboards/8westit-04.png` | styled exactly like a green highway guide sign with white capitals: "NEXT EXIT: PEACE OF MIND" with a white arrow, small line "8 WEST IT 365 · 8WESTIT.COM" |
-| `billboards/8westit-05.png` | white face, a cartoon padlock wearing sunglasses on a beach chair, headline "RANSOMWARE? NOT ON OUR ROAD." and "8 WEST IT 365" |
-| `billboards/8westit-06.png` | ocean-blue face, a stylized San Diego skyline and pier, headline "SAN DIEGO'S IT CREW. NOW SERVING THE WHOLE 8." and "8 WEST IT 365" |
-| `billboards/8westit-07.png` | desert-sand face, three checkmarks stacked next to the words "PATCHED. BACKED UP. BEACH-READY." and "8 WEST IT 365" |
-| `billboards/8westit-08.png` | split face: left half a tidy server rack, right half a perfect sunset over the ocean, headline "MANAGED IT. UNMANAGED SUNSETS." and "8 WEST IT 365" |
+| `billboards/8westit-01.png` | white face, a huge red comic headline "WE FIX IT BEFORE IT BREAKS!" with a small red-and-blue interstate shield and "8 WEST IT 365" bottom right |
+| `billboards/8westit-02.png` | dark navy face, a cartoon lighthouse throwing a yellow beam across it, headline in white "365 DAYS. ZERO FIRE DRILLS." and "8 WEST IT 365" |
+| `billboards/8westit-03.png` | orange face, the white 8 West IT van with a cartoon laptop buckled into the passenger seat giving a thumbs-up, headline "YOUR IT, RIDING SHOTGUN." and "8 WEST IT 365" |
+| `billboards/8westit-04.png` | styled exactly like a green highway guide sign with white capitals "NEXT EXIT: PEACE OF MIND" and a white arrow, small line "8 WEST IT 365 · 8WESTIT.COM" |
+| `billboards/8westit-05.png` | white face, a cartoon padlock in sunglasses lounging on a beach chair, headline "RANSOMWARE? NOT ON OUR ROAD." and "8 WEST IT 365" |
+| `billboards/8westit-06.png` | sky-blue face, a cartoon San Diego skyline and pier, headline "SAN DIEGO'S IT CREW. NOW SERVING THE WHOLE 8." and "8 WEST IT 365" |
+| `billboards/8westit-07.png` | yellow face, three big green checkmarks beside "PATCHED. BACKED UP. BEACH-READY." and "8 WEST IT 365" |
+| `billboards/8westit-08.png` | split face: a tidy cartoon server rack on the left, a perfect ocean sunset on the right, headline "MANAGED IT. UNMANAGED SUNSETS." and "8 WEST IT 365" |
 
-### F9 · Water tower (subtle parent) — `signage/water-tower.png` (CUTOUT) ★★
-```
-A classic small-town steel water tower on four legs with a round tank, painted a faded white,
-with the words "8 WEST" in weathered navy capitals around the tank and, much smaller beneath,
-"VENTURES". Slightly rusted, a ladder up one leg. Flat vector illustration on a flat solid
-neon-green #00FF00 background. [STYLE LOCK]
-```
+**Subtle parent-company set** (★★, all CUTOUT, [COMIC LOCK]):
+- `signage/water-tower.png` — *"A small-town steel water tower on four legs with a round tank, faded white paint, the words '8 WEST' in weathered navy capitals around the tank and much smaller beneath, 'VENTURES', a little rust, a ladder up one leg, thick ink outlines, neon-green #00FF00 background."*
+- `signage/ghost-sign.png` — *"The side wall of an old brick warehouse with a faded, peeling painted advertisement: '8 WEST VENTURES' in ghostly white block capitals with an old-fashioned interstate shield, half worn away, and a small fresh '8 WEST IT' sticker on the door below; thick ink outlines; neon-green #00FF00 background."*
+- `signage/tow-truck.png` ★★★ — *"Side view of a chunky cartoon 1980s wrecker tow truck with a boom and hook, white with a red-over-blue fleet stripe, an amber light bar, the door reading '8 WEST IT' in bold navy with a small interstate shield and beneath it 'ROADSIDE DIV.', a tiny 'AN 8 WEST VENTURES COMPANY' line on the rear fender, thick ink outlines, neon-green #00FF00 background."*
 
-### F10 · Ghost sign on brick (subtle parent) — `signage/ghost-sign.png` (CUTOUT) ★★
-```
-The side wall of an old brick warehouse with a faded, peeling painted advertisement from decades
-ago: "8 WEST VENTURES" in ghostly white block capitals with an old-fashioned interstate shield,
-half worn away by sun, a small modern 8 West IT sticker fresh on the door below. Flat vector
-illustration on a flat solid neon-green #00FF00 background. [STYLE LOCK]
-```
-
-### F11 · Tow truck — `signage/tow-truck.png` (CUTOUT) ★★★
-```
-Side view of a chunky 1980s wrecker tow truck with a boom and hook, painted white with a red-
-over-blue stripe matching a company fleet, amber light bar on the cab, the door reading "8 WEST
-IT" in bold navy with a small interstate shield and beneath it in small letters "ROADSIDE DIV.",
-a tiny "AN 8 WEST VENTURES COMPANY" line on the rear fender. Flat vector illustration on a flat
-solid neon-green #00FF00 background. [STYLE LOCK]
-```
-
-### F12 · Highway signage kit — `signage/*.png` (each CUTOUT) ★★
-One prompt each; all "flat vector, front-on, on a flat solid neon-green #00FF00 background,
-[STYLE LOCK]":
-- `shield-i8.png` — *"An American interstate highway shield: red crown reading 'INTERSTATE', blue body with a large white '8'."*
-- `shield-historic-80.png` — *"A brown-and-cream 'HISTORIC US 80' route marker shield with the number 80 in the classic US highway badge shape."*
-- `guide-sign-blank.png` — *"A blank green highway guide sign, white border, mounted on two gray posts, empty face."* (I set the text in-engine: these become the modern theme's **buttons**.)
-- `exit-sign.png` — *"A green highway exit sign reading 'EXIT' with a white arrow angled up-right."*
-- `mile-marker.png` — *"A small green roadside mile-marker post with the white number '8'."*
-- `sign-dust-storms.png` — *"A yellow diamond warning sign reading 'DUST STORMS MAY EXIST' in black."* (real Arizona sign)
-- `sign-flash-flood.png` — *"A yellow diamond warning sign reading 'WATCH FOR FLASH FLOODS'."*
-- `sign-grade.png` — *"A yellow diamond warning sign showing a truck on a slope with '6% GRADE' beneath."*
-- `sign-runaway-ramp.png` — *"A yellow warning sign reading 'RUNAWAY TRUCK RAMP' with an arrow."*
-- `sign-sea-level.png` — *"A green sign on a post reading 'ELEVATION SEA LEVEL' with a horizontal line."*
-- `sign-end-8.png` — *"A green highway sign reading 'END 8' above a small interstate shield."*
-- `sign-outfitter.png` — *"A hand-painted wooden general-store sign reading 'THE OUTFITTER' with '.85' scrawled in chalk in one corner."*
+**Highway signage kit** (★★, each CUTOUT, front-on, thick ink outlines, [COMIC LOCK]):
+`signage/shield-i8.png` (red-crown, blue-body interstate shield with white "8") · `shield-historic-80.png` (brown-and-cream "HISTORIC US 80" badge) · `guide-sign-blank.png` (blank green highway guide sign on two posts — **these become the Comic theme's buttons**) · `exit-sign.png` ("EXIT" with an arrow) · `mile-marker.png` (green post, white "8") · `sign-dust-storms.png` (yellow diamond "DUST STORMS MAY EXIST") · `sign-flash-flood.png` ("WATCH FOR FLASH FLOODS") · `sign-grade.png` (truck-on-slope, "6% GRADE") · `sign-runaway-ramp.png` ("RUNAWAY TRUCK RAMP") · `sign-sea-level.png` (green "ELEVATION SEA LEVEL") · `sign-end-8.png` (green "END 8" over a small shield) · `sign-outfitter.png` (hand-painted wooden "THE OUTFITTER" with ".85" chalked in a corner).
 
 ---
 
-## 8. Crew portraits (12) — ★★
+## 10. Event strips — ★★★ (this is where the comic *sings*)
 
-Square 1:1, min 1024×1024. Standard frame:
+Each event renders as a **three-panel comic strip**. Ask for the strip as one image: **3:1, min
+3600×1200**, three equal panels with thick black borders and white gutters, **no speech balloons,
+no captions** (the game letters them). Frame: *"A three-panel comic strip, 3:1, thick black panel
+borders with white gutters, no speech balloons, no text. Panel 1: [P1]. Panel 2: [P2]. Panel 3:
+[P3]. [COMIC LOCK] [VAN LOCK]"* Use the crew descriptions from section 4 for named characters.
 
-> *"[CREW LOCK]. [PERSON]. Neutral-friendly expression, looking slightly toward camera. Same
-> style as the other 8 West Trail crew portraits. [STYLE LOCK]"*
-
-| filename | PERSON |
+| filename | P1 / P2 / P3 |
 |---|---|
-| `crew/01.png` | a woman in her 50s with silver-streaked black hair in a bandana, aviator sunglasses pushed up, a denim work shirt — the veteran road boss |
-| `crew/02.png` | a lanky young man with a red beard and a trucker cap, a hoodie reading nothing, headphones around his neck — the sysadmin |
-| `crew/03.png` | a Black woman in her 30s with short natural hair, round tortoiseshell glasses, a crisp polo, a lanyard — the project manager who packed the spreadsheets |
-| `crew/04.png` | a Latino man in his 40s with a thick mustache, a straw cowboy hat, a friendly squint — knows every diner on the 10 |
-| `crew/05.png` | a South Asian woman in her 20s with a long braid, a bright yellow rain shell, a camera strap — the photographer |
-| `crew/06.png` | an older white man with a white beard and a Hawaiian shirt, reading glasses on a cord — the retiree who just came for the beach |
-| `crew/07.png` | a nonbinary person with a teal undercut, a nose ring, a vintage band tee — the intern who can type 140 words a minute |
-| `crew/08.png` | an East Asian man in his 30s with tousled hair and a clean white tee, a small tattoo of an interstate shield on his forearm — the mechanic |
-| `crew/09.png` | a Native American woman in her 40s with long dark hair, turquoise earrings, a fleece vest — the navigator, keeps the map |
-| `crew/10.png` | a heavyset white guy in his 20s with a buzzcut and a big grin, a company polo with an "8 WEST IT" logo — the new hire |
-| `crew/11.png` | a woman in her 60s with cropped gray hair, a sun hat, binoculars around her neck — the birder |
-| `crew/12.png` | a teenage boy with curly hair, braces, and a Dodgers cap on backwards — somebody's kid who insisted on coming |
-
-★ Optional mood variants per portrait: regenerate with *"...looking sunburned and exhausted"*
-(`crew/NN-rough.png`) and *"...pale, sweating, wrapped in a blanket"* (`crew/NN-critical.png`).
+| `events/flat-tire.webp` | the van cruising happily / close on a rear tire exploding with a burst of rubber and a startled face in the window / Ping and Bo wrestling a spare off the roof rack as a semi blurs past in a cloud of dust |
+| `events/radiator.webp` | the van climbing a hill with a small puff from the hood / the hood popped and a HUGE white steam cloud, everyone's hair blown back / Ping holding a split rubber hose at arm's length like a dead snake, grimacing |
+| `events/belt.webp` | under-the-hood close-up of a belt fraying / the belt snapping with a whip-crack motion line, sparks / Cache staring at the dead dashboard lights with spiral eyes |
+| `events/sushi.webp` | a gas-station cooler under buzzing fluorescents with one sad tray of sushi and a "2 FOR $8.85" sticker / Bo grinning with the tray, everyone else recoiling / Bo green-faced clutching his stomach in the back of the van, the others holding their noses |
+| `events/heatstroke.webp` | blinding noon at a rest-stop ramada, heat lines everywhere / Hank slumped on a bench, tongue out, a cartoon sun laughing overhead / Rosa pouring a blue water jug over his head, steam rising |
+| `events/snake.webp` | shade under a rest-stop bench, two glowing eyes / a coiled diamondback lunging with a RATTLE motion blur at a sneaker / Sol hopping on one foot clutching his ankle, hat flying |
+| `events/speed-trap.webp` | the van blazing down the highway, speed lines, everyone's cheeks rippling / a highway patrol cruiser with lights bursting in the mirror / a trooper in a campaign hat writing a ticket while Wes smiles innocently at the wheel |
+| `events/thief.webp` | a neon "VACANCY" motel at night, the van asleep in the lot / a hooded figure tiptoeing away with a blue water jug and a sack of food / the crew at dawn staring at the open side door, Dot checking her clipboard in horror |
+| `events/ransomware.webp` | a truck-stop booth at night, a laptop showing a red padlock and a countdown / a stranger in a leather vest leaning in, "I know computers" energy / Cache paying him $185 with a face like a funeral |
+| `events/wrong-turn.webp` | a lonely dirt crossroads with three unmarked roads and a crooked sign / Rosa and Sol arguing over an unfolded map on the hood, buzzards circling / the van driving back the way it came, everyone slumped |
+| `events/tailwind.webp` | a straight empty highway, a cartoon wind with puffed cheeks blowing from behind / the van rocketing forward with every window down, hair streaming, Piper leaning out with her camera / a green mile-marker whipping past in a blur |
+| `events/pecan-stand.webp` | a roadside farm stand under a cottonwood with sacks of pecans and red chiles / a smiling older woman in an apron handing over a paper bag and waving off the cash / the van pulling away with a mountain of pecans in the back and Bo already eating |
+| `events/historic-80.webp` | a weathered brown "HISTORIC US 80" shield on a bent post beside a cracked, abandoned two-lane road / the crew standing quietly at the old road, wildflowers in the cracks, golden light / Hank taking off his hat, moved, while Kit rolls his eyes |
+| `events/dust-storm.webp` | the van tiny as a colossal brown dust wall rises behind it / inside the van, everyone's faces pressed to the rear window in horror / the wall swallowing the road, the van's taillights the last thing visible |
+| `events/monsoon.webp` | a purple-teal thunderhead with a lightning bolt over the desert / a wash running with fast brown floodwater across the highway / the van stopped at the water's edge, Wes at the wheel weighing it, rain sheeting |
+| `events/tow-truck.webp` | the van dead on the shoulder, hood up, the crew sitting in a sad row on the bumper / the white 8 West IT wrecker (see tow truck description) pulling up at golden hour, light bar flashing / the tow driver leaning out with a thumbs-up and a red jerry can |
+| `events/siphon.webp` | night on the shoulder, the crew huddled in blankets, a big rig's running lights approaching / a kindly trucker crouched with a siphon hose and a red jerry can / the van's gauge needle creeping up one notch, five tiny relieved faces |
+| `events/memorial.webp` | the crew gathered by the roadside at dusk, heads bowed / a small white cross made of lath with a chrome hubcap nailed to its center, plastic flowers, a single work boot / the van pulling away smaller, one taillight, first stars |
+| `events/snack-stand.webp` | a roadside taco stand at sunset with a hand-painted menu and a smoking grill / Sky at the counter shouting an order with motion lines, the vendor scribbling fast / the crew staggering back to the van under a comically enormous tower of paper plates |
+| `events/date-shake.webp` (P2) | tall date palms and a hand-painted "DATE SHAKES" sign / a frosty shake in a paper cup, sweating, huge in frame / Marge with a blissed-out face and a milk mustache |
+| `events/river-ford.webp` (P2) | the van at the bank of the wide green Colorado, everyone leaning forward / the van halfway across with water at the doors, a bow wave, a fish flying past / the van climbing out the far side pouring water from every seam, a catfish in the roof rack |
+| `events/river-ferry.webp` (P2) | a little paddle ferry with a hand-painted fare sign at the landing / the van riding the ferry, a ferryman in a straw hat pulling a cable, Kit dangling his feet over the side / the far shore, cottonwoods, the ferryman waving |
+| `events/dunes-closure.webp` (P2) | sand blowing across the highway between huge golden dunes / a "ROAD CLOSED" barricade half buried, the van's wipers going / the crew playing cards on the dashboard while the dunes creep closer |
+| `events/hot-springs.webp` (P2) | a steaming natural pool at dusk under string lights / the whole crew soaking with towels on their heads, Hank in a rubber duck float / stars out, the van parked among boulders, snoring Zs |
+| `events/runaway-ramp.webp` (P2) | the van hurtling down a mountain grade, brakes smoking, Wes's eyes huge / the van veering onto a gravel runaway-truck ramp, gravel exploding / the van nose-deep in gravel, everyone flung forward, Bo still holding his taco |
+| `events/the-grade.webp` (P2) | the yellow "6% GRADE" sign at the summit, the road plunging away / the van dropping downhill between boulders and pines, brake lights glowing, a sliver of ocean below / the crew white-knuckled, Piper filming anyway |
+| `events/old-80.webp` (P2) | the faded "US 80" shield on a post at a narrow old two-lane fork / the van creeping along the cracked mountain road at dusk, boulders looming, no guardrail / headlights on, an owl watching from a pine |
 
 ---
 
-## 9. Event cards — ★★
+## 11. Splash pages (full-screen moments) — ★★★
 
-4:3, min 1600×1200. Full scene illustrations; no text. Standard suffix: *"[STYLE LOCK] + [VAN
-LOCK] where the van appears."*
+16:9, min 2560×1440, drawn as a single dramatic full-page comic splash. No text unless noted.
 
 | filename | Prompt |
 |---|---|
-| `events/flat-tire.webp` | *"The white 8 West IT van on a gravel highway shoulder, rear tire shredded, two people wrestling a spare out of the roof rack while a semi-truck blurs past, dust and heat, midday."* |
-| `events/radiator.webp` | *"Hood up on the white 8 West IT van, a geyser of white steam, a man in sunglasses holding a split rubber hose at arm's length like a dead snake, the desert flat and merciless behind."* |
-| `events/belt.webp` | *"Close view under a van's hood: a shredded black serpentine belt hanging off the pulleys, a hand reaching in with a flashlight, sparks of worry."* |
-| `events/sushi.webp` | *"A gas station convenience-store cooler under fluorescent light, a single sad plastic tray of sushi with a bright orange '2 FOR $8.85' sticker, a hand reaching for it, a rattlesnake-shaped air freshener watching from the counter."* |
-| `events/heatstroke.webp` | *"A rest-stop picnic ramada in blinding noon heat, a crew member slumped on the bench with a wet bandana on their head, another pouring water from a blue jug, the van in the shade."* |
-| `events/snake.webp` | *"A coiled diamondback rattlesnake in the shade under a rest-stop bench, rattle raised, a sneaker frozen mid-step inches away, long sharp shadows."* |
-| `events/speed-trap.webp` | *"A highway patrol cruiser with its lights on parked behind the white 8 West IT van on the shoulder, a trooper in a campaign hat writing in a ticket book, the driver's hands on the wheel, sunset."* |
-| `events/thief.webp` | *"A 1960s motel parking lot at night under a buzzing neon VACANCY sign, the van's side door slid open, a figure in a hoodie hurrying away with a blue water jug."* |
-| `events/ransomware.webp` | *"A truck-stop booth at night, a laptop on the table showing a red padlock and a countdown timer, a stranger in a leather vest leaning over saying something, coffee cups, neon through the window."* |
-| `events/wrong-turn.webp` | *"Two crew members arguing over an unfolded paper map on the van's hood at a lonely dirt crossroads with three unmarked roads, a crooked sign, buzzards overhead."* |
-| `events/tailwind.webp` | *"The white 8 West IT van cruising an empty straight highway with every window down, hair and a bandana streaming, a long trailing tailwind of dust, a wide smile on the driver, big blue sky."* |
-| `events/pecan-stand.webp` | *"A roadside farm stand under a cottonwood: burlap sacks of pecans, strings of red chiles, jars of honey, a smiling older woman in an apron handing over a paper bag, the van parked behind."* |
-| `events/historic-80.webp` | *"A weathered brown-and-cream 'HISTORIC US 80' shield on a bent post beside a cracked, abandoned two-lane road running parallel to the modern interstate, wildflowers in the cracks, golden light."* |
-| `events/dust-storm.webp` | *"The white 8 West IT van tiny in the foreground as a colossal brown dust wall bears down from behind, the road vanishing into it, the last sunlight on the storm's crest."* |
-| `events/monsoon.webp` | *"A desert wash running with fast brown floodwater across the highway, a dark teal thunderhead with a lightning bolt overhead, the van stopped at the water's edge, rain sheeting."* |
-| `events/tow-truck.webp` | *"The white 8 West IT wrecker tow truck (matching fleet stripe, 'ROADSIDE DIV.' on the door) pulling up behind the dead van on the shoulder at golden hour, the driver leaning out with a thumbs-up and a red jerry can."* |
-| `events/siphon.webp` | *"Night on the shoulder, a big-rig's running lights, a kindly trucker crouched with a siphon hose between his tank and a red jerry can, the crew huddled in blankets against the van."* |
-| `events/memorial.webp` | *"A small roadside memorial at dusk: a white cross made of lath with a chrome hubcap nailed to the center, plastic flowers, a single work boot, the highway stretching on, a violet sky."* |
-| `events/snack-stand.webp` | *"A bustling roadside taco stand at sunset with a hand-painted menu, a smoking grill, a line of truckers, paper plates piled high with carne asada, string lights, the van parked with its doors open."* |
-| `events/date-shake.webp` (P2) | *"A frosty date shake in a paper cup sweating in the sun on a picnic table under date palms, a crew member with a blissed-out face, a hand-painted 'DATE SHAKES' sign."* |
-| `events/river-ford.webp` (P2) | *"The white 8 West IT van halfway across the wide Colorado River with water up to the doors, a bow wave, a nervous face at the wheel, the old truss bridge in the background."* |
-| `events/river-ferry.webp` (P2) | *"The van riding a small flat paddle ferry across a green river, a ferryman in a straw hat pulling a cable, cottonwoods, calm water, a hand-painted fare sign."* |
-| `events/dunes-closure.webp` (P2) | *"Sand blowing across the highway between huge golden dunes, a 'ROAD CLOSED' barricade, the van waiting with wipers going, a lone tumbleweed."* |
-| `events/hot-springs.webp` (P2) | *"The crew soaking in a steaming natural hot-spring pool at dusk under string lights, the van parked by boulders, stars beginning."* |
-| `events/runaway-ramp.webp` (P2) | *"The white 8 West IT van nose-deep in the gravel of a runaway-truck ramp on a mountain grade, brakes smoking, gravel flying, a very relieved driver."* |
-| `events/the-grade.webp` (P2) | *"The van on a steep mountain highway plunging downhill between boulders and pines toward a hazy coastal plain, brake lights glowing red, a '6% GRADE' sign, a sliver of ocean far below."* |
-| `events/old-80.webp` (P2) | *"The van creeping along a narrow, winding, cracked old two-lane mountain road at dusk, guardrail-free, boulders looming, a faded 'US 80' shield on a post, headlights on."* |
+| `scenes/outfitter.webp` | *"A comic splash of the inside of a sun-drenched desert general store: wooden shelves of canned food, stacked blue water jugs, red jerry cans, tires and belts on pegboard, a brass cash register, a chalkboard price list where every price ends in '.85', a ceiling fan, a bearded shopkeeper in suspenders leaning on the counter, big front windows showing the white van outside. [COMIC LOCK] [VAN LOCK]"* |
+| `scenes/loading.webp` | *"A comic splash at dawn outside a general store: the five default crew (Wes, Dot, Cache, Sol, Piper) loading the white van — Wes on the roof strapping water jugs, Bo-style Sol carrying a cooler, Dot checking a clipboard, Cache clutching a coffee, Piper already photographing — long shadows, the Organ Mountains pink behind. [COMIC LOCK] [VAN LOCK] [CREW LOCK]"* |
+| `scenes/tucson.webp` | *"A comic splash: the white van cresting a rise as a valley of saguaros opens below, every arm out every window, a white mission glowing far off, purple mountains, orange light, a giant 'halfway there' feeling. [COMIC LOCK] [VAN LOCK]"* |
+| `scenes/yuma-decision.webp` | *"A comic splash from the riverbank: the wide green Colorado River, a shallow ford marked with stakes on the left, an old steel truss bridge in the center distance, a little paddle ferry with a fare sign on the right, storm clouds building upstream, the van at the water's edge, the crew looking at each other. [COMIC LOCK] [VAN LOCK]"* |
+| `scenes/laguna-decision.webp` | *"A comic splash from a mountain summit at dusk: the road forks — left, the interstate plunges downhill past a '6% GRADE' sign with brake-light red glow; right, a narrow old two-lane road winds among boulders past a faded 'US 80' shield; below both, a hazy coastal plain and a thin silver Pacific under an orange sky. [COMIC LOCK]"* |
+| `scenes/victory.webp` ★★★ | *"A triumphant comic splash at Sunset Cliffs: the white van parked at the very end of the road on golden sandstone cliffs, doors flung open, and the five crew caught mid-air in a joyous cliff jump toward the blue Pacific forty feet below — arms and legs everywhere, a hat flying, Hank in a cannonball, Piper snapping a selfie on the way down — white surf, gulls, a huge orange sun on the water, speed lines, a green 'END 8' sign at the road's end. Leave the upper-left sky clear for lettering. [COMIC LOCK] [VAN LOCK] [CREW LOCK]"* |
+| `scenes/victory-night.webp` ★★ | same as victory *"...an hour later: the crew wrapped in towels around a bonfire on the cliff top, the van's headlights off, a sky full of stars and a big cartoon moon, the ocean glittering below."* |
+| `scenes/memorial.webp` | *"A quiet comic splash at dusk: a small white roadside cross with a chrome hubcap at its center, plastic flowers, the empty highway stretching to a purple horizon, one distant pair of taillights, the first stars. Leave the center-left empty for lettering. [COMIC LOCK]"* |
+| `scenes/game-over.webp` ★★ | *"A darkly funny comic splash: the white van abandoned on the shoulder at noon, hood up, doors open, a vulture wearing sunglasses perched on the roof rack, heat lines, a mile marker, nothing else for a hundred miles. [COMIC LOCK] [VAN LOCK]"* |
 
 ---
 
-## 10. Scenes (full-screen moments) — ★★★
-
-16:9, min 2560×1440. These are the big emotional beats.
-
-### J1 · Title hero — `scenes/title.webp`
-```
-Wide cinematic illustration: the white 8 West IT van (boxy 1985 Ford Econoline, red-over-blue
-stripe, roof rack with blue water jugs and a spare tire, "8 WEST IT" door sign) small on an
-empty two-lane highway that runs straight toward a range of purple mountains, under an enormous
-gold-to-blue afternoon sky with one long cloud, saguaros on the shoulders, a green highway sign
-on the right reading "OCEAN BEACH 730". Leave the upper-left third of the sky calm and empty for
-a title to sit in. [STYLE LOCK] + [VAN LOCK]
-```
-
-### J2 · The outfitter — `scenes/outfitter.webp`
-```
-Wide illustration of the interior of a sun-drenched desert general store: wooden shelves of
-canned food, stacked blue water jugs, red jerry cans, tires and belts hung on pegboard, a brass
-cash register, a chalkboard price list with every price ending in ".85", a ceiling fan, a
-bearded shopkeeper in suspenders, big front windows showing the white van parked outside. [STYLE
-LOCK]
-```
-
-### J3 · Loading the van (crew naming) — `scenes/loading.webp`
-```
-Wide illustration: five silhouetted-but-friendly people loading the white 8 West IT van at dawn
-outside a general store — one on the roof strapping down water jugs, one carrying a cooler, one
-checking a paper map, one holding a coffee, one already asleep in the passenger seat — long
-morning shadows, the Organ Mountains pink in the distance. [STYLE LOCK] + [VAN LOCK]
-```
-
-### J4 · Tucson milestone — `scenes/tucson.webp`
-```
-Wide illustration: the white 8 West IT van cresting a rise as a valley of saguaros opens below,
-the crew's arms out every window, a white mission glowing far off, purple mountains, gold light
-— a moment of triumph halfway there. [STYLE LOCK] + [VAN LOCK]
-```
-
-### J5 · The Yuma crossing decision — `scenes/yuma-decision.webp`
-```
-Wide illustration from the riverbank: the wide green Colorado River in front of the van, a
-shallow ford marked by stakes on the left, an old steel truss bridge in the center distance, a
-small paddle ferry with a fare sign on the right, storm clouds building upstream; a decision
-point. [STYLE LOCK] + [VAN LOCK]
-```
-
-### J6 · Laguna Summit — the finale choice — `scenes/laguna-decision.webp`
-```
-Wide illustration from the summit at dusk: the road forks — left, the modern interstate plunges
-steeply downhill with a "6% GRADE" sign and brake-light red glow; right, a narrow old two-lane
-road winds off among boulders with a faded "US 80" shield; below both, a hazy coastal plain and
-a thin silver Pacific horizon under a coral sky. [STYLE LOCK]
-```
-
-### J7 · Victory at Ocean Beach — `scenes/victory.webp`
-```
-Wide cinematic illustration: the white 8 West IT van parked on the sand at Ocean Beach where the
-highway ends, doors open, the crew silhouetted running toward the water, the long pier, palm
-trees, gulls, and a vast coral-gold-violet sunset with the sun touching the Pacific. Pure joy.
-Leave the upper-left sky calm for a title. [STYLE LOCK] + [VAN LOCK]
-```
-
-### J8 · Victory, night variant — `scenes/victory-night.webp` ★★
-Same as J7 *"...an hour later: a bonfire on the sand, the van's headlights off, a sky full of
-stars, the pier lights reflected in dark water."*
-
-### J9 · The memorial — `scenes/memorial.webp`
-```
-Wide, quiet illustration at dusk: a small white roadside cross with a chrome hubcap at its
-center, plastic flowers, the empty highway stretching to a violet horizon, one distant pair of
-taillights, the first stars. Leave the center-left empty for an epitaph to be lettered. [STYLE
-LOCK]
-```
-
-### J10 · Game over, van abandoned — `scenes/game-over.webp` ★★
-```
-Wide illustration: the white 8 West IT van abandoned on the shoulder at noon, hood up, doors
-open, a vulture on the roof rack, heat shimmer, a mile marker, nothing else for a hundred miles.
-Darkly funny. [STYLE LOCK] + [VAN LOCK]
-```
-
----
-
-## 11. UI icons — ★★ (I draw the final SVGs; this sheet is my reference)
-
-### I1 · Icon reference sheet — `icons/reference-sheet.png`
-Square, min 2048×2048.
-```
-A clean icon sheet, 5 by 5 grid on a plain white background, each icon a single flat navy
-silhouette with one red or blue accent, consistent 2-pixel stroke weight, rounded corners,
-simple and readable at 24 pixels: a canned-food case, a blue water jug, a red jerry can, a tire,
-a serpentine belt, a radiator hose, a dollar bill, a boxy van, a wrench, a turtle (steady pace),
-a hare (strenuous pace), a rocket (grueling pace), a full plate (filling rations), a half plate
-(meager), an empty plate (bare-bones), a sun (mild), a sun with heat waves (hot), a thermometer
-bursting (scorching), a dust cloud, a storm cloud with lightning, a bed (rest), a taco (snack
-run), a folded map, a heart (health), a skull with a cowboy hat. [STYLE LOCK]
-```
-
----
-
-## 12. Heritage theme extras — ★
-
-### N1 · CRT bezel frame — `heritage/crt-bezel.png` (CUTOUT: screen area neon-green)
-```
-A beige 1980s computer monitor bezel seen straight on, filling the frame edge to edge, rounded
-screen corners, a small power LED and brightness knob at the lower right, faint scuffs and a
-faded inventory sticker, the entire screen area a flat solid neon-green #00FF00. Flat vector
-illustration. [STYLE LOCK]
-```
-
-### N2 · Theme toggle icons — `heritage/toggle-heritage.png`, `heritage/toggle-coastal.png`
-Square 1:1, min 512×512, CUTOUT.
-- *"A tiny flat icon of a beige 1980s computer monitor with a glowing green screen, on a flat solid neon-green #00FF00 background."*
-- *"A tiny flat icon of a pair of red sunglasses in front of a coral sunset over blue water, on a flat solid neon-green #00FF00 background."*
-
----
-
-## 13. Audio — ★ (these are prompts for a music/SFX generator such as Suno, Udio, or ElevenLabs — not Claude Imagine)
+## 12. Comic page furniture — ★★ (mostly CSS/SVG; these are my references)
 
 | filename | Prompt |
 |---|---|
-| `audio/title-loop.mp3` | *"Instrumental, 75 BPM, 90 seconds, seamless loop: dreamy surf-rock guitar with spring reverb over a warm 1980s synthwave pad and a slow driving drum machine, a hint of pedal steel, hopeful and wide-open like an empty desert highway at golden hour. No vocals."* |
-| `audio/travel-day.mp3` | *"Instrumental, 96 BPM, 2 minutes, seamless loop: upbeat road-trip surf-rock with a chugging rhythm guitar, bright organ stabs, hand claps, a tremolo lead, the feeling of windows down on a straight desert road. No vocals."* |
-| `audio/travel-mountain.mp3` | *"Instrumental, 80 BPM, 2 minutes, seamless loop: tense, cinematic synthwave with a pulsing bass, distant electric guitar, low toms, cold mountain-night atmosphere, building but never resolving. No vocals."* |
-| `audio/victory.mp3` | *"Instrumental, 100 BPM, 45 seconds: triumphant surf-rock crescendo with a full brass hit, crashing cymbals like waves, a final ringing major chord, a sunset-at-the-beach feeling. No vocals."* |
-| `audio/death-sting.mp3` | *"A 4-second comic-tragic sting: a sad muted trumpet 'wah-wah-wah-waaah' with a single somber pedal-steel slide underneath."* |
-| `audio/sfx/*.mp3` | engine start (old V8 cough then idle) · tire blowout BANG · cash register ka-ching · brass-bell shop door · typewriter key click and carriage-return ding · radiator hiss · rattlesnake rattle · thunder roll · gust of wind with sand · seagulls and surf · tow-truck backup beep · laptop error chime · van door slam · celebratory car horn |
+| `furniture/paper.png` (tileable, 2048²) | *"A seamless, tileable texture of slightly off-white aged comic-book newsprint paper with a very faint halftone dot pattern and tiny fiber specks, no other marks. [COMIC LOCK]"* |
+| `furniture/halftone.png` (tileable, 1024²) | *"A seamless tileable pattern of evenly spaced small black halftone dots on solid white, medium density, crisp edges."* |
+| `furniture/burst.png` (1:1, CUTOUT) | *"A comic-book radial speed-line burst: thin black lines radiating from an empty center to the edges, on a flat solid neon-green #00FF00 background. [COMIC LOCK]"* |
+| `furniture/balloon-sheet.png` (reference only, 16:9) | *"A reference sheet of empty comic-book speech balloons on white: a round speech balloon with a tail, a jagged shout balloon, a wobbly whisper balloon, a cloud-shaped thought balloon, a rectangular yellow caption box with a black border, a burst balloon for sound effects, all with thick black outlines, no text."* |
+| `furniture/panel-corners.png` (reference) | *"A reference sheet of hand-inked comic panel borders on white: a straight rectangular panel, a tilted action panel, a jagged broken panel, a rounded flashback panel, all thick black brush lines."* |
 
 ---
 
-## 14. Video — ★ (prompts for a video generator; or I reuse the Ventures `hero.mp4`)
+## 13. UI icon reference — ★★ (I draw the final SVGs)
 
-### M1 · Intro sting — `video/intro.mp4` (+ `.webm`), 6 seconds, 16:9, under 3 MB
+`icons/reference-sheet.png`, 1:1, min 2048×2048:
 ```
-Six-second animated logo sting in flat vector illustration style: a red-and-blue interstate
-shield with a white "8" drops in and lands with a small dust puff; the white 8 West IT van
-(1985 Econoline, red-over-blue stripe, roof rack) drives in from the left and stops beneath it;
-the words "THE 8 WEST TRAIL" wipe on in heavy slab-serif capitals; a small "PRESENTED BY 8 WEST
-IT" fades in below. Sun-bleached Americana palette (interstate red #C41E2A, ocean blue #1F8FD6,
-sand #E9C46A, coral #F4845F, navy #0C1830), paper-grain texture, no photorealism.
-```
-
-### M2 · Highway flyby loop — `video/billboards-loop.mp4`, 10 seconds, seamless ★
-```
-Seamless 10-second loop, side-scrolling flat vector illustration: a desert highway rolls right
-to left past saguaros and a green guide sign, with a roadside billboard reading "WE FIX IT
-BEFORE IT BREAKS. — 8 WEST IT 365" sliding past, big gold-to-blue sky, gentle parallax between
-foreground road, midground scrub, and far mountains. Sun-bleached Americana palette, paper
-grain, no photorealism.
+A clean comic-style icon sheet, 5 by 5 grid on white, each icon a simple flat cartoon object with
+a thick black outline and one bright fill color, readable at 24 pixels: a canned-food case, a blue
+water jug, a red jerry can, a tire, a serpentine belt, a radiator hose, a dollar bill, a boxy white
+van, a wrench, a turtle (steady pace), a hare (strenuous), a rocket (grueling), a full plate, a
+half plate, an empty plate, a smiling sun (mild), a sun with heat waves (hot), a bursting
+thermometer (scorching), a dust cloud, a storm cloud with lightning, a bed, a taco, a folded map,
+a heart, a skull in a cowboy hat. [COMIC LOCK]
 ```
 
 ---
 
-## 15. Marketing & web extras (because this *is* the marketing tool) — ★★
+## 14. Heritage theme extras — ★
+
+- `heritage/crt-bezel.png` (CUTOUT screen area): *"A beige 1980s computer monitor bezel seen straight on filling the frame, rounded screen corners, a power LED and a brightness knob lower right, scuffs and a faded inventory sticker, the whole screen area flat solid neon-green #00FF00, drawn with thick ink outlines. [COMIC LOCK]"*
+- `heritage/toggle-heritage.png` (1:1 CUTOUT): *"A tiny comic icon of a beige 1980s computer monitor with a glowing green screen, thick outline, neon-green #00FF00 background. [COMIC LOCK]"*
+- `heritage/toggle-comic.png` (1:1 CUTOUT): *"A tiny comic icon of a rolled-up comic book with a 'POW!' burst on its cover, thick outline, neon-green #00FF00 background. [COMIC LOCK]"*
+
+---
+
+## 15. Audio — ★ (prompts for Suno / Udio / ElevenLabs — not Claude Imagine)
+
+| filename | Prompt |
+|---|---|
+| `audio/title-loop.mp3` | *"Instrumental, 120 BPM, 90 seconds, seamless loop: bright 1970s cartoon-mystery-theme energy — bouncy bass, wah guitar, Hammond organ stabs, brass hits, hand claps, a surf-rock lead — playful, spooky-fun, road-trip ready. No vocals."* |
+| `audio/travel-day.mp3` | *"Instrumental, 110 BPM, 2 minutes, seamless loop: upbeat cartoon road-trip groove with a chugging guitar, bongos, organ, a whistled melody, the feeling of a van full of friends. No vocals."* |
+| `audio/travel-night.mp3` | *"Instrumental, 90 BPM, 2 minutes, seamless loop: spooky-fun cartoon suspense — walking bass, vibraphone, a theremin wobble, soft bongos, a distant owl. No vocals."* |
+| `audio/victory.mp3` | *"Instrumental, 130 BPM, 45 seconds: a triumphant cartoon finale with a full brass fanfare, crashing surf cymbals, hand claps, and a final ringing major chord with a splash. No vocals."* |
+| `audio/death-sting.mp3` | *"A 4-second comic-tragic sting: a sad muted trumpet 'wah-wah-wah-waaah' with a slide whistle falling underneath."* |
+| `audio/sfx/*.mp3` | cartoon engine start (cough, sputter, roar) · tire BANG with a spring boing · cash register ka-ching · brass shop bell · typewriter clack and ding · radiator hiss with a kettle whistle · rattlesnake rattle · thunder roll · wind with sand · seagulls and surf · tow-truck backup beep · laptop error boop · van door slam · slide whistle up · slide whistle down · crowd "HOORAY" · cannonball splash |
+
+---
+
+## 16. Video — ★ (prompts for a video generator)
+
+- `video/intro.mp4` (+ .webm), 6 s, 16:9, ≤ 3 MB: *"Six-second animated comic-book sting: a red-and-blue interstate shield with a white '8' slams down with a 'KRASHH' burst; the white 8 West IT van (boxy 1985 Econoline, red-over-blue stripe, roof rack) skids in from the left with a 'SCREEECH' and stops beneath it, five cartoon friends bouncing inside; the words 'THE 8 WEST TRAIL' pop on in chunky yellow comic lettering with a black outline; a small caption box reads '8 WEST IT PRESENTS'. Bold black ink outlines, flat cel colors, halftone, motion lines."*
+- `video/billboards-loop.mp4`, 10 s seamless: *"Seamless side-scrolling comic-book animation: a desert highway rolls right to left past saguaros and a green guide sign, a roadside billboard reading 'WE FIX IT BEFORE IT BREAKS! — 8 WEST IT 365' slides past, parallax between road, scrub, and purple mountains, thick ink outlines, flat cel colors."*
+
+---
+
+## 17. Marketing & web extras — ★★ (because this *is* the marketing tool)
 
 | filename | Spec | Prompt |
 |---|---|---|
-| `marketing/hero-tile.png` | 16:9, min 1600×900 — the tile on 8westit.com that links to the game | *"Website hero tile: the white 8 West IT van racing toward a sunset on a desert highway, a big interstate '8' shield in the sky, room top-left for a headline; energetic, inviting. [STYLE LOCK] + [VAN LOCK]"* |
-| `marketing/social-square-01.png` | 1:1, min 1080×1080 | *"Social post: a retro travel poster of the white 8 West IT van under a giant saguaro with the headline 'CAN YOU MAKE IT TO THE BEACH?' in slab-serif capitals and a small '8WT.8WESTIT.COM' at the bottom. [STYLE LOCK] + [VAN LOCK]"* |
-| `marketing/social-square-02.png` | 1:1 | *"Social post styled as a green highway guide sign: 'YOU HAVE DIED OF GAS-STATION SUSHI' in white capitals, a small white arrow, and '8WT.8WESTIT.COM'. Deadpan, funny. [STYLE LOCK]"* |
-| `marketing/social-story.png` | 9:16, min 1080×1920 | *"Vertical story graphic: the white 8 West IT van tiny at the bottom of a towering dust-storm wall, headline at top 'SPRING IS DUST SEASON.' and at the bottom 'PLAY THE 8 WEST TRAIL'. [STYLE LOCK] + [VAN LOCK]"* |
-| `marketing/sticker-sheet.png` | 4:3, min 2400×1800, white background | *"A die-cut sticker sheet: the interstate '8' shield, the white 8 West IT van, a taco, a rattlesnake in sunglasses, a padlock on a beach chair, a green sign reading 'NEXT EXIT: PEACE OF MIND', a skull in a cowboy hat, a blue water jug, a date shake, a tiny 'AN 8 WEST VENTURES COMPANY' badge — each with a white die-cut border. [STYLE LOCK]"* |
-| `marketing/email-header.png` | 3:1, min 1800×600 | *"Email newsletter header: the white 8 West IT van at the Ocean Beach pier at sunset, with a green guide sign reading 'END 8' and empty space on the right for text. [STYLE LOCK] + [VAN LOCK]"* |
-| `marketing/leaderboard-badge.png` | 1:1 CUTOUT | *"A gold-and-navy enamel-pin style badge shaped like an interstate shield with a laurel wreath, a small star at the top, blank center (numbers go in later), on a flat solid neon-green #00FF00 background. [STYLE LOCK]"* |
+| `marketing/hero-tile.png` | 16:9, min 1600×900 | *"A comic panel for a website tile: the white 8 West IT van racing toward an orange sunset on a desert highway, a giant interstate '8' shield in the sky, speed lines, room top-left for a headline. [COMIC LOCK] [VAN LOCK]"* |
+| `marketing/cover-02.png` … `cover-05.png` | 2:3, min 2000×3000 | Variant covers for social/share cards (masthead area left clear): *"...No. 2: the van fording the Colorado River with a catfish in the roof rack"* · *"No. 3: the van tiny before a colossal dust wall"* · *"No. 4: the crew cliff-jumping at Sunset Cliffs"* · *"No. 5: a roadside memorial at dusk, the crew with hats off"* — each *"[COMIC LOCK] [VAN LOCK] [CREW LOCK]"* |
+| `marketing/social-square-01.png` | 1:1, 1080² | *"A comic-book panel: the white 8 West IT van under a giant saguaro with the crew leaning out every window, a yellow caption box reading 'CAN YOU MAKE IT TO THE BEACH?' and a small strip reading '8WT.8WESTIT.COM'. [COMIC LOCK] [VAN LOCK]"* |
+| `marketing/social-square-02.png` | 1:1 | *"A comic panel styled as a giant green highway guide sign reading 'YOU HAVE DIED OF GAS-STATION SUSHI' in white capitals with a white arrow, and small '8WT.8WESTIT.COM'. Deadpan. [COMIC LOCK]"* |
+| `marketing/social-story.png` | 9:16, 1080×1920 | *"A vertical comic page in three stacked panels: the van tiny beneath a towering dust wall; the crew's terrified faces at the rear window; a yellow caption box at the bottom reading 'PLAY THE 8 WEST TRAIL'. [COMIC LOCK] [VAN LOCK]"* |
+| `marketing/sticker-sheet.png` | 4:3, 2400×1800, white | *"A die-cut comic sticker sheet: the interstate '8' shield, the white 8 West IT van, a taco, a rattlesnake in sunglasses, a padlock on a beach chair, a 'SCREEECH' sound effect, a skull in a cowboy hat, a blue water jug, a date shake, a green sign reading 'NEXT EXIT: PEACE OF MIND', a tiny 'AN 8 WEST VENTURES COMPANY' badge — each with a thick white die-cut border. [COMIC LOCK]"* |
+| `marketing/email-header.png` | 3:1, 1800×600 | *"A wide comic panel: the white 8 West IT van at the edge of Sunset Cliffs at sunset, a green 'END 8' sign, empty sky on the right for text. [COMIC LOCK] [VAN LOCK]"* |
+| `marketing/leaderboard-badge.png` | 1:1 CUTOUT | *"A gold-and-navy enamel-pin badge shaped like an interstate shield with a laurel wreath and a star, blank center, thick ink outline, neon-green #00FF00 background. [COMIC LOCK]"* |
 
 ---
 
-## 16. Priority order if you're doing this in evenings
+## 18. Priority order if you're doing this in evenings
 
-1. **A1 title lockup**, **B1 van clean**, **F1–F8 billboards** (the brand, in one evening).
-2. **C01 Mesilla**, **C04 Sonoran**, **C12 Ocean Beach**, **J1 title hero**, **J7 victory**.
-3. **B2/B3 van states**, **F11 tow truck**, the six ★★★ postcards, **A4 share card**.
-4. The rest of the regions and postcards, then event cards, then crew.
+1. **A2 cover No. 1**, **B van-clean + van-skid + van-hero**, **the five default crew model
+   sheets (Wes, Dot, Cache, Sol, Piper)**, **SFX: SCREEECH, KRASHH, BANG!, KA-CHING!** — one
+   evening, and the game already *looks* like a comic.
+2. **Billboards 01–08**, **regions 01, 04, 12**, **victory splash**.
+3. **Event strips**: flat-tire, sushi, dust-storm, tow-truck, memorial, snack-stand.
+4. The rest of the regions, postcards, crew, strips, and the marketing kit.
 5. Everything ★ whenever the mood strikes.
 
-Every slot has a placeholder until then. Send me anything as it lands — I'll cut it out,
-vectorize what needs vectorizing, tune the colors to the bible, and wire it in.
+Every slot has a placeholder until then. Send me anything as it lands — I'll key it out,
+vectorize what needs vectorizing, tune colors to the bible, and wire it in.
