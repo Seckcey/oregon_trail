@@ -159,14 +159,22 @@ ${shield(700, 1100, 0.7)}`,
   );
 }
 
-/** A postcard: the region this stop sits in, with its name in a caption box. 8:5. */
+/** A postcard: the region this stop sits in, over a "greetings from" strip. 8:5. */
 export function stopSvg(stopId: string): string {
   const stop = ROUTE.find((s) => s.id === stopId);
   const region = regionAt(stop?.mile ?? 0);
   const name = (stop?.name ?? stopId.replace(/-/g, ' ')).toUpperCase();
+  const size = Math.min(120, Math.floor(1000 / Math.max(6, name.length)) * 1.6);
   return svg(
     '0 0 1200 750',
-    `<g transform="translate(-400 0) scale(1.6667)">${inner(regionSvg(region))}</g>${caption(40, 40, Math.max(300, name.length * 28 + 60), name, 40)}`,
+    `<clipPath id="postcard-${stopId}"><rect x="0" y="0" width="1200" height="560"/></clipPath>
+<g clip-path="url(#postcard-${stopId})"><g transform="translate(-150 0) scale(1.25)">${inner(regionSvg(region))}</g></g>
+<rect x="0" y="560" width="1200" height="190" fill="${CREAM}"/>
+<rect x="0" y="560" width="1200" height="190" fill="url(#ht)" opacity=".3"/>
+<line x1="0" y1="560" x2="1200" y2="560" ${ink()} stroke-width="8"/>
+${text(600, 604, 'GREETINGS FROM', { size: 28, fill: INK, spacing: 6 })}
+${text(600, 716, name, { size, fill: RED, stroke: INK, strokeWidth: 8, spacing: 4 })}
+${caption(40, 40, Math.max(240, name.length * 22 + 60), `MILE ${stop?.mile ?? 0}`, 32)}`,
     { attrs: `data-stop="${stopId}"` },
   );
 }
@@ -211,10 +219,11 @@ function wrapWords(line: string, max: number): string[] {
 export function billboardSvg(n: number): string {
   const idx = Math.max(0, Math.min(BILLBOARD_TAGLINES.length, Math.round(n)));
   const face = idx === 0 ? { fill: PAPER, text: INK } : BILLBOARD_FACES[idx - 1]!;
-  const lines = idx === 0 ? [] : wrapWords(BILLBOARD_TAGLINES[idx - 1]!, 22);
-  const size = lines.length > 1 ? 52 : 64;
+  const lines = idx === 0 ? [] : wrapWords(BILLBOARD_TAGLINES[idx - 1]!, 16);
+  const size = lines.length > 2 ? 62 : lines.length > 1 ? 78 : 96;
   const outline = face.fill === PAPER ? {} : { stroke: INK, strokeWidth: 6 };
-  const lettering = lines.map((l, i) => text(600, 150 + i * (size + 6) - (lines.length - 1) * 20, l, { size, fill: face.text, ...outline })).join('');
+  const top = 170 - ((lines.length - 1) * (size + 4)) / 2;
+  const lettering = lines.map((l, i) => text(600, top + i * (size + 4), l, { size, fill: face.text, ...outline })).join('');
   return svg(
     '0 0 1200 400',
     `<rect x="240" y="300" width="24" height="100" fill="${SILVER}" ${ink()}/><rect x="936" y="300" width="24" height="100" fill="${SILVER}" ${ink()}/>

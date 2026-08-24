@@ -26,7 +26,7 @@ export type CrewMood = 'good' | 'fair' | 'poor' | 'critical' | 'lost';
 
 export type ArtRef =
   | { kind: 'region'; region: Region; weather: Weather['event']; heat: Weather['heat']; van: VanLook; moving: boolean }
-  | { kind: 'event'; stripId: EventStripId; frame: 0 | 1 | 2 }
+  | { kind: 'event'; stripId: EventStripId; frame: 0 | 1 | 2; cast?: readonly number[] }
   | { kind: 'stop'; stopId: string }
   | { kind: 'scene'; sceneId: SceneId }
   | { kind: 'cover' }
@@ -38,8 +38,10 @@ export type PanelSpan = 'wide' | 'third' | 'splash';
 export interface Panel {
   id: string;
   art: ArtRef;
-  /** Caption boxes lettered inside this panel. */
+  /** Caption boxes lettered inside this panel, along the bottom. */
   lines: string[];
+  /** Caption boxes lettered along the top (the date line on the road). */
+  head?: string[];
   /** Degrees; action panels tilt. */
   tilt: number;
   span: PanelSpan;
@@ -153,7 +155,7 @@ function stripPanels(screen: Screen, cast: number[]): { panels: Panel[]; leftove
   const stripId = eventStripFor(eventId);
   if (stripId) {
     return {
-      panels: [0, 1, 2].map((i) => panel(`frame-${i}`, { kind: 'event', stripId, frame: i as 0 | 1 | 2 }, 'third', words[i]!, tilt(i))),
+      panels: [0, 1, 2].map((i) => panel(`frame-${i}`, { kind: 'event', stripId, frame: i as 0 | 1 | 2, cast }, 'third', words[i]!, tilt(i))),
       leftover: [],
     };
   }
@@ -181,12 +183,22 @@ export function layoutPage(screen: Screen): ComicPage {
       panels = [panel('cover', { kind: 'cover' }, 'splash')];
       break;
     case 'setup':
-      panels = [panel('loading', { kind: 'scene', sceneId: 'loading' }, 'wide')];
+      panels = [panel('loading', { kind: 'scene', sceneId: 'loading' }, 'splash')];
       break;
     case 'store':
-      panels = [panel('outfitter', { kind: 'scene', sceneId: 'outfitter' }, 'wide')];
+      panels = [panel('outfitter', { kind: 'scene', sceneId: 'outfitter' }, 'splash')];
       break;
-    case 'road':
+    case 'road': {
+      // The date and yesterday's miles ride along the top of the shot; the log along the bottom.
+      const text = screen.lines.filter((l) => l.trim().length > 0);
+      const head = text.filter((l) => !l.startsWith('· '));
+      const log = text.filter((l) => l.startsWith('· ')).map((l) => l.slice(2));
+      const shot = panel('establishing', regionArt(scene), 'wide', log);
+      shot.head = head;
+      panels = [shot];
+      lines = [];
+      break;
+    }
     case 'overlay':
     case 'grade':
       panels = [panel('establishing', regionArt(scene), 'wide')];

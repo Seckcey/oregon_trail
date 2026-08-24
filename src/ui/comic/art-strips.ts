@@ -202,17 +202,17 @@ function propArt(prop: Prop): string {
   }
 }
 
-function reaction(mood: CrewMood, setting: Setting): string {
-  const ids = [1, 2, 3];
+function reaction(mood: CrewMood, setting: Setting, cast: readonly number[]): string {
+  const ids = cast.length ? cast.slice(0, 3) : [1, 2, 3];
   return `${backdrop(setting)}<rect x="0" y="0" width="400" height="400" fill="${INK}" opacity=".15"/>${ids
     .map((id, i) => `<g transform="translate(${20 + i * 120} ${140 + (i % 2) * 40}) scale(0.62)">${inner(crewHeadSvg(id, mood))}</g>`)
     .join('')}`;
 }
 
-/** One frame of a strip, 1:1. */
-export function stripFrameSvg(stripId: EventStripId, frame: 0 | 1 | 2): string {
+/** One frame of a strip, 1:1. The reaction frame shows this run's crew when given the cast. */
+export function stripFrameSvg(stripId: EventStripId, frame: 0 | 1 | 2, cast: readonly number[] = []): string {
   const spec = STRIPS[stripId];
-  const body = frame === 0 ? wideShot(spec) : frame === 1 ? propArt(spec.prop) : reaction(spec.mood, spec.setting);
+  const body = frame === 0 ? wideShot(spec) : frame === 1 ? propArt(spec.prop) : reaction(spec.mood, spec.setting, cast);
   return svg(VIEW, body, { attrs: `data-strip="${stripId}" data-frame="${frame}"` });
 }
 

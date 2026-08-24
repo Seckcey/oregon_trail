@@ -3,6 +3,7 @@
 // handlers; a renderer owns only its shell, its stylesheet, and its input.
 
 import type { Action, Screen } from '../sim/game';
+import { createComicRenderer } from './comic/index';
 import { createHeritageRenderer } from './heritage/index';
 import type { ThemeId } from './theme';
 
@@ -24,8 +25,9 @@ export interface Renderer {
   unmount(): void;
 }
 
-/** Every theme with a renderer. The Comic renderer joins this table in Phase 3 Step B. */
+/** Every theme with a renderer. */
 export const RENDERERS: Partial<Record<ThemeId, () => Renderer>> = {
+  comic: createComicRenderer,
   heritage: createHeritageRenderer,
 };
 

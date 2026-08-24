@@ -48,7 +48,19 @@ describe('the road page', () => {
     expect(p.panels[0]).toMatchObject({ span: 'wide', art: { kind: 'region', region: 1, van: 'clean', moving: false } });
     expect(p.balloons.length).toBe(3);
     expect(p.signs.length).toBe(4);
-    expect(p.lines.length).toBeGreaterThan(0);
+  });
+
+  test('the day’s narration is lettered inside the establishing shot: the date up top, the log below', () => {
+    const p = page(departed());
+    const shot = p.panels[0]!;
+    expect(shot.head).toEqual([expect.stringMatching(/^Day 1\./)]);
+    expect(shot.lines.length).toBeGreaterThan(0);
+    expect(shot.lines[0]).toMatch(/pull out of Las Cruces/);
+    expect(p.lines).toEqual([]);
+    const driven = reduce(departed(), { type: 'DRIVE' });
+    if (driven.phase === 'travel') {
+      expect(page(driven).panels[0]!.head).toEqual([expect.stringMatching(/^Day 2\./), expect.stringMatching(/^Yesterday the van made/)]);
+    }
   });
 
   test('after a day of driving the van is moving and the region follows the mile', () => {

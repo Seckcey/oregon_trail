@@ -26,7 +26,7 @@ export function placeholderSvg(ref: ArtRef): string {
     case 'region':
       return regionSvg(ref.region);
     case 'event':
-      return stripFrameSvg(ref.stripId, ref.frame);
+      return stripFrameSvg(ref.stripId, ref.frame, ref.cast ?? []);
     case 'stop':
       return stopSvg(ref.stopId);
     case 'scene':
