@@ -9,7 +9,7 @@ real art replaces them as it lands.*
 
 ## 0. How to use this document
 
-1. **Paste the prompt block verbatim** into Claude Imagine. Every prompt is complete as written — the style
+1. **Paste the prompt block verbatim** into Copilot M365 (see rule 8). Every prompt is complete as written — the style
    paragraphs are already inside it, so there is nothing to add. Generate 3–4 variations; keep the one that matches the Style Bible best — consistency across
    assets matters more than any single image being perfect.
 2. **Save with the exact filename** listed, into `public/assets/<category>/`. PNG for anything cut
@@ -25,8 +25,10 @@ real art replaces them as it lands.*
    drawn by the game in CSS/SVG so the words can change. Prompts say "no speech balloons".
 6. **Resolution:** biggest available. Wide panels ≥ 2400 px wide; sprites ≥ 1600 px long side.
 7. **Priority:** ★★★ = the look can't land without it · ★★ = depth and delight · ★ = polish.
-8. **Use Claude Imagine (the tool that made the masthead) for every prompt.** Claude chat and
-   ChatGPT can't generate images — they'll try to collage your uploads instead.
+8. **Use Copilot M365 with the ChatGPT 5.6 "deep think" setting for every prompt** — it made
+   the masthead and the van, and it's excellent. Plain Claude chat and plain ChatGPT chat will
+   either collage your uploads or refuse on copyright grounds; the prompts have been worded to
+   avoid that, but stick with the tool that works.
 9. **Skip these — I build them from your other art:** A4 share card, A5 "presents" plate,
    A6 parent-company plate, and everything in section 17 (marketing) except the variant covers.
    They are layout jobs, not drawings.
@@ -468,7 +470,7 @@ a heart, a skull in a cowboy hat. Saturday-morning comic-book illustration: bold
 
 ---
 
-## 15. Audio — ★ (prompts for Suno / Udio / ElevenLabs — not Claude Imagine)
+## 15. Audio — ★ (prompts for Suno / Udio / ElevenLabs — not Copilot M365)
 
 | filename | Prompt |
 |---|---|
