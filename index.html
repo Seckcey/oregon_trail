@@ -13,32 +13,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" />
+  <!-- Paint the canvas before any theme mounts; each renderer injects its own stylesheet. -->
+  <style>html { background: #050805; }</style>
   <script type="module" src="/src/main.ts"></script>
 </head>
 <body>
-  <div id="crt">
-    <header class="masthead">
-      <span class="mast-title">THE 8 WEST TRAIL</span>
-      <a class="mast-brand" href="https://8westit.com" target="_blank" rel="noopener">a road game from 8 WEST IT</a>
-    </header>
-    <main id="screen" aria-live="polite">
-      <h1 id="screen-title"></h1>
-      <div id="screen-lines"></div>
-      <form id="screen-input" hidden>
-        <label id="input-prompt" for="input-field"></label>
-        <div class="input-row">
-          <span class="input-caret">&gt;</span>
-          <input id="input-field" autocomplete="off" autocapitalize="characters" spellcheck="false" />
-        </div>
-      </form>
-      <div id="screen-choices" role="menu"></div>
-    </main>
-    <aside id="status" hidden></aside>
-    <footer class="colophon">
-      <span>&copy; 2026 8 West Ventures, LLC</span>
-      <span>an homage to the computer-lab classics</span>
-      <a href="https://8westit.com" target="_blank" rel="noopener">8westit.com</a>
-    </footer>
-  </div>
+  <div id="app"></div>
+  <noscript>The 8 West Trail is a game, and it needs JavaScript to run.</noscript>
 </body>
 </html>
