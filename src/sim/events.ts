@@ -271,10 +271,15 @@ export const POOL_EVENTS: PoolEvent[] = [
 ];
 
 /**
- * Maybe fire one pool event for the day. Returns notice lines, or null.
+ * Maybe fire one pool event for the day. Returns the event id and its notice lines, or null.
  * Consumes RNG deterministically.
  */
-export function rollPoolEvent(s: GameState): string[] | null {
+export interface FiredEvent {
+  id: string;
+  lines: string[];
+}
+
+export function rollPoolEvent(s: GameState): FiredEvent | null {
   if (!chance(s.rng, 0.3)) return null;
   const eligible = POOL_EVENTS.filter(
     (e) => e.when(s) && !(e.once && s.usedEventIds.includes(e.id)),
@@ -292,7 +297,7 @@ export function rollPoolEvent(s: GameState): string[] | null {
     }
   }
   if (chosen.once) s.usedEventIds.push(chosen.id);
-  return chosen.fire(s);
+  return { id: chosen.id, lines: chosen.fire(s) };
 }
 
 export { pick };

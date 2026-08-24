@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">8 West IT, LLC light logo</title>
+  <desc id="desc">Colorful Interstate 8 West shield with California coast and circuit accents used as the leading 8, followed by West IT, LLC.</desc>
+  <defs>
+    <linearGradient id="blueShield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0876d9"/>
+      <stop offset="0.55" stop-color="#054a93"/>
+      <stop offset="1" stop-color="#021a4a"/>
+    </linearGradient>
+    <linearGradient id="redTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff4b2f"/>
+      <stop offset="1" stop-color="#cf082b"/>
+    </linearGradient>
+    <linearGradient id="coastSky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#013d72"/>
+      <stop offset="0.48" stop-color="#ff8c3a"/>
+      <stop offset="0.72" stop-color="#ffd35c"/>
+      <stop offset="1" stop-color="#00c5c7"/>
+    </linearGradient>
+    <linearGradient id="ocean" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#03d8c7"/>
+      <stop offset="0.55" stop-color="#0c91d9"/>
+      <stop offset="1" stop-color="#0a2c7a"/>
+    </linearGradient>
+    <linearGradient id="wordDark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071a3a"/>
+      <stop offset="1" stop-color="#020916"/>
+    </linearGradient>
+    <linearGradient id="wordLight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dceaff"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#00132e" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <!-- California coast accent -->
+    <path d="M108 94 C96 106 95 132 105 151 C114 170 105 198 90 212 C78 223 62 230 42 236 C74 255 117 263 159 265 C204 267 256 257 294 238 C258 219 252 184 235 158 C218 132 203 108 203 79 C172 91 139 92 108 94Z" fill="url(#coastSky)"/>
+    <path d="M115 94 C127 122 141 148 161 174 C181 201 214 230 294 238 C265 262 213 274 160 273 C112 272 66 261 31 239 C62 229 82 218 95 204 C113 184 118 166 111 145 C105 125 103 105 115 94Z" fill="#041b3e" opacity="0.86"/>
+    <circle cx="75" cy="207" r="27" fill="#ffce42"/>
+    <path d="M26 235 C69 234 108 238 143 248 C88 248 49 246 26 235Z" fill="#16e0d0"/>
+    <path d="M37 246 C95 247 138 254 184 266 C118 270 71 264 37 246Z" fill="url(#ocean)"/>
+    <path d="M45 230 C80 229 111 233 142 242" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.95"/>
+    <path d="M61 244 C98 244 139 250 174 260" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <path d="M49 209 C55 183 67 165 77 150" fill="none" stroke="#061936" stroke-width="7" stroke-linecap="round"/>
+    <path d="M77 151 C59 147 46 153 36 167 M76 150 C93 144 107 147 119 158 M78 151 C80 135 87 124 99 116 M78 151 C67 134 53 127 38 128" fill="none" stroke="#061936" stroke-width="6" stroke-linecap="round"/>
+    <path d="M150 172 q8 -9 17 0 M174 158 q7 -7 15 0 M128 157 q6 -6 13 0" fill="none" stroke="#061936" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Interstate shield -->
+    <path d="M175 30 C213 48 248 48 285 30 C322 48 359 48 398 30 L432 86 L418 106 L418 159 C418 221 379 270 286 298 C193 270 154 221 154 159 L154 106 L140 86Z" fill="#ffffff"/>
+    <path d="M181 42 C216 58 251 58 285 42 C320 58 355 58 391 42 L419 85 L405 100 L405 158 C405 215 369 258 286 284 C202 258 168 215 168 158 L168 100 L154 85Z" fill="#092b62"/>
+    <path d="M169 86 L402 86 L391 50 C356 64 320 64 285 49 C251 64 216 64 181 50Z" fill="url(#redTop)"/>
+    <path d="M168 105 L405 105 L405 158 C405 215 369 258 286 284 C202 258 168 215 168 158Z" fill="url(#blueShield)"/>
+    <path d="M169 86 L402 86" stroke="#ffffff" stroke-width="9"/>
+    <text x="286" y="76" text-anchor="middle" fill="#ffffff" font-size="44" font-weight="800" letter-spacing="10" font-family="Arial, Helvetica, sans-serif">WEST</text>
+    <text x="286" y="244" text-anchor="middle" fill="#ffffff" font-size="172" font-weight="900" font-family="Arial Black, Arial, Helvetica, sans-serif">8</text>
+    <path d="M286 284 C367 258 405 215 405 158 L405 105 L418 86 L391 42" fill="none" stroke="#001945" stroke-width="6" opacity="0.72"/>
+  </g>
+
+  <!-- Tech circuit strokes -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M332 255 H452 L471 236 H506" stroke="#062e65" stroke-width="8"/>
+    <path d="M334 273 H463 L483 254 H524" stroke="#0aa6be" stroke-width="8"/>
+    <path d="M337 291 H440 L460 278 H552" stroke="#0a62c7" stroke-width="8"/>
+    <circle cx="512" cy="236" r="10" fill="#ffffff" stroke="#0aa6be" stroke-width="7"/>
+    <circle cx="530" cy="254" r="10" fill="#ffffff" stroke="#17d3d6" stroke-width="7"/>
+    <circle cx="558" cy="278" r="10" fill="#ffffff" stroke="#0aa6be" stroke-width="7"/>
+  </g>
+
+  <!-- Wordmark. Shield is the 8, so text starts with West. -->
+  <text x="600" y="202" fill="url(#wordLight)" font-size="86" font-weight="850" letter-spacing="-3" font-family="Segoe UI, Arial, Helvetica, sans-serif">West IT,</text>
+  <text x="935" y="202" fill="url(#wordLight)" font-size="76" font-weight="400" letter-spacing="5" font-family="Segoe UI, Arial, Helvetica, sans-serif">LLC</text>
+</svg>
