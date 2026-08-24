@@ -20,6 +20,7 @@ import { snackTotal, snackWordsFor, snackYield } from './snack';
 import { fmtCents, priceCentsAt, purchase, repairQuote, STORE_ITEMS, type StoreItemId } from './store';
 import { dailyFoodNeed, dailyWaterNeed, fuelNeed, milesForDay } from './travel';
 import type {
+  Celebration,
   DepartureMonth,
   EventChoice,
   GamePhase,
@@ -150,6 +151,7 @@ export function createGame(seed: string, memorials: Memorial[] = []): GameState 
     crossing: null,
     grade: null,
     summitRoute: null,
+    celebration: null,
     memorials,
     memorialSeenDay: 0,
     runMemorials: [],
@@ -237,9 +239,18 @@ function arrive(s: GameState): void {
   s.pendingArrival = false;
   if (stop.kind === 'finish') {
     s.atStopIndex = index;
-    s.phase = 'victory';
-    s.gameOver = true;
     log(s, `You made it to ${stop.name}. The 8 dead-ends at the Pacific, and you are parked on it.`);
+    notice(
+      s,
+      'cliffs',
+      [
+        stop.flavor,
+        '',
+        'The crew is already out of the van and lining up on the sandstone. Seven hundred and thirty miles of desert say you have earned this. Somebody has to go first.',
+      ],
+      [{ label: 'Cannonball' }, { label: 'Swan dive' }, { label: 'Hold the towels and cheer' }],
+      'SUNSET CLIFFS',
+    );
     return;
   }
   log(s, `You reach ${stop.name}, mile ${stop.mile}.`);
@@ -859,7 +870,28 @@ function resolveEventChoice(s: GameState, index: number): void {
     else takeOld80(s);
     return;
   }
+  if (ev.id === 'cliffs') {
+    finishAtTheCliffs(s, index);
+    return;
+  }
   s.phase = s.resumePhase;
+}
+
+const CELEBRATIONS: readonly Celebration[] = ['cannonball', 'swan', 'towels'];
+
+const CELEBRATION_LINES: Record<Celebration, string> = {
+  cannonball:
+    'You went first, and you went in like a dropped safe. The splash reached the top of the cliff. The crew is still yelling about it.',
+  swan: 'You went first: a swan dive, or something the crew agreed afterwards to call a swan dive. You came up laughing salt water.',
+  towels:
+    'You held the towels and the phones and cheered the whole crew off the edge one by one. Somebody has to. It was still the best day of the run.',
+};
+
+function finishAtTheCliffs(s: GameState, index: number): void {
+  s.celebration = CELEBRATIONS[index] ?? 'cannonball';
+  s.phase = 'victory';
+  s.gameOver = true;
+  log(s, CELEBRATION_LINES[s.celebration]);
 }
 
 function resolveEventContinue(s: GameState): void {
@@ -1448,7 +1480,7 @@ export function view(s: GameState): Screen {
       });
 
     case 'map': {
-      const lines: string[] = ['LAS CRUCES → OCEAN BEACH · 730 MILES', ''];
+      const lines: string[] = ['LAS CRUCES → SUNSET CLIFFS · 730 MILES', ''];
       for (const stop of ROUTE) {
         const here = s.mile >= stop.mile ? '■' : '·';
         lines.push(`${here} mile ${String(stop.mile).padStart(3)}  ${stop.name}`);
@@ -1495,7 +1527,7 @@ export function view(s: GameState): Screen {
       return screen({
         title: 'HOW TO PLAY',
         lines: [
-          'Get the crew from Las Cruces to Ocean Beach alive — 730 miles, until the 8 dead-ends at the Pacific.',
+          'Get the crew from Las Cruces to Sunset Cliffs alive — 730 miles, until the 8 dead-ends at the Pacific. Then jump.',
           '',
           '· Every DRIVE is one day: the van moves, everyone eats and drinks, the desert rolls its dice.',
           '· PACE trades health for miles. RATIONS trade food for health.',
@@ -1560,7 +1592,7 @@ export function view(s: GameState): Screen {
     case 'victory': {
       if (!s.occupation) throw new Error('victory without occupation');
       return screen({
-        title: 'OCEAN BEACH, SAN DIEGO',
+        title: 'SUNSET CLIFFS, SAN DIEGO',
         art: 'victory',
         lines: buildVictoryLines(s),
         choices: [{ key: '1', label: 'Run it again', action: { type: 'RESTART' } }],
@@ -1581,7 +1613,8 @@ function buildVictoryLines(s: GameState): string[] {
         ? 'You rode the 6% grade down with the brakes talking the whole way, and the brakes held.'
         : 'You came down the mountain somehow. The log is vague on the details.';
   return [
-    'The 8 dead-ends at the sand. You park the van where the road gives up and the Pacific begins, and nobody says anything for a while.',
+    'The 8 ran out of continent. You followed the boulevard to the edge, and the whole crew went off the sandstone into the Pacific to celebrate.',
+    CELEBRATION_LINES[s.celebration ?? 'towels'],
     descent,
     '',
     `Survivors: ${survivors.length ? survivors.map((m) => m.name).join(', ') : 'none'} — ${s.day} days, ${s.mile} miles.`,
@@ -1593,6 +1626,6 @@ function buildVictoryLines(s: GameState): string[] {
     `  Subtotal ..... ${score.subtotal}  x${score.multiplier} (${occupation.toUpperCase()})`,
     `  TOTAL ........ ${score.total}`,
     '',
-    `PHASE ${TUNING.buildPhase} ROUTE · LAS CRUCES → OCEAN BEACH · brought to you by 8 WEST IT 365`,
+    `PHASE ${TUNING.buildPhase} ROUTE · LAS CRUCES → SUNSET CLIFFS · brought to you by 8 WEST IT 365`,
   ];
 }

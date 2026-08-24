@@ -44,7 +44,7 @@ Three things, in priority order:
     Inter + a mono face. The live site is https://8westit.com.
   - Ask Frank for SVG masters of both logos if only PNG exists.
 
-### 3. The full route: Tucson → Ocean Beach
+### 3. The full route: Tucson → Sunset Cliffs
 
 Stops 6–17 from PLAN.md, with the new mechanics they carry:
 
@@ -62,7 +62,7 @@ Stops 6–17 from PLAN.md, with the new mechanics they carry:
 - **Laguna Summit** (690): THE FINALE. Choose: **ride the 6% grade** (fast, free, brakes
   smoking — a real set-piece with a brake-temperature minigame) or **Old Highway 80** (slow,
   winding, weather risk). Both fully written.
-- **Ocean Beach** (730): victory at the Pacific. The van at the sand where the 8 dead-ends.
+- **Sunset Cliffs** (730): victory at the Pacific — the crew celebrates by cliff jumping into the ocean where the 8 dead-ends (Frank changed the finish from Ocean Beach on 2026-08-24).
 - Also: **van repairs at shops** (cash for condition), Tucson becomes a milestone screen not an
   ending, and the phase1EndMile gate goes away (keep a "PHASE" marker in the score screen).
 
@@ -109,8 +109,8 @@ placeholders as it lands.
 |---|---|---|---|
 | 1 | **Title lockup** "THE 8 WEST TRAIL" in interstate-shield style, with "presented by 8 West IT" and a tiny "an 8 West Ventures company" | SVG, horizontal + stacked | `brand/title-lockup.svg`, `brand/title-stacked.svg` |
 | 2 | **The van** — 1985 Econoline, side view, 8 West IT door magnets, white/red/blue livery | PNG transparent, 1600×800; ideally wheels as a separate layer; 3 states: clean / dusty / battered | `van/van-clean.png`, `van-dusty.png`, `van-battered.png`, `van-wheel.png` |
-| 3 | **Region backdrops** (8) — wide parallax panoramas: (1) Mesilla valley pecans + Organ Mountains, (2) Deming–Lordsburg dust flats, (3) Texas Canyon boulders → Sonoran saguaro, (4) Picacho / Casa Grande farmland, (5) Gila Bend / Dateland lowlands, (6) Yuma / Colorado River + Imperial Dunes, (7) In-Ko-Pah boulders + Laguna pines, (8) Ocean Beach pier at sunset | WebP 2400×900; if possible 3 layers each (sky / mid / road) as separate PNGs for parallax | `regions/01-mesilla.webp` … `08-ocean-beach.webp` (+ `-sky`, `-mid`, `-road` layers) |
-| 4 | **Stop postcards** (17, or the 6 majors minimum: Las Cruces, Tucson, Yuma, El Centro, Laguna Summit, Ocean Beach) | WebP 800×500, vintage-postcard style | `stops/<stop-id>.webp` (ids in `src/sim/data/route.ts`) |
+| 3 | **Region backdrops** (8) — wide parallax panoramas: (1) Mesilla valley pecans + Organ Mountains, (2) Deming–Lordsburg dust flats, (3) Texas Canyon boulders → Sonoran saguaro, (4) Picacho / Casa Grande farmland, (5) Gila Bend / Dateland lowlands, (6) Yuma / Colorado River + Imperial Dunes, (7) In-Ko-Pah boulders + Laguna pines, (8) Sunset Cliffs at sunset | WebP 2400×900; if possible 3 layers each (sky / mid / road) as separate PNGs for parallax | `regions/01-mesilla.webp` … `08-sunset-cliffs.webp` (+ `-sky`, `-mid`, `-road` layers) |
+| 4 | **Stop postcards** (17, or the 6 majors minimum: Las Cruces, Tucson, Yuma, El Centro, Laguna Summit, Sunset Cliffs) | WebP 800×500, vintage-postcard style | `stops/<stop-id>.webp` (ids in `src/sim/data/route.ts`) |
 | 5 | **Billboards** — 6–8 highway billboards for 8 West IT 365 (fun taglines: "We fix it before it breaks", "365 days. Zero fire drills.", "Your IT, on the road with you", etc.) + 2 subtle Ventures ones ("an 8 West Ventures company" plate; a water tower reading 8 WEST) | SVG or PNG 1200×400 | `billboards/8westit-01.svg` … `8westventures-01.svg` |
 
 ### C. Tier 2 — depth and delight
@@ -120,7 +120,7 @@ placeholders as it lands.
 | 6 | **Crew portraits** — 12 diverse modern-cartoon avatars | PNG transparent 512×512 | `crew/01.png` … `12.png` |
 | 7 | **Event cards** (~13): gas-station sushi, rattlesnake rest stop, flat tire, radiator steam, dust-storm wall, monsoon wash, tow truck (8 West IT livery, "Roadside Div."), ransomware laptop, speed trap, snack stand, pecan stand, Historic US 80 sign, roadside memorial | WebP 800×600 | `events/<event-id>.webp` (ids in `src/sim/events.ts`) |
 | 8 | **Icon set**: food, water, fuel, tire, belt, hose, cash, van, pace ×3, rations ×3, weather (mild/warm/hot/scorching/dust/monsoon) | SVG, single color + accent, 24px grid | `icons/<name>.svg` |
-| 9 | **Victory scene** — van on the sand at Ocean Beach, sunset, crew silhouettes; **memorial scene** — roadside cross at dusk | WebP 1920×1080 | `scenes/victory.webp`, `scenes/memorial.webp` |
+| 9 | **Victory scene** — van parked at the top of Sunset Cliffs at sunset, crew silhouettes mid-jump; **memorial scene** — roadside cross at dusk | WebP 1920×1080 | `scenes/victory.webp`, `scenes/memorial.webp` |
 
 ### D. Tier 3 — optional polish
 

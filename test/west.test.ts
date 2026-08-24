@@ -22,14 +22,14 @@ describe('Tucson is a milestone, not the finish', () => {
     const s = run(arriveAt(departed(), 'tucson'), { type: 'OPEN', screen: 'map' });
     const text = view(s).lines.join('\n');
     expect(text).not.toMatch(/uncharted|phase 2/i);
-    expect(text).toContain('Ocean Beach');
+    expect(text).toContain('Sunset Cliffs');
   });
 
   test('the title and help screens promise the whole road', () => {
     const title = view(run(departed(), { type: 'RESTART' }));
     expect(title.lines.join(' ')).not.toMatch(/Phase 1/);
     const help = view(run(departed(), { type: 'OPEN', screen: 'help' }));
-    expect(help.lines.join(' ')).toMatch(/Ocean Beach/);
+    expect(help.lines.join(' ')).toMatch(/Sunset Cliffs/);
     expect(help.lines.join(' ')).not.toMatch(/Tucson alive/);
   });
 });
@@ -306,7 +306,7 @@ describe('Laguna Summit', () => {
     const labels = s.pendingEvent!.choices!.map((c) => c.label.toLowerCase());
     expect(labels[0]).toMatch(/6%/);
     expect(labels[1]).toMatch(/old highway 80/);
-    expect(s.nextStopIndex).toBe(stopIndexOf('ocean-beach'));
+    expect(s.nextStopIndex).toBe(stopIndexOf('sunset-cliffs'));
   });
 
   test('Old Highway 80 is slow and safe: two or three days, then the coast road', () => {
@@ -374,25 +374,47 @@ describe('Laguna Summit', () => {
 });
 
 describe('the Pacific', () => {
-  test('reaching Ocean Beach is victory, with the score and the phase marker', () => {
-    const s = arriveAt(departed(), 'ocean-beach');
-    expect(s.phase).toBe('victory');
-    expect(s.gameOver).toBe(true);
+  test('reaching Sunset Cliffs is the celebration: pick your jump, then the score', () => {
+    const s = arriveAt(departed(), 'sunset-cliffs');
+    expect(s.phase).toBe('event');
+    expect(s.pendingEvent?.id).toBe('cliffs');
+    expect(s.pendingEvent?.title).toMatch(/SUNSET CLIFFS/);
+    expect(s.pendingEvent!.choices).toHaveLength(3);
+    expect(s.gameOver).toBe(false);
     expect(s.mile).toBe(730);
-    const screen = view(s);
-    expect(screen.title).toMatch(/OCEAN BEACH/);
+
+    const won = reduce(s, { type: 'EVENT_CHOICE', index: 0 });
+    expect(won.phase).toBe('victory');
+    expect(won.gameOver).toBe(true);
+    expect(won.celebration).toBe('cannonball');
+    const screen = view(won);
+    expect(screen.title).toMatch(/SUNSET CLIFFS/);
     expect(screen.art).toBe('victory');
     const text = screen.lines.join('\n');
     expect(text).toMatch(/TOTAL/);
     expect(text).toMatch(/PHASE 2/);
     expect(text).toMatch(/Pacific/);
+    expect(text).toMatch(/dropped safe/);
+  });
+
+  test('every jump is a win, and the screen remembers yours', () => {
+    const cliffs = arriveAt(departed(), 'sunset-cliffs');
+    const texts = new Set<string>();
+    for (const [index, celebration] of (['cannonball', 'swan', 'towels'] as const).entries()) {
+      const won = reduce(cliffs, { type: 'EVENT_CHOICE', index });
+      expect(won.phase).toBe('victory');
+      expect(won.celebration).toBe(celebration);
+      texts.add(view(won).lines[1]!);
+    }
+    expect(texts.size).toBe(3);
   });
 
   test('the victory screen remembers which way you came down the mountain', () => {
     const top = arriveAt(departed(), 'laguna-summit');
     const old80 = reduce(reduce(top, { type: 'EVENT_CHOICE', index: 1 }), { type: 'EVENT_CONTINUE' });
-    const beach = arriveAt(old80, 'ocean-beach', false);
-    expect(view(beach).lines.join(' ')).toMatch(/Old Highway 80/);
+    const cliffs = arriveAt(old80, 'sunset-cliffs', false);
+    const won = reduce(cliffs, { type: 'EVENT_CHOICE', index: 2 });
+    expect(view(won).lines.join(' ')).toMatch(/Old Highway 80/);
   });
 });
 

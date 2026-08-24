@@ -120,6 +120,9 @@ export interface LogEntry {
 
 export type SummitRoute = 'grade' | 'old80';
 
+/** How you went off the cliffs at the finish. */
+export type Celebration = 'cannonball' | 'swan' | 'towels';
+
 export interface GameState {
   phase: GamePhase;
   returnPhase: GamePhase; // where sub-screens (supplies/map/pace/rations) return to
@@ -158,6 +161,7 @@ export interface GameState {
   crossing: CrossingState | null; // on a river bank
   grade: GradeState | null; // on the 6% descent
   summitRoute: SummitRoute | null; // which way you came down the mountain
+  celebration: Celebration | null; // the jump at Sunset Cliffs
 
   memorials: Memorial[]; // environment: past runs' graves (injected at init)
   memorialSeenDay: number; // last day a memorial line fired

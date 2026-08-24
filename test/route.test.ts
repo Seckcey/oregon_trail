@@ -6,10 +6,10 @@ import { repairQuote } from '../src/sim/store';
 import { rollWeather } from '../src/sim/weather';
 
 describe('the full route', () => {
-  test('runs seventeen stops from Las Cruces to Ocean Beach, 730 miles, in order', () => {
+  test('runs seventeen stops from Las Cruces to Sunset Cliffs, 730 miles, in order', () => {
     expect(ROUTE).toHaveLength(17);
     expect(ROUTE[0]).toMatchObject({ id: 'las-cruces', mile: 0, kind: 'start' });
-    expect(ROUTE[16]).toMatchObject({ id: 'ocean-beach', mile: 730, kind: 'finish' });
+    expect(ROUTE[16]).toMatchObject({ id: 'sunset-cliffs', mile: 730, kind: 'finish' });
     for (let i = 1; i < ROUTE.length; i++) expect(ROUTE[i]!.mile).toBeGreaterThan(ROUTE[i - 1]!.mile);
   });
 

@@ -10,7 +10,7 @@ emigrant trail to the 8 West run to the beach. Same bones — outfitting, pace v
 crossings, breakdowns, random catastrophe, permadeath, epitaphs, a score table — new skin:
 a five-person crew in a van, desert heat instead of blizzards, the Colorado River at Yuma
 instead of the Green River, and the run ending where Interstate 8 literally dead-ends at the
-Pacific in Ocean Beach, San Diego.
+Pacific at Sunset Cliffs, San Diego — where the crew celebrates by jumping off the cliffs.
 
 The homage is the point. Everyone who plays it should smile in the first 30 seconds because
 they know exactly what game this is — and remember which IT company made it.
@@ -50,7 +50,7 @@ they know exactly what game this is — and remember which IT company made it.
 | 14 | Ocotillo → In-Ko-Pah grade | hazard | Blue Mountains approach |
 | 15 | Jacumba / Boulevard | landmark | Fort Boise |
 | 16 | Laguna Summit (~4,000 ft) → the 6% grade | climax | The Dalles decision |
-| 17 | El Cajon → Mission Valley → **Ocean Beach** | finish | Oregon City |
+| 17 | El Cajon → Mission Valley → **Sunset Cliffs** (the cliff-jump finale; changed from Ocean Beach 2026-08-24) | finish | Oregon City |
 
 **The climax (The Dalles analog):** at Laguna Summit, choose — **ride the 6% grade** (fast,
 free, brakes smoking, runaway-ramp minigame) or **Old Highway 80** (slow winding backroad,

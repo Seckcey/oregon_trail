@@ -32,7 +32,7 @@ function shareText(s: GameState): string {
   if (s.phase === 'victory' && s.occupation) {
     const score = computeScore(s.crew, s.supplies, s.cash, s.occupation);
     const survivors = s.crew.filter((m) => m.alive).map((m) => m.name).join(', ');
-    return `${header}\nMade Ocean Beach with ${survivors || 'no one'}. Score ${score.total} (${s.occupation.toUpperCase()} x${score.multiplier}).\nPlay at 8wt.8westit.com`;
+    return `${header}\nMade Sunset Cliffs with ${survivors || 'no one'}. Score ${score.total} (${s.occupation.toUpperCase()} x${score.multiplier}).\nPlay at 8wt.8westit.com`;
   }
   return `${header}\nI died of ${s.deathCause ?? 'THE ROAD'}. "${s.epitaph}"\nPlay at 8wt.8westit.com`;
 }

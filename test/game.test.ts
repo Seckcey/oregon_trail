@@ -361,7 +361,7 @@ describe('death', () => {
 
 describe('the end of the desert leg', () => {
   // Phase 1 ended the run here. Phase 2 opened the road: Tucson is a town
-  // like any other, and the finish is Ocean Beach (see test/west.test.ts).
+  // like any other, and the finish is Sunset Cliffs (see test/west.test.ts).
   test('reaching Tucson is a milestone stop, not the finish', () => {
     let s = departed();
     s = structuredClone(s);

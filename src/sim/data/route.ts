@@ -1,6 +1,6 @@
 import type { Stop } from '../types';
 
-// The 8 West Trail: Las Cruces to Ocean Beach, ~730 miles, seventeen stops.
+// The 8 West Trail: Las Cruces to Sunset Cliffs, ~730 miles, seventeen stops.
 // Mileage is road-trip-approximate, tuned for game cadence. Everything here
 // is our own writing.
 
@@ -134,12 +134,12 @@ export const ROUTE: Stop[] = [
     flavor: 'Laguna Summit, four thousand feet. Pines — actual pines — and cold air through the vents for the first time since New Mexico. Ahead, the sign: 6% GRADE, NEXT 6 MILES. TRUCKS USE LOW GEAR. Below that, the whole coast.',
   },
   {
-    id: 'ocean-beach',
-    name: 'Ocean Beach',
+    id: 'sunset-cliffs',
+    name: 'Sunset Cliffs',
     mile: 730,
     kind: 'finish',
     hasShop: false,
-    flavor: 'Ocean Beach, San Diego. Interstate 8 runs out of continent at Sunset Cliffs Boulevard, and you park where the road gives up and the Pacific begins. The 8 dead-ends here. So, gloriously, do you.',
+    flavor: 'Sunset Cliffs, San Diego. Interstate 8 runs out of continent at Sunset Cliffs Boulevard, and you follow the boulevard to the edge: gold sandstone, a low sun, and the Pacific forty feet down, doing its thing. The 8 dead-ends here. So, gloriously, do you.',
   },
 ];
 
