@@ -10,10 +10,15 @@ to be shared. Everyone who plays it will know exactly what game it's tipping its
 
 ## Status
 
-**Phase 1 is live at [8wt.8westit.com](https://8wt.8westit.com)** — the Desert Leg, Las Cruces
-to Tucson: outfitting, pace/rations/water, dust storms and monsoons, breakdowns, the snack run,
-deaths and roadside memorials, scoring, and localStorage saves. Phases 2-4 (the full route to
-Sunset Cliffs, art pass, networked memorials) are next.
+**Phase 2 is live at [8wt.8westit.com](https://8wt.8westit.com)** — the full route, Las Cruces
+to Sunset Cliffs: seventeen stops, the Gila and Colorado crossings (ford / float / ferry / wait),
+the Imperial Dunes, the In-Ko-Pah climb, the Laguna Summit decision and the 6% grade, shop
+tune-ups, landmark specials, and the cliff-jump finish — plus everything from Phase 1
+(outfitting, pace/rations/water, storms, breakdowns, the snack run, deaths and roadside
+memorials, scoring, localStorage saves). It ships in the green-phosphor **Heritage** look; the
+UI is split behind a renderer interface with a persisted theme toggle ready for a second theme.
+Phase 3 is the comic-book renderer (see [docs/PHASE3-COMIC-BRIEF.md](docs/PHASE3-COMIC-BRIEF.md));
+Phase 4 is networked memorials.
 
 See [docs/PLAN.md](docs/PLAN.md) for the full game design and build plan, and
 [research/](research/) for the underlying research (history, mechanics, market).
@@ -23,7 +28,7 @@ See [docs/PLAN.md](docs/PLAN.md) for the full game design and build plan, and
 ```
 npm install
 npm run dev      # local dev server
-npm test         # 211 tests (vitest): sim, route, crossings, the grade, UI plumbing
+npm test         # 212 tests (vitest): sim, route, crossings, the grade, UI plumbing
 npm run build    # typecheck + production bundle in dist/
 ```
 
@@ -36,8 +41,8 @@ The VM builds and serves the game with Docker on `127.0.0.1:1985`, which the Clo
 tunnel maps to 8wt.8westit.com:
 
 ```
-git archive --format=tar.gz -o /tmp/8wt.tar.gz HEAD
-scp /tmp/8wt.tar.gz coastline:/tmp/
+git archive --format=tar.gz -o /tmp/8wt-deploy.tar.gz HEAD
+scp /tmp/8wt-deploy.tar.gz coastline:/tmp/8wt-deploy.tar.gz
 ssh coastline "tar xzf /tmp/8wt-deploy.tar.gz -C ~/apps/eight-west-trail && cd ~/apps/eight-west-trail && docker compose up -d --build"
 ```
 

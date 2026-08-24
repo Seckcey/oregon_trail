@@ -105,7 +105,15 @@ game earns shares by being good; the brand rides along.
   phosphor-terminal UI, localStorage saves and local roadside memorials, share-your-story copy.
   Note one deliberate deviation from the table above: the ransomware event costs $185 for
   "a guy who knows computers" instead of a lost day (cleaner in the sim), wink intact.
-- Phase 2-4: not started.
+- **Phase 2 (the route): SHIPPED 2026-08-24.** PR #1 split the UI behind a renderer interface
+  with a persisted theme toggle (Heritage pixel-identical); PR #2 opened the whole road — Gila and
+  Colorado crossings, the Imperial Dunes, the In-Ko-Pah, the Laguna Summit decision with the 6%
+  grade brake minigame vs Old Highway 80, tune-ups, landmark specials, and the finish moved to
+  **Sunset Cliffs** with the cliff-jump celebration (Frank's call). 212 tests. The Phase 2 brief's
+  "Coastal" theme was built to a first cut and then **cancelled the same day** in favour of the
+  comic-book direction (docs/PHASE3-COMIC-BRIEF.md); that work is parked on an unpushed local
+  branch, not merged.
+- Phase 3 (comic renderer) and Phase 4 (networked memorials): not started.
 
 ## Build plan
 
