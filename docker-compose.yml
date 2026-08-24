@@ -1,0 +1,9 @@
+# The 8 West Trail on coastline: container serves the static game on
+# 127.0.0.1:1985, which the Cloudflare tunnel maps to 8wt.8westit.com.
+services:
+  eight-west-trail:
+    build: .
+    container_name: eight-west-trail
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1985:80"

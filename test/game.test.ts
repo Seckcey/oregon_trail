@@ -420,6 +420,29 @@ describe('view', () => {
     expect(screen.choices.some((c) => c.label.toLowerCase().includes('drive'))).toBe(true);
   });
 
+  test('the status bar reports the van as a whole number', () => {
+    const s = driveUntil(departed(), (x) => x.phase === 'travel' && x.day >= 2);
+    const status = view(s).status!;
+    expect(Number.isInteger(s.van.condition) || !`${status.van}`.includes('.')).toBe(true);
+    expect(Number.isInteger(status.van)).toBe(true);
+  });
+
+  test('standing in a town, NEXT points at the town ahead', () => {
+    const s = driveUntil(departed(), (x) => x.phase === 'stop');
+    const status = view(s).status!;
+    expect(s.atStopIndex).toBe(1); // Deming
+    expect(status.nextStop).toBe('Lordsburg');
+    expect(status.nextStopMiles).toBe(60);
+  });
+
+  test('parked days never roll a storm: rest and snack weather is heat only', () => {
+    for (let i = 0; i < 60; i++) {
+      const rested = reduce(departed(`park-${i}`, 3), { type: 'REST' });
+      expect(rested.weatherToday?.event).toBe('none');
+      expect(rested.weatherToday?.label).not.toBe('dust storm');
+    }
+  });
+
   test('the epitaph screen asks for input', () => {
     let s = departed();
     s = structuredClone(s);

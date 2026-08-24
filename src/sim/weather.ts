@@ -26,7 +26,13 @@ const MONSOON_MONTHS: readonly Month[] = [7, 8];
 const MONSOON_MIN_MILE = 150;
 const MONSOON_CHANCE = 0.12;
 
-const HEAT_LABELS = ['mild', 'warm', 'hot', 'scorching'] as const;
+export const HEAT_LABELS = ['mild', 'warm', 'hot', 'scorching'] as const;
+
+/** The same day, seen from a parked van: storms don't apply, heat does. */
+export function heatOnly(w: Weather): Weather {
+  if (w.event === 'none') return w;
+  return { label: HEAT_LABELS[w.heat], heat: w.heat, event: 'none' };
+}
 
 export function rollWeather(rng: RngState, month: Month, mile: number): Weather {
   const [min, max] = HEAT_RANGE[month];

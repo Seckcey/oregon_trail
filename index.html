@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The 8 West Trail</title>
+  <meta name="description" content="A road-survival game from 8 West IT. Load a 1985 van in Las Cruces, keep your crew alive, and don't stop until the 8 dead-ends at the Pacific." />
+  <meta property="og:title" content="The 8 West Trail" />
+  <meta property="og:description" content="Five friends. One 1985 van. 730 miles of desert. A loving homage to the computer-lab classics, from 8 West IT." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#050805" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050805'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='18' font-weight='bold' fill='%234bf07a' text-anchor='middle'%3E8W%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" />
+  <script type="module" src="/src/main.ts"></script>
+</head>
+<body>
+  <div id="crt">
+    <header class="masthead">
+      <span class="mast-title">THE 8 WEST TRAIL</span>
+      <a class="mast-brand" href="https://8westit.com" target="_blank" rel="noopener">a road game from 8 WEST IT</a>
+    </header>
+    <main id="screen" aria-live="polite">
+      <h1 id="screen-title"></h1>
+      <div id="screen-lines"></div>
+      <form id="screen-input" hidden>
+        <label id="input-prompt" for="input-field"></label>
+        <div class="input-row">
+          <span class="input-caret">&gt;</span>
+          <input id="input-field" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+        </div>
+      </form>
+      <div id="screen-choices" role="menu"></div>
+    </main>
+    <aside id="status" hidden></aside>
+    <footer class="colophon">
+      <span>&copy; 2026 8 West Ventures, LLC</span>
+      <span>an homage to the computer-lab classics</span>
+      <a href="https://8westit.com" target="_blank" rel="noopener">8westit.com</a>
+    </footer>
+  </div>
+</body>
+</html>

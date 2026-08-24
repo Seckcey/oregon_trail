@@ -19,7 +19,7 @@ import type {
   Weather,
 } from './types';
 import { DAYS_IN_MONTH, healthStatus, MONTH_NAMES, TUNING } from './types';
-import { rollWeather } from './weather';
+import { heatOnly, rollWeather } from './weather';
 
 // ---------------------------------------------------------------------------
 // Actions and screens
@@ -324,7 +324,7 @@ function completeDay(s: GameState, opts: DayOptions): void {
 
 function driveDay(s: GameState): void {
   if (s.supplies.fuel <= 0) {
-    s.weatherToday = rollWeather(s.rng, s.month, s.mile);
+    s.weatherToday = heatOnly(rollWeather(s.rng, s.month, s.mile));
     if (s.cash >= 8500) {
       notice(s, 'gas-tow', [
         'The needle has been lying. The van coasts onto the shoulder, out of gas, miles from anything.',
@@ -441,7 +441,7 @@ function finishSnackRun(s: GameState): void {
   s.supplies.food = Math.min(TUNING.foodMax, s.supplies.food + gained);
   s.snackRunsSinceStop += 1;
   const overshoot = snack.results.reduce((a, r) => a + r.lbs, 0);
-  s.weatherToday = rollWeather(s.rng, s.month, s.mile);
+  s.weatherToday = heatOnly(rollWeather(s.rng, s.month, s.mile));
   s.snack = null;
   const lines =
     overshoot > gained
@@ -529,7 +529,7 @@ export function reduce(state: GameState, action: Action): GameState {
 
     case 'REST': {
       if (s.gameOver) return s;
-      s.weatherToday = rollWeather(s.rng, s.month, s.mile);
+      s.weatherToday = heatOnly(rollWeather(s.rng, s.month, s.mile));
       completeDay(s, { miles: 0, resting: true, allowPool: false });
       return s;
     }
@@ -629,7 +629,8 @@ export function reduce(state: GameState, action: Action): GameState {
 // ---------------------------------------------------------------------------
 
 function statusOf(s: GameState): StatusData {
-  const next = ROUTE[Math.min(s.nextStopIndex, ROUTE.length - 1)]!;
+  const nextIndex = s.atStopIndex !== null ? s.atStopIndex + 1 : s.nextStopIndex;
+  const next = ROUTE[Math.min(nextIndex, ROUTE.length - 1)]!;
   return {
     date: `${MONTH_NAMES[s.month]} ${s.dayOfMonth}`,
     day: s.day,
@@ -643,7 +644,7 @@ function statusOf(s: GameState): StatusData {
     parts: `${s.supplies.tires}t ${s.supplies.belts}b ${s.supplies.hoses}h`,
     pace: s.pace,
     rations: s.rations,
-    van: s.van.condition,
+    van: Math.round(s.van.condition),
     weather: s.weatherToday?.label ?? null,
     crew: s.crew.map((m) => ({
       name: m.name,

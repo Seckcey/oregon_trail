@@ -1,0 +1,188 @@
+/* The 8 West Trail — phosphor terminal dress.
+   One committed look: green P1 phosphor on near-black, everywhere. */
+
+:root {
+  --bg: #050805;
+  --bg-panel: #081008;
+  --phos: #4bf07a;
+  --phos-dim: #2f9a52;
+  --phos-faint: #1d5c33;
+  --amber: #ffb454;
+  --red: #ff7a6b;
+  --glow: 0 0 6px rgba(75, 240, 122, 0.45);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--phos);
+  font-family: 'VT323', 'Courier New', monospace;
+  font-size: 20px;
+  line-height: 1.45;
+  text-shadow: var(--glow);
+}
+
+/* scanlines over everything, gently */
+#crt {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px;
+  position: relative;
+}
+#crt::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.18) 0px,
+    rgba(0, 0, 0, 0.18) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+a { color: var(--phos); }
+a:hover { color: #7dffa5; }
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--phos);
+  outline-offset: 2px;
+}
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 14px 0 10px;
+  border-bottom: 1px solid var(--phos-faint);
+}
+.mast-title { font-size: 26px; letter-spacing: 2px; }
+.mast-brand { font-size: 16px; color: var(--phos-dim); text-decoration: none; }
+.mast-brand:hover { color: var(--phos); text-decoration: underline; }
+
+#screen {
+  flex: 1;
+  padding: 18px 0 10px;
+}
+
+#screen-title {
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+
+#screen-lines { white-space: pre-wrap; word-break: break-word; }
+#screen-lines .line { min-height: 1.2em; }
+#screen-lines .line.pending { visibility: hidden; }
+
+#screen-choices {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+#screen-choices button {
+  font: inherit;
+  color: var(--phos);
+  background: transparent;
+  border: 1px solid var(--phos-faint);
+  padding: 6px 14px;
+  cursor: pointer;
+  text-align: left;
+  text-shadow: var(--glow);
+  min-width: min(420px, 100%);
+}
+#screen-choices button:hover {
+  background: var(--bg-panel);
+  border-color: var(--phos-dim);
+}
+#screen-choices button .key {
+  color: var(--phos-dim);
+  margin-right: 10px;
+}
+
+#screen-input { margin-top: 18px; }
+#screen-input label { display: block; color: var(--phos-dim); margin-bottom: 6px; }
+.input-row { display: flex; align-items: center; gap: 8px; }
+.input-caret { font-size: 22px; }
+#input-field {
+  font: inherit;
+  flex: 1;
+  max-width: 420px;
+  background: var(--bg-panel);
+  color: var(--phos);
+  border: 1px solid var(--phos-dim);
+  padding: 6px 10px;
+  text-shadow: var(--glow);
+  text-transform: uppercase;
+}
+
+#status {
+  border-top: 1px double var(--phos-faint);
+  padding: 10px 0;
+  font-size: 17px;
+  color: var(--phos-dim);
+}
+#status .stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+#status .stat b { color: var(--phos); font-weight: 400; }
+#status .stat.warn b { color: var(--amber); }
+#status .crew-row { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+#status .crew-chip .hp-good { color: var(--phos); }
+#status .crew-chip .hp-fair { color: var(--phos); }
+#status .crew-chip .hp-poor { color: var(--amber); }
+#status .crew-chip .hp-critical { color: var(--amber); }
+#status .crew-chip .hp-lost { color: var(--red); }
+
+.colophon {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  justify-content: space-between;
+  padding: 10px 0 16px;
+  border-top: 1px solid var(--phos-faint);
+  font-size: 15px;
+  color: var(--phos-faint);
+}
+.colophon a { color: var(--phos-faint); }
+.colophon a:hover { color: var(--phos-dim); }
+
+.share-btn {
+  font: inherit;
+  margin-top: 14px;
+  color: var(--phos);
+  background: transparent;
+  border: 1px dashed var(--phos-dim);
+  padding: 6px 14px;
+  cursor: pointer;
+  text-shadow: var(--glow);
+}
+.share-btn:hover { background: var(--bg-panel); }
+
+@media (max-width: 600px) {
+  body { font-size: 18px; }
+  #screen-title { font-size: 24px; }
+  .mast-title { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

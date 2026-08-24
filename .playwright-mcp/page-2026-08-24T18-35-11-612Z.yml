@@ -1,0 +1,35 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: THE 8 WEST TRAIL
+    - link "a road game from 8 WEST IT" [ref=e5] [cursor=pointer]:
+      - /url: https://8westit.com
+  - main [ref=e6]:
+    - heading "* * *" [level=1] [ref=e262]
+    - generic [ref=e8]: You haul 26 lbs of roadside provisions back to the van. The day
+    - menu [ref=e13]:
+      - menuitem "1)Press on" [ref=e264] [cursor=pointer]
+  - complementary [ref=e76]:
+    - generic [ref=e265]:
+      - generic [ref=e266]: DATE May 4
+      - generic [ref=e267]: MILE 60
+      - generic [ref=e268]: NEXT Lordsburg 60mi
+      - generic [ref=e269]: CASH $218.45
+      - generic [ref=e270]: FOOD 106lb
+      - generic [ref=e271]: WATER 8gal
+      - generic [ref=e272]: GAS 22gal
+      - generic [ref=e273]: SPARES 1t 0b 1h
+      - generic [ref=e274]: VAN 99/100
+      - generic [ref=e275]: PACE steady
+      - generic [ref=e276]: MEALS filling
+      - generic [ref=e277]: WEATHER dust storm
+    - generic [ref=e278]:
+      - generic [ref=e279]: FRANK GOOD
+      - generic [ref=e280]: Bo GOOD
+      - generic [ref=e281]: Sol GOOD
+      - generic [ref=e282]: Sky GOOD
+      - generic [ref=e283]: Wes GOOD
+  - contentinfo [ref=e17]:
+    - generic [ref=e18]: © 2026 8 West Ventures, LLC
+    - generic [ref=e19]: an homage to the computer-lab classics
+    - link "8westit.com" [ref=e20] [cursor=pointer]:
+      - /url: https://8westit.com

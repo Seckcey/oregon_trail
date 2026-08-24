@@ -1,0 +1,43 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: THE 8 WEST TRAIL
+    - link "a road game from 8 WEST IT" [ref=e5] [cursor=pointer]:
+      - /url: https://8westit.com
+  - main [ref=e6]:
+    - heading "THE SNACK RUN" [level=1] [ref=e192]
+    - generic [ref=e8]:
+      - generic [ref=e239]: A roadside stand shimmers into view. You have one shot at each order — call it out FAST and EXACTLY.
+      - generic [ref=e240]: Round 3 of 3.
+      - generic [ref=e241]: “ELOTE” — naile
+    - generic [ref=e43]:
+      - generic [ref=e44]: Type the word and hit ENTER
+      - generic [ref=e45]:
+        - generic [ref=e46]: ">"
+        - textbox "Type the word and hit ENTER" [active] [ref=e196]:
+          - /placeholder: ""
+    - menu
+  - complementary [ref=e76]:
+    - generic [ref=e243]:
+      - generic [ref=e244]: DATE May 3
+      - generic [ref=e245]: MILE 60
+      - generic [ref=e246]: NEXT Lordsburg 60mi
+      - generic [ref=e247]: CASH $218.45
+      - generic [ref=e248]: FOOD 95lb
+      - generic [ref=e249]: WATER 14gal
+      - generic [ref=e250]: GAS 22gal
+      - generic [ref=e251]: SPARES 1t 0b 1h
+      - generic [ref=e252]: VAN 99/100
+      - generic [ref=e253]: PACE steady
+      - generic [ref=e254]: MEALS filling
+      - generic [ref=e255]: WEATHER hot
+    - generic [ref=e256]:
+      - generic [ref=e257]: FRANK GOOD
+      - generic [ref=e258]: Bo GOOD
+      - generic [ref=e259]: Sol GOOD
+      - generic [ref=e260]: Sky GOOD
+      - generic [ref=e261]: Wes GOOD
+  - contentinfo [ref=e17]:
+    - generic [ref=e18]: © 2026 8 West Ventures, LLC
+    - generic [ref=e19]: an homage to the computer-lab classics
+    - link "8westit.com" [ref=e20] [cursor=pointer]:
+      - /url: https://8westit.com
