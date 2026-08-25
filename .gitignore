@@ -13,6 +13,7 @@ playwright-report/
 public/assets/**/*.png
 public/assets/**/*.jpg
 public/assets/**/*.jpeg
+art-masters/
 
 # Phase 4: the API's database and the secrets
 /data/

@@ -10,15 +10,18 @@
 //   npm run art -- --root <dir>      (another assets folder, e.g. a different checkout)
 
 import { readdirSync, statSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import sharp from 'sharp';
-import { keyMode, processRaster } from './art-lib.mjs';
+import { keyMode, processRaster, slimWebp } from './art-lib.mjs';
 
 const args = process.argv.slice(2);
 const check = args.includes('--check');
 const rootArg = args[args.indexOf('--root') + 1];
 const ROOT = args.includes('--root') && rootArg ? resolve(rootArg) : join(process.cwd(), 'public', 'assets');
 const BUDGET_BYTES = 200 * 1024;
+const MAX_EDGE = 2400;
+// Full-size WebPs saved by the image tool are kept here, outside the shipping folder (gitignored).
+const MASTERS = join(ROOT, '..', '..', 'art-masters');
 
 function walk(dir) {
   let entries = [];
@@ -40,6 +43,17 @@ function rel(file) {
 async function needsKeying(file) {
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   return keyMode(data, info.width, info.height) !== null;
+}
+
+// Finished WebPs first: an oversized one is shrunk in place, its master kept aside.
+let slimmed = 0;
+for (const file of walk(ROOT).filter((f) => /\.webp$/i.test(f))) {
+  if (check) continue;
+  const r = await slimWebp(file, join(MASTERS, relative(ROOT, dirname(file))), { maxEdge: MAX_EDGE, budgetBytes: BUDGET_BYTES });
+  if (r.slimmed) {
+    slimmed += 1;
+    console.log(`  slim ${rel(file)}: ${r.width}×${r.height} → ${MAX_EDGE} px, ${(r.size / 1024).toFixed(0)} KB (master kept)`);
+  }
 }
 
 const rasters = walk(ROOT).filter((f) => /\.(png|jpe?g)$/i.test(f));
@@ -77,4 +91,4 @@ for (const file of rasters) {
   );
   written += 1;
 }
-console.log(`${rasters.length} rasters, ${written} written (${keyedCount} keyed), ${skipped} left alone under ${BUDGET_BYTES / 1024} KB`);
+console.log(`${rasters.length} rasters, ${written} written (${keyedCount} keyed), ${skipped} left alone under ${BUDGET_BYTES / 1024} KB, ${slimmed} webp slimmed`);

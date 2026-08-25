@@ -187,6 +187,12 @@ test.describe('the comic book', () => {
     await outfit(page);
     await expect(page.locator('#comic.page-road')).toBeVisible();
     await expect(page.locator('.stage .van')).toBeVisible();
+    // Real art or placeholder, the van and the billboards stay inside their panel.
+    const panelBox = (await page.locator('.page-road .panel').first().boundingBox())!;
+    for (const drawn of ['.stage .van > *', '.stage .billboard > *']) {
+      const boxes = await page.locator(drawn).evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width));
+      for (const width of boxes) expect(width).toBeLessThanOrEqual(panelBox.width * 0.4);
+    }
     await expect(page.locator('.stage .billboard')).toHaveCount(2);
     await expect(page.locator('.crew-panel .mate')).toHaveCount(5);
     await expect(page.locator('.balloons .balloon')).toHaveCount(3);
