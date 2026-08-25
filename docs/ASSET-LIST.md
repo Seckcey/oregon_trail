@@ -583,3 +583,9 @@ subtle halftone-dot texture; clean bright backgrounds. Palette: ink black, sunfl
 #FFC72C, hot orange #F58220, white. No gradients, no painterly texture, no photorealism, no
 speech balloons, no text.
 ```
+
+### 19.5 · Rule for every cutout from here on: never fill a shape with pure screen green
+The keyer removes the neon #00FF00 background and any sealed pocket of that exact green (the gap
+in a roof rack). A letter or a checkmark painted in that same pure green looks like a pocket. If a
+prompt needs a green element on a cutout, ask for **lime green #7AC143** by name — never "bright
+green" or "neon green". HOORAY!'s R was regenerated for exactly this reason.

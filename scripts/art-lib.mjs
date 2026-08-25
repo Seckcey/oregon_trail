@@ -84,7 +84,8 @@ export function keyGreen(rgba, width, height, opts = {}) {
   const background = new Uint8Array(n);
   const queue = new Int32Array(n);
 
-  // Flood from the seeds through every neighbour `accept` admits.
+  // Flood from the seeds through every neighbour `accept` admits. Returns how
+  // many pixels this call marked; they sit in queue[0..count) until the next call.
   const flood = (seeds, accept) => {
     let head = 0;
     let tail = 0;
@@ -105,6 +106,7 @@ export function keyGreen(rgba, width, height, opts = {}) {
       if (y > 0) push(idx - width);
       if (y < height - 1) push(idx + width);
     }
+    return tail;
   };
   const everyPixel = { *[Symbol.iterator]() { for (let idx = 0; idx < n; idx++) yield idx; } };
   const borderPixels = {
@@ -128,8 +130,24 @@ export function keyGreen(rgba, width, height, opts = {}) {
     flood(borderPixels, isChroma);
     // Sealed pockets (the gap in a roof rack): only the screen colour itself,
     // grown only through the screen colour itself — a bright cartoon green
-    // next to a pocket is art and stays.
-    flood(everyPixel, isScreen);
+    // next to a pocket is art and stays. And a "pocket" bigger than 1% of the
+    // frame is not a gap at all but a shape somebody painted in screen green
+    // (a letter, a checkmark): that stays too.
+    const maxPocket = Math.max(64, Math.floor(n * 0.01));
+    // Each pocket is examined once: a reverted shape must not be re-flooded
+    // from every one of its pixels.
+    const examined = new Uint8Array(n);
+    for (let idx = 0; idx < n; idx++) {
+      if (background[idx] || examined[idx]) continue;
+      const p = idx * 4;
+      if (!isScreen(out[p], out[p + 1], out[p + 2])) continue;
+      const count = flood([idx], isScreen);
+      const keep = count > maxPocket;
+      for (let i = 0; i < count; i++) {
+        examined[queue[i]] = 1;
+        if (keep) background[queue[i]] = 0;
+      }
+    }
   }
 
   // Background out; the ring next to it softened and de-spilled.
