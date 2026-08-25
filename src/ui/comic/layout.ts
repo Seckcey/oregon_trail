@@ -78,6 +78,9 @@ const EVENT_STRIP_ALIASES: Record<string, EventStripId> = {
   'grade-ramp': 'runaway-ramp',
   'grade-done': 'the-grade',
   'old80-done': 'old-80',
+  'dexcom-low': 'dexcom',
+  'dexcom-15': 'dexcom',
+  'dexcom-late': 'dexcom',
 };
 
 export function eventStripFor(eventId: string): EventStripId | null {

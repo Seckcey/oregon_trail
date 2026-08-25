@@ -37,6 +37,9 @@ function hairFor(m: CastMember): string {
       return `<path d="M60 84 q40 -50 80 0z" fill="${h}" ${ink()}/><ellipse cx="100" cy="82" rx="90" ry="16" fill="#D9A66B" ${ink()}/><path d="M66 82 q0 -44 34 -44 q34 0 34 44z" fill="#D9A66B" ${ink()}/>`;
     case 'backwards-cap':
       return `<path d="M52 84 q48 -60 96 0z" fill="${h}" ${ink()}/><path d="M54 80 q46 -58 92 0 v6 h-92z" fill="#1F8FD6" ${ink()}/><path d="M140 84 h44 v10 h-44z" fill="#1F8FD6" ${ink()}/>`;
+    case 'curly':
+      // Short curls on top, faded at the sides.
+      return `<path d="M56 92 q0 -20 16 -22 q4 -22 26 -18 q10 -18 30 -8 q18 -8 24 12 q14 4 8 24 q-52 -14 -104 12z" fill="${h}" ${ink()}/><circle cx="72" cy="66" r="9" fill="${h}" ${ink()} stroke-width="3"/><circle cx="96" cy="52" r="10" fill="${h}" ${ink()} stroke-width="3"/><circle cx="122" cy="58" r="9" fill="${h}" ${ink()} stroke-width="3"/>`;
   }
 }
 
@@ -66,6 +69,9 @@ function accessoryFor(m: CastMember, mood: CrewMood): string {
       return `<rect x="78" y="160" width="18" height="30" rx="4" fill="${INK}"/><rect x="104" y="160" width="18" height="30" rx="4" fill="${INK}"/><path d="M64 150 q36 26 72 0" fill="none" ${ink()} stroke-width="3"/>`;
     case 'braces':
       return mood === 'lost' ? '' : `<path d="M78 128 q22 12 44 0" fill="none" stroke="#8E8E8E" stroke-width="4"/><path d="M84 130 v4 M96 133 v4 M108 133 v4 M118 130 v4" stroke="#8E8E8E" stroke-width="3"/>`;
+    case 'blue-circle':
+      // The blue circle — the awareness symbol for diabetes — on the shirt, and a small CGM on the arm.
+      return `<circle cx="100" cy="176" r="9" fill="${SKY}" ${ink()} stroke-width="3"/><ellipse cx="156" cy="180" rx="7" ry="9" fill="${PAPER}" ${ink()} stroke-width="3"/>`;
   }
 }
 

@@ -30,11 +30,12 @@ describe('the slot table is the asset-list contract', () => {
     expect(STOP_IDS[16]).toBe('sunset-cliffs');
   });
 
-  test('the sixteen SFX words and the twenty-seven event strips', () => {
+  test('the sixteen SFX words and the twenty-eight event strips (Kannon’s Dexcom strip included)', () => {
     expect(SFX_IDS).toHaveLength(16);
     expect(SFX_IDS).toContain('kaching');
     expect(SFX_IDS).toContain('wah-wah');
-    expect(EVENT_STRIPS).toHaveLength(27);
+    expect(EVENT_STRIPS).toHaveLength(28);
+    expect(EVENT_STRIPS).toContain('dexcom');
     expect(EVENT_STRIPS).toContain('tow-truck');
     expect(EVENT_STRIPS).toContain('the-grade');
   });

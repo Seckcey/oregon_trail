@@ -15,7 +15,8 @@ export type HairStyle =
   | 'long'
   | 'buzz'
   | 'sun-hat'
-  | 'backwards-cap';
+  | 'backwards-cap'
+  | 'curly';
 
 export type Accessory =
   | 'aviators'
@@ -29,7 +30,8 @@ export type Accessory =
   | 'earrings'
   | 'big-grin'
   | 'binoculars'
-  | 'braces';
+  | 'braces'
+  | 'blue-circle';
 
 export interface CastMember {
   id: number;
@@ -50,7 +52,7 @@ export const CAST: readonly CastMember[] = [
   { id: 4, name: 'Sol', role: 'knows every diner, laughs with his whole face', skin: '#C68B5E', hair: '#3A2418', hairStyle: 'straw-hat', shirt: '#F58220', accessory: 'mustache' },
   { id: 5, name: 'Piper', role: 'the photographer, always leaning out a window', skin: '#A9744F', hair: '#1A1A1A', hairStyle: 'braid', shirt: '#FFC72C', accessory: 'camera' },
   { id: 6, name: 'Hank', role: 'came for the beach', skin: '#F1C9A5', hair: '#EDEDED', hairStyle: 'bald-beard', shirt: '#C41E2A', accessory: 'reading-glasses' },
-  { id: 7, name: 'Sky', role: 'the intern who types 140 words a minute', skin: '#EFC4A0', hair: '#2AB7A9', hairStyle: 'undercut', shirt: '#111111', accessory: 'nose-ring' },
+  { id: 7, name: 'Kannon', role: 'lives with Type 1 diabetes, handles it like it’s nothing', skin: '#D9A377', hair: '#3B2A1A', hairStyle: 'curly', shirt: '#111111', accessory: 'blue-circle' },
   { id: 8, name: 'Ping', role: 'the mechanic', skin: '#F1D0A5', hair: '#1A1A1A', hairStyle: 'tousled', shirt: '#FFFFFF', accessory: 'rag' },
   { id: 9, name: 'Rosa', role: 'the navigator', skin: '#B97A57', hair: '#1F1A17', hairStyle: 'long', shirt: '#1F8FD6', accessory: 'earrings' },
   { id: 10, name: 'Bo', role: 'the new hire, eats everything', skin: '#F6D5BE', hair: '#8A5A2B', hairStyle: 'buzz', shirt: '#0C1830', accessory: 'big-grin' },

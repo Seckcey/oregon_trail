@@ -67,6 +67,25 @@ function shapeFor(label: string, spoken: boolean): BalloonShape {
   return 'speech';
 }
 
+/**
+ * The Dexcom alert is Kannon's scene: "keep rolling" is his line, and
+ * "pull over" belongs to whoever is nearest. Everything else goes round
+ * the van in order. Returns an index into the crew, or null for nobody.
+ */
+function speakerFor(screen: Screen, choiceIndex: number, alive: readonly number[]): number | null {
+  if (alive.length === 0) return null;
+  const crew = screen.status?.crew ?? [];
+  if (screen.scene.eventId === 'dexcom-low') {
+    const kannon = alive.find((i) => crew[i]?.badge === 't1d');
+    if (kannon !== undefined) {
+      if (choiceIndex === 1) return kannon;
+      const other = alive.find((i) => i !== kannon);
+      if (other !== undefined) return other;
+    }
+  }
+  return alive[choiceIndex % alive.length]!;
+}
+
 export function assignBalloons(screen: Screen): BalloonLayout {
   const crew = screen.status?.crew ?? [];
   const alive = crew.map((m, i) => (m.label === 'LOST' ? -1 : i)).filter((i) => i >= 0);
@@ -77,7 +96,7 @@ export function assignBalloons(screen: Screen): BalloonLayout {
       signs.push({ key: choice.key, label: choice.label, action: choice.action, speaker: null, speakerIndex: null, shape: 'speech' });
       continue;
     }
-    const speakerIndex = alive.length > 0 ? alive[balloons.length % alive.length]! : null;
+    const speakerIndex = speakerFor(screen, balloons.length, alive);
     balloons.push({
       key: choice.key,
       label: choice.label,

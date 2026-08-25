@@ -4,6 +4,7 @@
 
 import type { SetPiece, StatusData } from '../../sim/game';
 import { fmtCents } from '../../sim/store';
+import { T1D_LINKS } from '../../sim/t1d';
 import { type AssetResolver, type CrewSheet } from '../assets';
 import type { UiHandlers } from '../renderer';
 import { artSource } from './art';
@@ -108,15 +109,26 @@ ${status.weather ? cap('Weather', status.weather) : ''}
 </div>`;
 }
 
+/** The blue circle beside Kannon's name: tap it and the crew panel explains, with links. */
+function t1dBadgeHtml(name: string): string {
+  return `<button type="button" class="t1d-badge" data-t1d="toggle" aria-expanded="false" title="${esc(name)} lives with Type 1 diabetes — tap to learn more"><span class="dot"></span>T1D</button>`;
+}
+
+function t1dNoteHtml(name: string): string {
+  return `<div class="t1d-note" data-t1d="note" hidden><span class="caption narration">${esc(name)} lives with Type 1 diabetes: an autoimmune condition where the pancreas makes little or no insulin. He manages it with a sensor on his arm, insulin for every meal, and a juice box for the lows. He handles it like it’s nothing. It isn’t nothing.</span><span class="caption narration">Learn more, or help: <a href="https://${T1D_LINKS.ada}" target="_blank" rel="noopener">American Diabetes Association</a> · <a href="https://www.${T1D_LINKS.breakthrough}" target="_blank" rel="noopener">Breakthrough T1D (formerly JDRF)</a></span></div>`;
+}
+
 function crewHtml(page: ComicPage, resolver: AssetResolver): string {
   if (!page.status) return '';
   const mates = page.status.crew
     .map((m, i) => {
       const mood = moodOf(m.label);
-      return `<div class="mate${mood === 'lost' ? ' lost' : ''}"><div class="head">${headHtml(page.cast[i] ?? i + 1, mood, resolver)}</div><div class="tag">${esc(m.name)}</div><div class="mood ${mood}">${esc(m.label)}</div></div>`;
+      const badge = m.badge === 't1d' ? t1dBadgeHtml(m.name) : '';
+      return `<div class="mate${mood === 'lost' ? ' lost' : ''}"><div class="head">${headHtml(page.cast[i] ?? i + 1, mood, resolver)}</div><div class="tag">${esc(m.name)}</div><div class="mood ${mood}">${esc(m.label)}</div>${badge}</div>`;
     })
     .join('');
-  return `<div class="crew-panel" aria-label="The crew">${mates}</div>`;
+  const kannon = page.status.crew.find((m) => m.badge === 't1d');
+  return `<div class="crew-panel" aria-label="The crew">${mates}${kannon ? t1dNoteHtml(kannon.name) : ''}</div>`;
 }
 
 function balloonHtml(b: Balloon, page: ComicPage, resolver: AssetResolver): string {
@@ -281,6 +293,14 @@ ${signs ? `<div class="signs" role="menu">${signs}</div>` : ''}`;
   for (const btn of host.querySelectorAll<HTMLButtonElement>('button[data-extra]')) {
     const extra = opts.extras[Number(btn.dataset['extra'])];
     if (extra) btn.addEventListener('click', extra.onClick);
+  }
+  const t1dNote = host.querySelector<HTMLElement>('[data-t1d="note"]');
+  for (const btn of host.querySelectorAll<HTMLButtonElement>('button[data-t1d="toggle"]')) {
+    btn.addEventListener('click', () => {
+      if (!t1dNote) return;
+      t1dNote.hidden = !t1dNote.hidden;
+      btn.setAttribute('aria-expanded', String(!t1dNote.hidden));
+    });
   }
   for (const img of host.querySelectorAll<HTMLImageElement>('img.real')) {
     if (img.complete && img.naturalWidth > 0) img.classList.add('loaded');

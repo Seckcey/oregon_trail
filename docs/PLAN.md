@@ -151,6 +151,31 @@ snack run) is a shader and a font.
   homage-with-our-own-name trademark posture (gameplay unmistakably Oregon Trail; their mark
   never printed in our marketing).
 
+## Kannon and Type 1 awareness (added 2026-08-24)
+
+Kannon — Frank's son, drawn from life in `crew/07-model.png` — rides with the crew and lives
+with Type 1 diabetes. The design rules, in priority order:
+
+1. **T1D never kills him in this game.** The road can, the same as anyone (sushi, thirst, the
+   river). His diabetes is something he *manages*, and the game shows him managing it.
+2. **He's always offered.** Every new game's five suggested names include Kannon (his slot in
+   the line-up is the seed's choice). Players can rename him away; then none of this fires.
+   The sim recognises him by name (`isKannon`), case-insensitive.
+3. **The Dexcom alert** (`dexcom-low`, once per run, ~12%/driving day after mile 20): his CGM
+   says LOW. Two balloons — *Pull over. Juice box and fifteen minutes.* (lose ~10 miles, then
+   the **rule of 15** caption) or *He says he's fine. Keep rolling.* (he loses 5 health, never
+   below 1; the crew loses ~25 miles; then the lesson: the alert is the whole point). In the
+   comic, "keep rolling" is Kannon's balloon and "pull over" is someone else's.
+4. **Small touches:** on scorching days, once, the insulin goes in the cooler (`insulin-cooler`);
+   a good snack run notes that he counts the carbs and doses without looking up; the crew panel
+   shows the **blue circle** beside his name, and tapping it opens a note with both links.
+5. **Links, always both:** American Diabetes Association (diabetes.org) and Breakthrough T1D,
+   formerly JDRF (breakthrought1d.org) — in the lesson captions, the crew-panel note, and About.
+
+Medical copy follows the ADA's hypoglycemia guidance (15 g fast-acting carbs, recheck in
+15 minutes, repeat) and the CDC's description of Type 1 (autoimmune; the pancreas makes little
+or no insulin). Everything lives in `src/sim/t1d.ts`; tests in `test/kannon.test.ts`.
+
 ## Reference
 
 - docs/PHASE2-BRIEF.md — Phase 2 scope (two themes + toggle, branding, full route)
