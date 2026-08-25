@@ -466,8 +466,9 @@ img.real.instant { transition: none !important; }
 .sign.extra:hover { background: #2aa0ea; }
 .sign.buy { background: var(--paper); color: var(--ink); }
 .sign.buy:hover { background: var(--yellow); }
-.sign.mast-theme { background: var(--navy); font-size: 13px; padding: 4px 10px; }
-.sign.mast-theme:hover { background: var(--grape); }
+.sign.mast-theme, .sign.mast-sound { background: var(--navy); font-size: 13px; padding: 4px 10px; white-space: nowrap; }
+.sign.mast-theme:hover, .sign.mast-sound:hover { background: var(--grape); }
+.sign.mast-sound[aria-pressed='false'] { background: #6b6b6b; }
 
 /* ------------------------------------------------------------------ */
 /* Text-entry captions                                                  */

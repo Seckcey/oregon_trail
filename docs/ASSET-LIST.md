@@ -597,8 +597,8 @@ green" or "neon green". HOORAY!'s R was regenerated for exactly this reason.
 Every image and video slot above is filled, keyed, committed and live at https://8wt.8westit.com
 — 231 `.webp`/`.svg` files and the two videos. What is left is not image work:
 
-- **§15 audio** — five music beds and the SFX pack. Never in the image tool's scope; these prompts
-  are for a music generator (Suno, Udio, ElevenLabs). The registry has the slots; nothing plays yet.
+- **§15 audio** — DONE 2026-08-25: superseded by `audio-asset-brief.md` at the repo root (85 files,
+  per-batch review log); the prompts above are the original seed and are kept for the record.
 - **§19.4 heat shimmer** — retired after the first attempt read as three yellow lines; the second
   prompt is written and waiting.
 - **Ford badges** — a few images (the cover, the outfitter, cover No. 3, the river strips) show a
