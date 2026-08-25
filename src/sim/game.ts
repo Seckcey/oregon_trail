@@ -72,7 +72,10 @@ export type Action =
   | { type: 'SNACK_START' }
   | { type: 'SNACK_SUBMIT'; typed: string; ms: number }
   | { type: 'SUBMIT_EPITAPH'; text: string }
-  | { type: 'RESTART' };
+  | { type: 'RESTART' }
+  // Data in from the UI layer (the sim never fetches): the road's memorials, and word that ours was posted.
+  | { type: 'MEMORIALS_LOADED'; memorials: Memorial[] }
+  | { type: 'MEMORIAL_POSTED'; id: string; mile: number };
 
 export interface ScreenChoice {
   key: string;
@@ -219,6 +222,7 @@ export function createGame(seed: string, memorials: Memorial[] = []): GameState 
     memorials,
     memorialSeenDay: 0,
     runMemorials: [],
+    memorialPosted: null,
     suggestedNames,
     storeNotice: null,
     pendingArrival: false,
@@ -1254,6 +1258,14 @@ export function reduce(state: GameState, action: Action): GameState {
 
     case 'RESTART':
       return createGame(`${s.seed}*`, [...s.memorials, ...s.runMemorials]);
+
+    case 'MEMORIALS_LOADED':
+      s.memorials = action.memorials;
+      return s;
+
+    case 'MEMORIAL_POSTED':
+      if (s.phase === 'dead') s.memorialPosted = { id: action.id, mile: action.mile };
+      return s;
   }
 }
 

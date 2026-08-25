@@ -1,9 +1,14 @@
-import { createGame, reduce, view, type Action } from './sim/game';
+import { view } from './sim/game';
 import { computeScore } from './sim/score';
 import type { GameState } from './sim/types';
-import { addMemorials, loadMemorials, loadSave, storeSave } from './ui/persistence';
+import { netConfig } from './ui/net/api';
+import { newRunId } from './ui/net/identity';
+import { fetchMemorials, postMemorial, reportMemorial } from './ui/net/memorials';
+import { turnstileToken } from './ui/net/turnstile';
+import { addMemorials, loadMemorials, loadSave, storeSave, tagMemorial } from './ui/persistence';
 import { parseQuery } from './ui/query';
 import { RENDERERS, availableThemes, type Renderer, type UiHandlers } from './ui/renderer';
+import { createSession } from './ui/session';
 import { loadTheme, otherTheme, resolveTheme, saveTheme, toggleLabel, type ThemeId } from './ui/theme';
 
 function freshSeed(): string {
@@ -25,7 +30,24 @@ function requireRoot(): HTMLElement {
 }
 
 const query = parseQuery(window.location.search);
-let state: GameState = createGame(query.seed ?? freshSeed(), loadMemorials());
+const net = netConfig(import.meta.env, window.location.search);
+const TURNSTILE_SITE_KEY = (import.meta.env['VITE_TURNSTILE_SITE_KEY'] ?? '').trim();
+
+const session = createSession(query.seed ?? freshSeed(), {
+  net,
+  runIdFactory: newRunId,
+  loadSave,
+  loadMemorials,
+  storeSave,
+  addMemorials,
+  tagMemorial,
+  fetchMemorials,
+  postMemorial,
+  reportMemorial,
+  // No site key in the build → '' (post without a token; the dev server accepts it).
+  turnstile: () => (TURNSTILE_SITE_KEY ? turnstileToken(TURNSTILE_SITE_KEY) : Promise.resolve('')),
+  track: () => {},
+});
 
 function shareText(s: GameState): string {
   const header = `THE 8 WEST TRAIL — day ${s.day}, mile ${s.mile} of 730`;
@@ -38,7 +60,7 @@ function shareText(s: GameState): string {
 }
 
 async function copyShare(): Promise<void> {
-  const text = shareText(state);
+  const text = shareText(session.state);
   try {
     await navigator.clipboard.writeText(text);
     flashShareButton('COPIED — go brag');
@@ -65,32 +87,14 @@ let theme: ThemeId = resolveTheme({
 let renderer: Renderer | null = null;
 
 const handlers: UiHandlers = {
-  dispatch(action: Action): void {
-    const prevPhase = state.phase;
-    state = reduce(state, action);
-
-    // Persistence side effects
-    const ended = state.phase === 'dead' || state.phase === 'victory';
-    if (ended && prevPhase !== state.phase) {
-      addMemorials(state.runMemorials);
-      storeSave(null);
-    } else if (state.day > 0 && !state.gameOver) {
-      storeSave(state);
-    }
-    render();
-  },
+  dispatch: (action) => session.dispatch(action),
   extraButtons() {
     const buttons: { label: string; onClick(): void }[] = [];
+    const state = session.state;
     if (state.phase === 'title') {
       const save = loadSave();
-      if (save && !save.gameOver) {
-        buttons.push({
-          label: 'Continue the last run',
-          onClick() {
-            state = save;
-            render();
-          },
-        });
+      if (save && !save.state.gameOver) {
+        buttons.push({ label: 'Continue the last run', onClick: () => void session.continueSave() });
       }
     }
     if (state.phase === 'dead' || state.phase === 'victory') {
@@ -122,7 +126,8 @@ function switchTheme(id: ThemeId): void {
 }
 
 function render(): void {
-  renderer?.render(view(state));
+  renderer?.render(view(session.state));
 }
 
+session.onChange = render;
 mountTheme(theme);
