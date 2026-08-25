@@ -3,8 +3,11 @@
 
 import { Hono } from 'hono';
 import { configFrom, type Config } from './config.ts';
+import { randomBytes } from 'node:crypto';
 import { migrate, openDb, type Db } from './db.ts';
+import { clientIp, hashIp } from './iphash.ts';
 import { saveMemorial } from './memorials.ts';
+import { isReportReason, reportMemorial } from './reports.ts';
 import { sampleMemorials } from './sample.ts';
 import { validateMemorial } from './validate.ts';
 
@@ -41,6 +44,8 @@ export function createApp(opts: AppOptions = {}): App {
   const db = openDb(config.dbPath);
   migrate(db);
   const app = new Hono();
+  const ipSecret = config.ipHashSecret ?? randomBytes(32).toString('hex');
+  const ipHashOf = (req: Request) => hashIp(clientIp(req.headers), ipSecret);
 
   app.get('/api/health', (c) => c.json({ ok: true }));
 
@@ -55,9 +60,19 @@ export function createApp(opts: AppOptions = {}): App {
     if (!parsed.ok) return c.json({ error: parsed.error }, parsed.status);
     const valid = validateMemorial(parsed.body);
     if (!valid.ok) return c.json({ error: valid.error }, 400);
-    const saved = saveMemorial(db, valid.value, null);
+    const saved = saveMemorial(db, valid.value, ipHashOf(c.req.raw));
     if (!saved.ok) return c.json({ error: saved.error }, 422);
     return c.json({ id: saved.id, status: saved.status }, 201);
+  });
+
+  app.post('/api/memorials/:id/report', async (c) => {
+    const parsed = await readJson(c.req.raw);
+    if (!parsed.ok) return c.json({ error: parsed.error }, parsed.status);
+    const reason = (parsed.body as { reason?: unknown } | null)?.reason;
+    if (!isReportReason(reason)) return c.json({ error: 'bad-reason' }, 400);
+    const outcome = reportMemorial(db, c.req.param('id'), reason, ipHashOf(c.req.raw));
+    if (outcome === 'missing') return c.json({ error: 'not-found' }, 404);
+    return c.body(null, 204);
   });
 
   return { fetch: app.fetch, request: app.request.bind(app), config, db };
