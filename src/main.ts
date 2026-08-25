@@ -3,10 +3,11 @@ import { computeScore } from './sim/score';
 import type { GameState } from './sim/types';
 import { createTracker } from './ui/analytics';
 import { netConfig } from './ui/net/api';
-import { newRunId } from './ui/net/identity';
+import { loadPlayerToken, newRunId } from './ui/net/identity';
+import { fetchLeaderboard, postRun } from './ui/net/leaderboard';
 import { fetchMemorials, postMemorial, reportMemorial } from './ui/net/memorials';
 import { turnstileToken } from './ui/net/turnstile';
-import { addMemorials, loadMemorials, loadSave, storeSave, tagMemorial } from './ui/persistence';
+import { addMemorials, loadMemorials, loadSave, storeSave, storeUnsubscribeUrl, tagMemorial } from './ui/persistence';
 import { parseQuery } from './ui/query';
 import { RENDERERS, availableThemes, type Renderer, type UiHandlers } from './ui/renderer';
 import { createSession } from './ui/session';
@@ -48,7 +49,14 @@ const session = createSession(query.seed ?? freshSeed(), {
   // No site key in the build → '' (post without a token; the dev server accepts it).
   turnstile: () => (TURNSTILE_SITE_KEY ? turnstileToken(TURNSTILE_SITE_KEY) : Promise.resolve('')),
   track: createTracker(import.meta.env['VITE_GA4_ID'] ?? ''),
+  playerToken: loadPlayerToken(themeStorage()),
+  postRun,
+  fetchLeaderboard,
+  storeUnsubscribeUrl,
 });
+
+/** Every CTA links here (Frank's call, 2026-08-25). */
+const CTA_URL = 'https://8westit.com/?utm_source=8wt&utm_medium=game';
 
 function shareText(s: GameState): string {
   const header = `THE 8 WEST TRAIL — day ${s.day}, mile ${s.mile} of 730`;
@@ -100,6 +108,9 @@ const handlers: UiHandlers = {
     }
     if (state.phase === 'dead' || state.phase === 'victory') {
       buttons.push({ label: 'Copy your story', onClick: () => void copyShare() });
+    }
+    if (state.phase === 'dead' || state.phase === 'victory' || state.phase === 'leaderboard') {
+      buttons.push({ label: '8 West IT 365 → 8westit.com', onClick: () => void window.open(CTA_URL, '_blank', 'noopener') });
     }
     return buttons;
   },

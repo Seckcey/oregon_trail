@@ -9,6 +9,7 @@ import { newRunId } from './net/identity';
 const SAVE_KEY_V2 = '8wt.save.v2'; // v2: Phase 2–3 — the bare GameState
 const SAVE_KEY = '8wt.save.v3'; // v3: Phase 4 — { runId, state }
 const MEMORIAL_KEY = '8wt.memorials.v1';
+const UNSUBSCRIBE_KEY = '8wt.unsubscribe.v1';
 const MEMORIAL_CAP = 60;
 
 export interface SaveEnvelope {
@@ -94,6 +95,23 @@ export function addMemorials(memorials: Memorial[]): void {
     writeMemorials([...loadMemorials(), ...memorials]);
   } catch {
     /* storage unavailable */
+  }
+}
+
+/** The unsubscribe link from a claim, kept on the device (the claim screen says so). */
+export function storeUnsubscribeUrl(url: string): void {
+  try {
+    localStorage.setItem(UNSUBSCRIBE_KEY, url);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function loadUnsubscribeUrl(): string | null {
+  try {
+    return localStorage.getItem(UNSUBSCRIBE_KEY);
+  } catch {
+    return null;
   }
 }
 

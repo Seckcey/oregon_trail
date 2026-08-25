@@ -22,6 +22,7 @@ export interface RequestOptions {
   method?: 'GET' | 'POST';
   body?: unknown;
   turnstile?: string | null;
+  playerToken?: string | null;
 }
 
 /** JSON in, JSON out; 204 → {}; anything that is not a 2xx with a JSON body → null. */
@@ -33,6 +34,7 @@ export async function apiRequest<T = unknown>(cfg: NetConfig, path: string, opts
     const headers: Record<string, string> = { accept: 'application/json' };
     if (opts.body !== undefined) headers['content-type'] = 'application/json';
     if (opts.turnstile) headers['turnstile-token'] = opts.turnstile;
+    if (opts.playerToken) headers['x-player-token'] = opts.playerToken;
     const res = await fetchImpl(`${cfg.base}${path}`, {
       method: opts.method ?? 'GET',
       headers,
