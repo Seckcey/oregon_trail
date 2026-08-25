@@ -20,7 +20,7 @@ draws itself with inked SVG placeholders for every slot in [docs/ASSET-LIST.md](
 real art dropped into [public/assets/](public/assets/README.md) replaces a placeholder with no code
 change. The green-phosphor **Heritage** look is untouched on the other side of the toggle.
 
-**Phase 4A — the trail remembers — is built and waiting on its deploy.** Roadside memorials are
+**Phase 4A — the trail remembers — is live (2026-08-25).** Roadside memorials are
 networked: when a crew dies online, the memorial (nicknames, mile, cause, epitaph) is posted to a
 small API in a second container (`server/`: Node 26 + Hono + `node:sqlite`, proxied by nginx under
 `/api/`), filtered for contact details and rude words, rate-limited, and gated by Cloudflare

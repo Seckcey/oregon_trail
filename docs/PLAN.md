@@ -128,7 +128,7 @@ game earns shares by being good; the brand rides along.
   `.webp`/`.svg` files are committed (PNG masters are gitignored) so `git archive` deploys carry
   them. Landed so far: masthead, cover, icon, splashes, all eleven van poses and the dashboard,
   twelve crew model sheets, twelve headshots, the first mood variants.
-- **Phase 4 (the trail remembers): 4A BUILT 2026-08-25, awaiting deploy (A17).** docs/PHASE4-PLAN.md
+- **Phase 4 (the trail remembers): 4A SHIPPED 2026-08-25 (PR #9).** docs/PHASE4-PLAN.md
   is the plan (PR #8). Step 4A — networked roadside memorials — is on branch `phase4/memorials`:
   the `server/` API (Hono, `node:sqlite`, the text filter and word list, the route-wide sampler,
   reports, rate limits, Turnstile, the 30-day IP-hash purge, `admin.mjs`), the compose + nginx
