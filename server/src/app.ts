@@ -10,11 +10,14 @@ import { saveMemorial } from './memorials.ts';
 import { standardLimits } from './ratelimit.ts';
 import { isReportReason, reportMemorial } from './reports.ts';
 import { sampleMemorials } from './sample.ts';
+import { turnstileGate } from './turnstile.ts';
 import { validateMemorial } from './validate.ts';
 
 export interface AppOptions {
   dbPath?: string;
   env?: Record<string, string | undefined>;
+  /** Injected for tests; the Turnstile verify is the only outbound call. */
+  fetch?: typeof fetch;
 }
 
 export interface App {
@@ -49,6 +52,8 @@ export function createApp(opts: AppOptions = {}): App {
   const ipSecret = config.ipHashSecret ?? randomBytes(32).toString('hex');
   const ipHashOf = (req: Request) => hashIp(clientIp(req.headers), ipSecret);
   const limits = standardLimits();
+  const human = turnstileGate(config.turnstileSecret, opts.fetch ?? fetch);
+  const notHuman = (c: { json: (o: unknown, s: 403) => Response }) => c.json({ error: 'not-verified' }, 403);
   const over = (c: { json: (o: unknown, s: 429) => Response }) => c.json({ error: 'slow-down' }, 429);
 
   app.get('/api/health', (c) => c.json({ ok: true }));
@@ -62,6 +67,7 @@ export function createApp(opts: AppOptions = {}): App {
 
   app.post('/api/memorials', async (c) => {
     if (!limits.memorialPost.take(ipHashOf(c.req.raw))) return over(c);
+    if (!(await human(c.req.raw, clientIp(c.req.raw.headers)))) return notHuman(c);
     const parsed = await readJson(c.req.raw);
     if (!parsed.ok) return c.json({ error: parsed.error }, parsed.status);
     const valid = validateMemorial(parsed.body);
@@ -73,6 +79,7 @@ export function createApp(opts: AppOptions = {}): App {
 
   app.post('/api/memorials/:id/report', async (c) => {
     if (!limits.report.take(ipHashOf(c.req.raw))) return over(c);
+    if (!(await human(c.req.raw, clientIp(c.req.raw.headers)))) return notHuman(c);
     const parsed = await readJson(c.req.raw);
     if (!parsed.ok) return c.json({ error: parsed.error }, parsed.status);
     const reason = (parsed.body as { reason?: unknown } | null)?.reason;
