@@ -76,10 +76,10 @@ game, and `eight-west-api` (no published port; nginx proxies `/api/`) with its S
 git archive --format=tar.gz -o /tmp/8wt-deploy.tar.gz HEAD
 scp /tmp/8wt-deploy.tar.gz coastline:/tmp/8wt-deploy.tar.gz
 ssh coastline "tar xzf /tmp/8wt-deploy.tar.gz -C ~/apps/eight-west-trail && cd ~/apps/eight-west-trail && docker compose up -d --build"
+```
 
 **Never `rm -rf` the app directory before extracting** — `data/` (the live memorial database) and
 `.env` (the secrets) live there and are not in git. Extract over the tree; Docker rebuilds the rest.
-```
 
 Frank's review queue, from the box:
 
