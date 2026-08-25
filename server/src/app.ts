@@ -7,6 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { migrate, openDb, type Db } from './db.ts';
 import { clientIp, hashIp } from './iphash.ts';
 import { saveMemorial } from './memorials.ts';
+import { standardLimits } from './ratelimit.ts';
 import { isReportReason, reportMemorial } from './reports.ts';
 import { sampleMemorials } from './sample.ts';
 import { validateMemorial } from './validate.ts';
@@ -21,6 +22,7 @@ export interface App {
   request: Hono['request'];
   config: Config;
   db: Db;
+  limits: ReturnType<typeof standardLimits>;
 }
 
 export const BODY_LIMIT = 4096;
@@ -46,16 +48,20 @@ export function createApp(opts: AppOptions = {}): App {
   const app = new Hono();
   const ipSecret = config.ipHashSecret ?? randomBytes(32).toString('hex');
   const ipHashOf = (req: Request) => hashIp(clientIp(req.headers), ipSecret);
+  const limits = standardLimits();
+  const over = (c: { json: (o: unknown, s: 429) => Response }) => c.json({ error: 'slow-down' }, 429);
 
   app.get('/api/health', (c) => c.json({ ok: true }));
 
   app.get('/api/memorials', (c) => {
+    if (!limits.get.take(ipHashOf(c.req.raw))) return over(c);
     const seed = (c.req.query('seed') ?? '').slice(0, 64);
     c.header('Cache-Control', 'public, max-age=300');
     return c.json(sampleMemorials(db, seed));
   });
 
   app.post('/api/memorials', async (c) => {
+    if (!limits.memorialPost.take(ipHashOf(c.req.raw))) return over(c);
     const parsed = await readJson(c.req.raw);
     if (!parsed.ok) return c.json({ error: parsed.error }, parsed.status);
     const valid = validateMemorial(parsed.body);
@@ -66,6 +72,7 @@ export function createApp(opts: AppOptions = {}): App {
   });
 
   app.post('/api/memorials/:id/report', async (c) => {
+    if (!limits.report.take(ipHashOf(c.req.raw))) return over(c);
     const parsed = await readJson(c.req.raw);
     if (!parsed.ok) return c.json({ error: parsed.error }, parsed.status);
     const reason = (parsed.body as { reason?: unknown } | null)?.reason;
@@ -75,5 +82,5 @@ export function createApp(opts: AppOptions = {}): App {
     return c.body(null, 204);
   });
 
-  return { fetch: app.fetch, request: app.request.bind(app), config, db };
+  return { fetch: app.fetch, request: app.request.bind(app), config, db, limits };
 }
