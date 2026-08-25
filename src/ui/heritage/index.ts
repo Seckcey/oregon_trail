@@ -164,6 +164,9 @@ export function createHeritageRenderer(): Renderer {
     const field = el.inputField();
     field.value = '';
     field.maxLength = INPUT_MAX_LENGTH[screen.input.kind];
+    field.type = screen.input.kind === 'email' ? 'email' : 'text';
+    field.autocapitalize = screen.input.kind === 'email' ? 'off' : 'characters';
+    field.autocomplete = screen.input.kind === 'email' ? 'email' : 'off';
     field.placeholder = screen.input.placeholder;
     inputStartedAt = performance.now();
     submitLocked = false;

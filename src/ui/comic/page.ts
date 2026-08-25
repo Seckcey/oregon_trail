@@ -253,7 +253,7 @@ function askHtml(page: ComicPage, maxLength: number): string {
   const input = page.input;
   if (!input) return '';
   const word = page.set?.kind === 'snack' ? `<div class="shout-word" aria-label="Shout this">${esc(page.set.word)}</div>` : '';
-  return `${word}<form class="ask" data-kind="${input.kind}"><label class="caption ask-prompt" for="comic-input">${esc(input.prompt)}</label><div class="ask-row"><input id="comic-input" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="${maxLength}" placeholder="${esc(input.placeholder)}"><button type="submit" class="sign">${input.kind === 'snack' ? 'Shout it!' : 'That’s it'}</button></div></form>`;
+  return `${word}<form class="ask" data-kind="${input.kind}"><label class="caption ask-prompt" for="comic-input">${esc(input.prompt)}</label><div class="ask-row"><input id="comic-input" type="${input.kind === 'email' ? 'email' : 'text'}" autocomplete="${input.kind === 'email' ? 'email' : 'off'}" autocapitalize="${input.kind === 'email' ? 'off' : 'characters'}" spellcheck="false" maxlength="${maxLength}" placeholder="${esc(input.placeholder)}"><button type="submit" class="sign">${input.kind === 'snack' ? 'Shout it!' : 'That’s it'}</button></div></form>`;
 }
 
 // ---------------------------------------------------------------------------

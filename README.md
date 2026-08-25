@@ -20,6 +20,13 @@ draws itself with inked SVG placeholders for every slot in [docs/ASSET-LIST.md](
 real art dropped into [public/assets/](public/assets/README.md) replaces a placeholder with no code
 change. The green-phosphor **Heritage** look is untouched on the other side of the toggle.
 
+**Phase 4B — the leaderboard and the list — is built (2026-08-25), awaiting its deploy.** A run
+that makes the cliffs is posted to the API (idempotent on its run id); the claim screens put a
+nickname on the board, then optionally an email with an explicit 18+ consent sentence (stored
+verbatim) — the lead list Frank exports with `admin.mjs leads.csv`; every email has a one-click
+unsubscribe at `/unsubscribe/<token>`. The board shows the top 25 and, from the same browser,
+where your run landed. Skippable at every step; offline it says so.
+
 **Phase 4A — the trail remembers — is live (2026-08-25).** Roadside memorials are
 networked: when a crew dies online, the memorial (nicknames, mile, cause, epitaph) is posted to a
 small API in a second container (`server/`: Node 26 + Hono + `node:sqlite`, proxied by nginx under
@@ -42,8 +49,8 @@ See [docs/PLAN.md](docs/PLAN.md) for the full game design and build plan, and
 ```
 npm install
 npm run dev      # local dev server (no API: VITE_8WT_API is empty, the game plays offline)
-npm test         # 391 tests (vitest): sim, route, crossings, the grade, scene + set pieces, the comic page engine, the net layer
-npm run test:server  # 95 tests for the API (server/), against :memory: SQLite
+npm test         # 431 tests (vitest): sim, route, crossings, the grade, scene + set pieces, the comic page engine, the net layer
+npm run test:server  # 126 tests for the API (server/), against :memory: SQLite
 npm run test:all # both
 npm run build    # typecheck + production bundle in dist/
 npm run e2e      # Playwright: the playthrough in both themes, the mocked API, ?offline=1, the API down
@@ -84,6 +91,7 @@ Frank's review queue, from the box:
 docker compose exec eight-west-api node admin.mjs queue        # hidden memorials + their reports
 docker compose exec eight-west-api node admin.mjs ok <id>      # false positive: show it again
 docker compose exec eight-west-api node admin.mjs remove <id>  # take it down for good
+docker compose exec eight-west-api node admin.mjs leads.csv    # the list (consented, minus unsubscribed)
 sqlite3 data/8wt.db                                            # everything else
 ```
 

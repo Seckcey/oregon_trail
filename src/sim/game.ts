@@ -2014,7 +2014,7 @@ function boardRow(r: Board['top'][number], you: boolean): string {
   const bits = [r.displayName, n(r.score), r.occupation.toUpperCase(), `${r.days} days`, `${r.survivors} made it`];
   if (r.summitRoute) bits.push(SUMMIT_LABEL[r.summitRoute]);
   if (r.celebration) bits.push(CELEBRATION_LABEL[r.celebration]);
-  return `#${r.rank}  ${bits.join(' · ')}${you ? ' — that’s you' : ''}`;
+  return `#${r.rank} · ${bits.join(' · ')}${you ? ' — that’s you' : ''}`;
 }
 
 function boardLines(s: GameState): string[] {
@@ -2026,7 +2026,7 @@ function boardLines(s: GameState): string[] {
     if (top.length === 0) lines.push(COPY.boardEmpty);
     for (const r of top) lines.push(boardRow(r, yours !== null && yours.rank === r.rank));
     if (yours && yours.rank > top.length) {
-      lines.push('…', `#${n(yours.rank)}  You · ${n(yours.score)} · of ${n(yours.total)} runs`);
+      lines.push('…', `#${n(yours.rank)} · You · ${n(yours.score)} · of ${n(yours.total)} runs`);
     }
   }
   lines.push('', COPY.boardCta1, COPY.boardCta2);

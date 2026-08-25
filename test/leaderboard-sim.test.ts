@@ -161,10 +161,10 @@ describe('the leaderboard screen', () => {
     expect(loaded.boardStatus).toBe('ready');
     const lines = view(loaded).lines;
     expect(view(loaded).title).toBe('THE 8 WEST LEADERBOARD');
-    expect(lines).toContain('#1  Dana · 3,240 · CEO · 41 days · 5 made it · the 6% grade · swan dive');
-    expect(lines).toContain('#2  Wes · 3,100 · INTERN · 50 days · 3 made it · Old Highway 80');
+    expect(lines).toContain('#1 · Dana · 3,240 · CEO · 41 days · 5 made it · the 6% grade · swan dive');
+    expect(lines).toContain('#2 · Wes · 3,100 · INTERN · 50 days · 3 made it · Old Highway 80');
     expect(lines).toContain('…');
-    expect(lines).toContain('#37  You · 1,200 · of 1,204 runs');
+    expect(lines).toContain('#37 · You · 1,200 · of 1,204 runs');
     expect(lines.at(-2)).toBe('Every run on this board got here on a 1985 van. Your business should be on something newer.');
     expect(lines.at(-1)).toBe('8 West IT 365 — flat-rate IT for small business — 8westit.com/365');
     expect(labels(loaded)).toEqual(['0) Back']);
@@ -174,8 +174,8 @@ describe('the leaderboard screen', () => {
     const s = reduce(reduce(createGame('x'), { type: 'OPEN', screen: 'leaderboard' }), { type: 'LEADERBOARD_LOADED', board: { ...board, yours: { rank: 1, score: 3240, total: 2 } } });
     const lines = view(s).lines;
     expect(lines).not.toContain('…');
-    expect(lines.filter((l) => /^#1 /.test(l))).toHaveLength(1);
-    expect(lines).toContain('#1  Dana · 3,240 · CEO · 41 days · 5 made it · the 6% grade · swan dive — that’s you');
+    expect(lines.filter((l) => /^#1 ·/.test(l))).toHaveLength(1);
+    expect(lines).toContain('#1 · Dana · 3,240 · CEO · 41 days · 5 made it · the 6% grade · swan dive — that’s you');
   });
 
   test('an empty board invites; a failed fetch says the plan’s offline line', () => {
