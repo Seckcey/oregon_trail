@@ -91,6 +91,7 @@ function kindOf(s: GameState): SceneKind {
     case 'rations':
     case 'help':
     case 'about':
+    case 'report':
       return 'menu';
     case 'epitaph':
     case 'dead':

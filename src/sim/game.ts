@@ -1,4 +1,5 @@
 import { CREW_NAME_POOL, DEATH_CAUSES, DRIVE_LINES, EPITAPH_DEFAULT, TOWN_TALK } from './data/text';
+import { PRIVACY_NOTE } from './data/privacy';
 import { ROUTE, stopAt } from './data/route';
 import {
   floatRisk,
@@ -57,7 +58,7 @@ export type Action =
   | { type: 'LEAVE_STORE' }
   | { type: 'DRIVE' }
   | { type: 'REST' }
-  | { type: 'OPEN'; screen: 'supplies' | 'map' | 'pace' | 'rations' | 'help' | 'about' }
+  | { type: 'OPEN'; screen: 'supplies' | 'map' | 'pace' | 'rations' | 'help' | 'about' | 'report' }
   | { type: 'BACK' }
   | { type: 'SET_PACE'; pace: Pace }
   | { type: 'SET_RATIONS'; rations: Rations }
@@ -72,7 +73,24 @@ export type Action =
   | { type: 'SNACK_START' }
   | { type: 'SNACK_SUBMIT'; typed: string; ms: number }
   | { type: 'SUBMIT_EPITAPH'; text: string }
-  | { type: 'RESTART' };
+  | { type: 'RESTART' }
+  // Data in from the UI layer (the sim never fetches): the road's memorials, and word that ours was posted.
+  | { type: 'MEMORIALS_LOADED'; memorials: Memorial[] }
+  | { type: 'MEMORIAL_POSTED'; id: string; mile: number }
+  | { type: 'REPORT_MEMORIAL'; id: string; reason: ReportReason };
+
+export type ReportReason = 'rude' | 'real-name' | 'spam' | 'other';
+
+// The words Phase 4 put on the screens (docs/PHASE4-PLAN.md §6), verbatim.
+export const COPY = {
+  nicknames: 'Nicknames, please — these ride on the road for other players to see.',
+  epitaphWarning: 'Other crews will read this. Keep it clean, keep it yours, no phone numbers.',
+  memorialLocal: 'The memorial will stand by the road for the next crew to pass.',
+  memorialPosted: (mile: number) => `Your memorial stands at mile ${mile}. The next crew through will pass it.`,
+  reportWhy: 'Why should this come down?',
+  reportThanks: 'Thanks. We’ll take a look.',
+  cta: 'Presented by 8 West IT 365 — the company named for the highway. 8westit.com',
+} as const;
 
 export interface ScreenChoice {
   key: string;
@@ -219,6 +237,9 @@ export function createGame(seed: string, memorials: Memorial[] = []): GameState 
     memorials,
     memorialSeenDay: 0,
     runMemorials: [],
+    memorialPosted: null,
+    lastMemorial: null,
+    reportedMemorialIds: [],
     suggestedNames,
     storeNotice: null,
     pendingArrival: false,
@@ -286,6 +307,13 @@ function recordDeath(s: GameState, name: string, cause: string): void {
     cause,
     epitaph: `REST EASY, ${name.toUpperCase()}`,
   });
+}
+
+/** The memorial passed today, if it came from the road (has an id) and has not been reported. */
+function reportableMemorial(s: GameState): Memorial | null {
+  const m = s.lastMemorial;
+  if (!m || !m.id || s.memorialSeenDay !== s.day || s.reportedMemorialIds.includes(m.id)) return null;
+  return m;
 }
 
 /** Where the road picks up after a day that ended in a notice. */
@@ -469,6 +497,7 @@ function completeDay(s: GameState, opts: DayOptions): void {
     const passed = s.memorials.find((g) => g.mile > prevMile && g.mile <= s.mile);
     if (passed) {
       s.memorialSeenDay = s.day;
+      s.lastMemorial = passed;
       log(s, `You pass a small roadside memorial at mile ${passed.mile}: “${passed.epitaph}”`);
     }
   }
@@ -1144,6 +1173,7 @@ export function reduce(state: GameState, action: Action): GameState {
     }
 
     case 'OPEN':
+      if (action.screen === 'report' && !reportableMemorial(s)) return s;
       s.returnPhase = s.phase;
       s.phase = action.screen;
       return s;
@@ -1254,6 +1284,22 @@ export function reduce(state: GameState, action: Action): GameState {
 
     case 'RESTART':
       return createGame(`${s.seed}*`, [...s.memorials, ...s.runMemorials]);
+
+    case 'MEMORIALS_LOADED':
+      s.memorials = action.memorials;
+      return s;
+
+    case 'MEMORIAL_POSTED':
+      if (s.phase === 'dead') s.memorialPosted = { id: action.id, mile: action.mile };
+      return s;
+
+    case 'REPORT_MEMORIAL': {
+      if (s.phase !== 'report') return s;
+      if (!s.reportedMemorialIds.includes(action.id)) s.reportedMemorialIds.push(action.id);
+      log(s, COPY.reportThanks);
+      s.phase = s.returnPhase;
+      return s;
+    }
   }
 }
 
@@ -1405,6 +1451,7 @@ export function view(s: GameState): Screen {
         title: 'THE CREW',
         lines: [
           'Five seats in the van. Five names on the manifest.',
+          COPY.nicknames,
           s.crew.length > 0 ? `Aboard so far: ${s.crew.map((m) => m.name).join(', ')}.` : 'The manifest is blank.',
         ],
         input: {
@@ -1489,8 +1536,30 @@ export function view(s: GameState): Screen {
           { key: '5', label: 'Change rations', action: { type: 'OPEN', screen: 'rations' } },
           { key: '6', label: 'Check supplies', action: { type: 'OPEN', screen: 'supplies' } },
           { key: '7', label: 'Look at the map', action: { type: 'OPEN', screen: 'map' } },
+          ...(reportableMemorial(s) ? [{ key: '8', label: 'Report that memorial', action: { type: 'OPEN', screen: 'report' } as Action }] : []),
         ],
         status: statusOf(s),
+      });
+    }
+
+    case 'report': {
+      const m = reportableMemorial(s);
+      const id = m?.id ?? '';
+      const report = (reason: ReportReason): Action => ({ type: 'REPORT_MEMORIAL', id, reason });
+      return screen(s, {
+        title: 'REPORT A MEMORIAL',
+        lines: [
+          m ? `Mile ${m.mile}: “${m.epitaph}” — ${m.names.join(', ')}` : 'Nothing to report today.',
+          '',
+          COPY.reportWhy,
+        ],
+        choices: [
+          { key: '1', label: 'Rude', action: report('rude') },
+          { key: '2', label: 'Someone’s real name', action: report('real-name') },
+          { key: '3', label: 'Spam', action: report('spam') },
+          { key: '4', label: 'Something else', action: report('other') },
+          { key: '0', label: 'Back', action: { type: 'BACK' } },
+        ],
       });
     }
 
@@ -1730,6 +1799,8 @@ export function view(s: GameState): Screen {
           '',
           ...ABOUT_T1D_LINES,
           '',
+          ...PRIVACY_NOTE,
+          '',
           '8westit.com',
         ],
         choices: [{ key: '0', label: 'Back', action: { type: 'BACK' } }],
@@ -1745,6 +1816,7 @@ export function view(s: GameState): Screen {
           '',
           `Day ${s.day}, mile ${s.mile}. The desert closes over the story.`,
           'Someone will pass this place. Leave them a few words.',
+          COPY.epitaphWarning,
         ],
         input: { kind: 'epitaph', prompt: 'Epitaph for the roadside memorial', placeholder: EPITAPH_DEFAULT },
       });
@@ -1762,7 +1834,9 @@ export function view(s: GameState): Screen {
           `${s.crew.map((m) => m.name).join(' · ')}`,
           `Day ${s.day} · mile ${s.mile} of 730 · ${MONTH_NAMES[s.month]} ${s.dayOfMonth}`,
           '',
-          'The memorial will stand by the road for the next crew to pass.',
+          s.memorialPosted ? COPY.memorialPosted(s.memorialPosted.mile) : COPY.memorialLocal,
+          '',
+          COPY.cta,
         ],
         choices: [{ key: '1', label: 'Load a new van', action: { type: 'RESTART' } }],
       });
@@ -1806,5 +1880,7 @@ function buildVictoryLines(s: GameState): string[] {
     `  TOTAL ........ ${score.total}`,
     '',
     `PHASE ${TUNING.buildPhase} ROUTE · LAS CRUCES → SUNSET CLIFFS · brought to you by 8 WEST IT 365`,
+    '',
+    COPY.cta,
   ];
 }

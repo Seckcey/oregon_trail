@@ -28,6 +28,12 @@ describe('every screen is a comic page', () => {
     for (const screen of ['supplies', 'map', 'pace', 'rations', 'help', 'about'] as const) {
       expect(page(reduce(departed(), { type: 'OPEN', screen })).kind).toBe('overlay');
     }
+    // The report Screen (Phase 4A) is a menu overlay too, drawn by the same code as help/about.
+    const reportable = { ...departed(), lastMemorial: { id: 'SRV1', names: ['A'], mile: 1, day: 1, cause: 'THIRST', epitaph: 'E' }, memorialSeenDay: departed().day };
+    const report = page(reduce(reportable, { type: 'OPEN', screen: 'report' }));
+    expect(report.kind).toBe('overlay');
+    expect(report.title).toBe('REPORT A MEMORIAL');
+    expect(report.balloons.length + report.signs.length).toBe(5);
     expect(page({ ...departed(), phase: 'epitaph', deathCause: 'THIRST' }).kind).toBe('grave');
     expect(page(reduce(arriveAt(departed(), 'sunset-cliffs'), { type: 'EVENT_CHOICE', index: 1 })).kind).toBe('victory');
   });

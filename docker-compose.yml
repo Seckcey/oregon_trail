@@ -1,9 +1,31 @@
-# The 8 West Trail on coastline: container serves the static game on
-# 127.0.0.1:1985, which the Cloudflare tunnel maps to 8wt.8westit.com.
+# The 8 West Trail on coastline: nginx serves the static game on
+# 127.0.0.1:1985, which the Cloudflare tunnel maps to 8wt.8westit.com, and
+# proxies /api/ to the API container (no published port; only nginx reaches it).
+# The API keeps its SQLite file in ./data — `sqlite3 data/8wt.db` from here.
+# Secrets (TURNSTILE_SECRET, IP_HASH_SECRET) live in ./.env, never in git.
 services:
   eight-west-trail:
-    build: .
+    build:
+      context: .
+      args:
+        VITE_8WT_API: /api
+        VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEbKDeVygm4sZpw9
+        VITE_GA4_ID: G-5FT9ZWRB08
     container_name: eight-west-trail
     restart: unless-stopped
+    depends_on:
+      - eight-west-api
     ports:
       - "127.0.0.1:1985:80"
+
+  eight-west-api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: eight-west-api
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./data:/data

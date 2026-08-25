@@ -179,6 +179,7 @@ async function sfxSeen(page: Page): Promise<string[]> {
 
 test.describe('the comic book', () => {
   test('plays from the outfitter to the end of the road, slamming words along the way', async ({ page }) => {
+    await page.route('**/api/**', (route) => route.abort('connectionrefused')); // the API down: nothing changes
     await page.goto('/?theme=comic&seed=e2e-comic');
     await expect(page.locator('#comic.page-cover')).toBeVisible();
     await expect(page.locator('.mast-title')).toContainText('THE 8 WEST TRAIL');
@@ -254,7 +255,7 @@ test.describe('the comic book', () => {
 
 test.describe('the green phosphor', () => {
   test('plays the same run in Heritage, untouched', async ({ page }) => {
-    await page.goto('/?theme=heritage&seed=e2e-heritage');
+    await page.goto('/?theme=heritage&seed=e2e-heritage&offline=1'); // the runtime switch: no network
     await expect(page.locator('#crt')).toBeVisible();
     await expect(page.locator('#screen-title')).toHaveText('THE 8 WEST TRAIL');
     await expect(page.locator('.mast-theme')).toHaveText('Back to color');

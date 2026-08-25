@@ -1,0 +1,23 @@
+{
+  "name": "eight-west-api",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The 8 West Trail — the API that remembers: roadside memorials, later the leaderboard and share cards",
+  "type": "module",
+  "engines": { "node": ">=26" },
+  "scripts": {
+    "start": "node src/index.ts",
+    "dev": "node --watch src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "hono": "^4.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
