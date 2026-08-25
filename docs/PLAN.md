@@ -132,9 +132,12 @@ game earns shares by being good; the brand rides along.
   with the blank plate, the parent-company winks and the twelve-piece signage kit; twenty-eight
   event strips; nine splashes; furniture, icons and the Heritage extras; covers 2–5; the 6s intro
   sting and the 10s billboard loop. Masters stay out of git (`art-masters/`); `npm run art` keys
-  the green screen and slims oversized files. **Still open** (see ASSET-LIST §20): §15 audio,
-  which was never in the image tool's scope; the §19.4 heat-shimmer plate; and a few images
-  carrying a Ford badge on the van grille that wants painting out.
+  the green screen and slims oversized files. **Audio SHIPPED 2026-08-25 (PR #12):** 11 music tracks and 74 SFX
+  from ElevenLabs via `generate_audio.py` + `audio-asset-brief.md` (review log inside), played by
+  the Comic theme (`src/ui/comic/audio.ts` plans, `mixer.ts` plays; SOUND: ON/OFF in the masthead;
+  Heritage silent). Frank's listening pass is still pending — "approved" there means measured spec.
+  **Still open** (see ASSET-LIST §20): the §19.4 heat-shimmer plate; and a few images carrying a
+  Ford badge on the van grille that wants painting out.
 - **Phase 4 (the trail remembers): 4A SHIPPED 2026-08-25 (PR #9).** docs/PHASE4-PLAN.md
   is the plan (PR #8). Step 4A — networked roadside memorials — is on branch `phase4/memorials`:
   the `server/` API (Hono, `node:sqlite`, the text filter and word list, the route-wide sampler,
