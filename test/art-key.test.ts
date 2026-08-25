@@ -131,3 +131,32 @@ describe('a green window inside a frame (the dashboard)', () => {
     expect(at(out, 32, 40)).toEqual([...LIME, 255]);
   });
 });
+
+/** Cartoon greens sealed inside a drawing — the R in HOORAY!, a checkmark on a billboard. */
+describe('bright cartoon green inside a drawing', () => {
+  const CARTOON_GREEN: [number, number, number] = [40, 220, 50];
+  const CHECKMARK_GREEN: [number, number, number] = [30, 235, 60];
+
+  function lettering(): Uint8Array {
+    const px = image(GREEN);
+    // An ink-outlined block with a bright green fill, the way a letter or a checkmark is drawn.
+    for (let y = 10; y < 38; y++) {
+      for (let x = 10; x < 54; x++) {
+        const edge = y === 10 || y === 37 || x === 10 || x === 53;
+        put(px, x, y, edge ? INK : CARTOON_GREEN);
+      }
+    }
+    for (let y = 16; y < 24; y++) for (let x = 20; x < 30; x++) put(px, x, y, CHECKMARK_GREEN);
+    // And a real pocket of screen green sealed inside the same block.
+    for (let y = 26; y < 32; y++) for (let x = 36; x < 46; x++) put(px, x, y, GREEN);
+    return px;
+  }
+
+  test('survives the key, while a true screen pocket beside it does not', () => {
+    const out = keyGreen(lettering(), W, H);
+    expect(at(out, 15, 30)).toEqual([...CARTOON_GREEN, 255]);
+    expect(at(out, 25, 20)).toEqual([...CHECKMARK_GREEN, 255]);
+    expect(at(out, 40, 28)[3]).toBe(0);
+    expect(at(out, 2, 2)[3]).toBe(0);
+  });
+});
