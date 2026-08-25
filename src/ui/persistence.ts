@@ -22,7 +22,7 @@ function looksLikeState(x: unknown): x is GameState {
 
 /** Fields added since a save was written get their defaults. */
 function upgradeState(state: GameState): GameState {
-  return { ...state, memorialPosted: state.memorialPosted ?? null };
+  return { ...state, memorialPosted: state.memorialPosted ?? null, lastMemorial: state.lastMemorial ?? null, reportedMemorialIds: state.reportedMemorialIds ?? [] };
 }
 
 export function loadSave(): SaveEnvelope | null {

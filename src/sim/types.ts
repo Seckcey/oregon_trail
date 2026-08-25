@@ -75,6 +75,7 @@ export type GamePhase =
   | 'rations'
   | 'help'
   | 'about'
+  | 'report'
   | 'epitaph'
   | 'dead'
   | 'victory';
@@ -169,6 +170,8 @@ export interface GameState {
   memorialSeenDay: number; // last day a memorial line fired
   runMemorials: Memorial[]; // this run's dead, for the UI to persist
   memorialPosted: { id: string; mile: number } | null; // the UI says the road took this run's memorial
+  lastMemorial: Memorial | null; // the memorial passed most recently (reportable on the day it was passed)
+  reportedMemorialIds: string[]; // reported this run; never offered twice
 
   suggestedNames: string[]; // deterministic name suggestions for blank entries
   storeNotice: string | null; // last outfitter message (sold-out wallet, full van)

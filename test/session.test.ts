@@ -113,6 +113,25 @@ describe('progress', () => {
   });
 });
 
+describe('reports', () => {
+  it('a REPORT_MEMORIAL action posts the report with a token and tracks the outcome', async () => {
+    const { d, calls } = deps();
+    const session = createSession('seed-1', d);
+    session.state = { ...departed('seed-1'), lastMemorial: { id: 'SRV1', names: ['A'], mile: 1, day: 1, cause: 'THIRST', epitaph: 'E' } };
+    session.dispatch({ type: 'REPORT_MEMORIAL', id: 'SRV1', reason: 'spam' });
+    await tick();
+    expect(calls.reportMemorial![0]).toEqual([{ base: '/api' }, 'SRV1', 'spam', 'tok']);
+    expect(calls.track!.some((c) => c[0] === 'memorial_reported')).toBe(true);
+  });
+  it('offline or blocked: the report is not sent', async () => {
+    const { d, calls } = deps({ turnstile: () => Promise.resolve(null) });
+    const session = createSession('seed-1', d);
+    session.dispatch({ type: 'REPORT_MEMORIAL', id: 'SRV1', reason: 'spam' });
+    await tick();
+    expect(calls.reportMemorial).toHaveLength(0);
+  });
+});
+
 describe('death', () => {
   it('stores the memorials locally, clears the save, posts once with the run id, and tags the local copy with the server id', async () => {
     const { d, calls } = deps();

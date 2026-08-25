@@ -4,10 +4,10 @@
 // test/session.test.ts drives one with fakes. Nothing in src/sim/ knows this
 // file exists.
 
-import { createGame, reduce, type Action } from '../sim/game';
+import { createGame, reduce, type Action, type ReportReason } from '../sim/game';
 import type { GameState, Memorial } from '../sim/types';
 import type { NetConfig } from './net/api';
-import type { Posted, ReportReason } from './net/memorials';
+import type { Posted } from './net/memorials';
 import { mergeMemorials } from './net/merge';
 import type { SaveEnvelope } from './persistence';
 
@@ -58,6 +58,7 @@ export function createSession(seed: string, deps: SessionDeps): Session {
       }
       session.state = reduce(session.state, action);
       const s = session.state;
+      if (action.type === 'REPORT_MEMORIAL') void sendReport(action.id, action.reason);
       const ended = s.phase === 'dead' || s.phase === 'victory';
       if (ended && prevPhase !== s.phase) {
         deps.addMemorials(s.runMemorials);
@@ -95,6 +96,14 @@ export function createSession(seed: string, deps: SessionDeps): Session {
     if (result.status === 'visible' && runId === myRun) {
       session.dispatch({ type: 'MEMORIAL_POSTED', id: result.id, mile: grave.mile });
     }
+  }
+
+  async function sendReport(id: string, reason: ReportReason): Promise<void> {
+    if (!deps.net.base) return;
+    const token = await deps.turnstile();
+    if (token === null) return;
+    const ok = await deps.reportMemorial(deps.net, id, reason, token || null);
+    if (ok) deps.track('memorial_reported', { reason });
   }
 
   // Boot: the road's memorials from the API, merged over the local ones.

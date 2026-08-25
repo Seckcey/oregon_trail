@@ -1,10 +1,11 @@
 // The memorial calls: the road-wide sample at game start, the post at death,
 // the report. Shapes are checked on the way in; nothing here throws.
 
+import type { ReportReason } from '../../sim/game';
 import type { Memorial } from '../../sim/types';
 import { apiRequest, type NetConfig } from './api';
 
-export type ReportReason = 'rude' | 'real-name' | 'spam' | 'other';
+export type { ReportReason };
 
 function isMemorial(x: unknown): x is Memorial & { id: string } {
   if (typeof x !== 'object' || x === null) return false;
