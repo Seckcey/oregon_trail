@@ -24,3 +24,14 @@ export function processRaster(
   out: string,
   opts?: { maxEdge?: number; quality?: number },
 ): Promise<{ width: number; height: number; keyed: boolean; hasAlpha: boolean }>;
+
+/**
+ * A finished WebP saved at full size: if it is wider than the edge limit and
+ * heavier than the budget, keep the original under masterDir and replace the
+ * file with a resized copy. Otherwise leave it alone.
+ */
+export function slimWebp(
+  file: string,
+  masterDir: string,
+  opts?: { maxEdge?: number; budgetBytes?: number; quality?: number },
+): Promise<{ slimmed: boolean; width: number; height: number; size: number }>;

@@ -8,6 +8,8 @@
 // green, so it goes semi-transparent and has the green spill pulled out.
 // See test/art-key.test.ts.
 
+import { copyFileSync, existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import sharp from 'sharp';
 
 /** Screen-ish green: high G, low R and B, and G well above both — the band the flood fill grows through. */
@@ -156,6 +158,34 @@ export function keyMode(rgba, width, height) {
   if (isGreenScreen(rgba, width, height)) return 'screen';
   if (isGreenWindow(rgba, width, height)) return 'window';
   return null;
+}
+
+/**
+ * A finished WebP saved straight from the image tool at full size. If it is
+ * both wider than the edge limit and heavier than the budget, keep the
+ * original as a master under masterDir and replace it with a resized copy.
+ * Anything already within limits is left exactly as it is.
+ */
+export async function slimWebp(file, masterDir, opts = {}) {
+  const maxEdge = opts.maxEdge ?? 2400;
+  const budgetBytes = opts.budgetBytes ?? 200 * 1024;
+  const quality = opts.quality ?? 84;
+  const size = statSync(file).size;
+  const meta = await sharp(file).metadata();
+  const width = meta.width ?? 0;
+  const height = meta.height ?? 0;
+  if (size <= budgetBytes || Math.max(width, height) <= maxEdge) {
+    return { slimmed: false, width, height, size };
+  }
+  mkdirSync(masterDir, { recursive: true });
+  const master = join(masterDir, basename(file));
+  if (!existsSync(master)) copyFileSync(file, master);
+  const slim = await sharp(master)
+    .resize({ width: maxEdge, height: maxEdge, fit: 'inside', withoutEnlargement: true })
+    .webp({ quality, alphaQuality: 92, effort: 5, ...(meta.hasAlpha ? {} : { smartSubsample: true }) })
+    .toBuffer();
+  writeFileSync(file, slim);
+  return { slimmed: true, width, height, size: slim.length };
 }
 
 /**
