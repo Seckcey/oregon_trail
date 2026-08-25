@@ -383,7 +383,7 @@ real-name):
 
 **Score / dead screen CTA** (one line, same on both endings; replaces nothing, appended
 after the choices):
-> Presented by 8 West IT 365 — the company named for the highway. 8westit.com/365
+> Presented by 8 West IT 365 — the company named for the highway. 8westit.com
 
 **Unsubscribe page:**
 > **You're off the list.** No more email from 8 West IT. The leaderboard keeps your nickname
@@ -514,11 +514,15 @@ without a running server.
 
 1. Create a **Turnstile** widget (managed mode) for `8wt.8westit.com` in the Cloudflare
    dashboard; put the site key in the build (`VITE_TURNSTILE_SITE_KEY`) and the secret in
-   coastline's `~/apps/eight-west-trail/.env`.
+   coastline's `~/apps/eight-west-trail/.env`. Done 2026-08-25: site key
+   `0x4AAAAAAEbKDeVygm4sZpw9`; secret and `IP_HASH_SECRET` are in `.env` on the box.
 2. Generate `IP_HASH_SECRET` (`openssl rand -hex 32`) into the same `.env`.
-3. Create the **GA4 property** (web stream for `8wt.8westit.com`) and send the Measurement ID (`G-…`) for `VITE_GA4_ID`. Done 2026-08-25.
+3. Create the **GA4 property** (web stream for `8wt.8westit.com`) and send the Measurement ID for `VITE_GA4_ID`. Done 2026-08-25: `G-5FT9ZWRB08`. Search Console has no
+   property for `8wt.8westit.com` yet — optional; add it when 8 Westalytics should watch the game.
 4. `privacy@8westit.com` — created as an Office 365 shared mailbox, 2026-08-25.
-5. Confirm the `8westit.com/365` landing URL for the CTA.
+5. The CTA link: `8westit.com/365` does not exist (404 on 2026-08-25). Until a landing page
+   exists the CTA links to `https://8westit.com/services.html?utm_source=8wt`; swap when Frank has a
+   page he wants the game to send people to.
 6. Nothing changes in the tunnel.
 
 ## 11. Open questions (defaults chosen; say so if wrong)
