@@ -172,9 +172,96 @@ export const FURNITURE_IDS = ['paper', 'halftone', 'burst', 'balloon-sheet', 'pa
 export const ICON_IDS = ['reference-sheet'] as const;
 /** §14 — Heritage extras. */
 export const HERITAGE_IDS = ['crt-bezel', 'toggle-heritage', 'toggle-comic'] as const;
-/** §15 — audio. */
-export const AUDIO_IDS = ['title-loop', 'travel-day', 'travel-night', 'victory', 'death-sting'] as const;
+/** §15 — music (audio-asset-brief.md §4–§5). Everything loops except `victory` and `death-sting`. */
+export const AUDIO_IDS = [
+  'title-loop',
+  'travel-day',
+  'travel-night',
+  'victory',
+  'death-sting',
+  'outfitter-loop',
+  'stop-loop',
+  'grade-tension',
+  'crossing-tension',
+  'snack-loop',
+  'grave-theme',
+] as const;
 export type AudioId = (typeof AUDIO_IDS)[number];
+/** Music tracks that loop; the rest play once. */
+export const MUSIC_LOOPS: ReadonlySet<AudioId> = new Set<AudioId>(AUDIO_IDS.filter((id) => id !== 'victory' && id !== 'death-sting'));
+
+/**
+ * §15 — sound effects (audio-asset-brief.md §6–§13), under audio/sfx/. The first sixteen are the
+ * lettering pack and share their names with the SFX_IDS art, so a slammed word plays its own sound.
+ */
+export const AUDIO_SFX_IDS = [
+  // the lettering pack
+  ...SFX_IDS,
+  // user interface
+  'ui-move',
+  'ui-select',
+  'ui-back',
+  'ui-page-turn',
+  'ui-panel-slam',
+  'ui-balloon-pop',
+  'ui-type-key',
+  'ui-type-ding',
+  'ui-error',
+  'ui-notice',
+  // the van
+  'van-start',
+  'van-idle',
+  'van-cruise-day',
+  'van-cruise-strain',
+  'van-brakes',
+  'van-downshift',
+  'van-door',
+  'van-horn',
+  'van-gravel',
+  // weather and ambience beds (loops)
+  'amb-desert-day',
+  'amb-desert-night',
+  'amb-heat',
+  'amb-dust-storm',
+  'amb-monsoon',
+  'amb-mountain',
+  'amb-ocean',
+  'amb-town',
+  'amb-store',
+  // event foley
+  'ev-snake',
+  'ev-heatstroke',
+  'ev-speed-trap',
+  'ev-thief',
+  'ev-ransomware',
+  'ev-sushi',
+  'ev-wrong-turn',
+  'ev-tailwind',
+  'ev-pecan-stand',
+  'ev-historic-80',
+  'ev-flat-tire',
+  'ev-radiator',
+  'ev-belt',
+  'ev-tow-truck',
+  'ev-river-ford',
+  'ev-river-ferry',
+  'ev-runaway-ramp',
+  'ev-dunes',
+  'ev-hot-springs',
+  'ev-date-shake',
+  'ev-border-checkpoint',
+  'ev-sea-level',
+  'ev-insulin-cooler',
+  'ev-memorial',
+  'ev-snack-stand',
+  // landmarks, minigame, the ending
+  'snack-hit',
+  'snack-miss',
+  'stop-arrive',
+  'victory-fireworks',
+  'grave-shovel',
+] as const;
+export type AudioSfxId = (typeof AUDIO_SFX_IDS)[number];
 /** §16 — video. */
 export const VIDEO_IDS = ['intro', 'billboards-loop'] as const;
 
@@ -228,6 +315,7 @@ function buildAllSlots(): readonly string[] {
   for (const id of ICON_IDS) slots.push(`icons/${id}`);
   for (const id of HERITAGE_IDS) slots.push(`heritage/${id}`);
   for (const id of AUDIO_IDS) slots.push(`audio/${id}`);
+  for (const id of AUDIO_SFX_IDS) slots.push(`audio/sfx/${id}`);
   for (const id of VIDEO_IDS) slots.push(`video/${id}`);
   return slots;
 }
@@ -261,6 +349,7 @@ export interface AssetResolver {
   signage(id: SignageId): string | null;
   furniture(id: (typeof FURNITURE_IDS)[number]): string | null;
   audio(id: AudioId): string | null;
+  audioSfx(id: AudioSfxId): string | null;
   /** Every numbered 8 West IT billboard face that exists, in order. */
   billboards(): string[];
 }
@@ -310,6 +399,7 @@ export function createAssetResolver(manifest: readonly string[], base = '/assets
     signage: (id) => slot(`signage/${id}`),
     furniture: (id) => slot(`furniture/${id}`),
     audio: (id) => slot(`audio/${id}`),
+    audioSfx: (id) => slot(`audio/sfx/${id}`),
     billboards: () => {
       const urls: string[] = [];
       for (let i = 1; i <= BILLBOARD_COUNT; i++) {

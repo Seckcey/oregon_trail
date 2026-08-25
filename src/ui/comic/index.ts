@@ -4,12 +4,15 @@
 // No game logic: layout.ts decides the page, page.ts draws it.
 
 import type { Action, Screen } from '../../sim/game';
-import { assets } from '../assets';
+import { MUSIC_LOOPS, assets } from '../assets';
 import { INPUT_MAX_LENGTH, inputAction } from '../input';
+import { loadAudioEnabled, saveAudioEnabled } from '../persistence';
 import type { Renderer, UiHandlers } from '../renderer';
 import { burst } from './art-shared';
+import { planAudio, type AudioCue } from './audio';
 import comicCss from './comic.css?inline';
 import { layoutPage, type ComicPage } from './layout';
+import { createMixer, type Mixer } from './mixer';
 import { preloadArt, renderPage } from './page';
 import { SFX_COLORS, SFX_WORDS, sfxForTransition } from './sfx';
 import type { SfxId } from '../assets';
@@ -64,6 +67,8 @@ export function createComicRenderer(): Renderer {
   let submitLocked = false;
   let reducedMotion = false;
   let sfxTimer: number | null = null;
+  let mixer: Mixer | null = null;
+  let lastCue: AudioCue | null = null;
 
   function q<T extends HTMLElement>(selector: string): T {
     const node = root?.querySelector<T>(selector);
@@ -131,6 +136,33 @@ export function createComicRenderer(): Renderer {
     void h;
   }
 
+  /** The SOUND: ON / OFF sign in the masthead, and the gesture that unlocks the browser's audio. */
+  function wireSound(signal: AbortSignal): void {
+    const created = createMixer(assets, { enabled: loadAudioEnabled() ?? true, loops: MUSIC_LOOPS });
+    mixer = created;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'sign mast-sound';
+    const paint = (): void => {
+      const on = created.isEnabled();
+      btn.textContent = on ? 'SOUND: ON' : 'SOUND: OFF';
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.setAttribute('aria-label', on ? 'Turn the sound off' : 'Turn the sound on');
+    };
+    btn.addEventListener('click', () => {
+      const on = !created.isEnabled();
+      saveAudioEnabled(on);
+      created.setEnabled(on);
+      paint();
+    });
+    paint();
+    q<HTMLElement>('.mast-right').appendChild(btn);
+    // Browsers keep audio locked until the first real gesture on the page.
+    const unlock = (): void => created.unlock();
+    document.addEventListener('pointerdown', unlock, { signal, capture: true });
+    document.addEventListener('keydown', unlock, { signal, capture: true });
+  }
+
   return {
     theme: 'comic',
 
@@ -155,6 +187,7 @@ export function createComicRenderer(): Renderer {
       reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       listeners = new AbortController();
       wireInput(nextHandlers, listeners.signal);
+      wireSound(listeners.signal);
       // Frank's masthead replaces the lettering once it lands as a vector; the
       // raw raster is a generation sheet, so only an SVG counts as finished.
       const masthead = assets.brand('masthead');
@@ -196,6 +229,7 @@ export function createComicRenderer(): Renderer {
       if (inputField) {
         inputStartedAt = performance.now();
         submitLocked = false;
+        inputField.addEventListener('input', () => mixer?.play('ui-type-key'));
         // Focus now, not on a timer: the field is rebuilt every render and the
         // next keystroke (a fast typist, a test runner) must land in it.
         inputField.focus();
@@ -210,12 +244,18 @@ export function createComicRenderer(): Renderer {
         }
         window.scrollTo({ top: 0 });
       }
-      slam(sfxForTransition(prev, screen, lastAction));
+      const word = sfxForTransition(prev, screen, lastAction);
+      slam(word);
+      lastCue = planAudio(prev, screen, lastAction, word, lastCue);
+      mixer?.apply(lastCue);
     },
 
     unmount() {
       if (sfxTimer !== null) window.clearTimeout(sfxTimer);
       sfxTimer = null;
+      mixer?.dispose();
+      mixer = null;
+      lastCue = null;
       const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
       if (favicon?.dataset['heritage']) favicon.href = favicon.dataset['heritage'];
       listeners?.abort();

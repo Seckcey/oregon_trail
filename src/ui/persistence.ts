@@ -10,7 +10,26 @@ const SAVE_KEY_V2 = '8wt.save.v2'; // v2: Phase 2–3 — the bare GameState
 const SAVE_KEY = '8wt.save.v3'; // v3: Phase 4 — { runId, state }
 const MEMORIAL_KEY = '8wt.memorials.v1';
 const UNSUBSCRIBE_KEY = '8wt.unsubscribe.v1';
+const AUDIO_KEY = '8wt.audio.v1';
 const MEMORIAL_CAP = 60;
+
+/** The player's sound choice: true/false once they have made one, null before that. */
+export function loadAudioEnabled(): boolean | null {
+  try {
+    const raw = localStorage.getItem(AUDIO_KEY);
+    return raw === 'on' ? true : raw === 'off' ? false : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveAudioEnabled(on: boolean): void {
+  try {
+    localStorage.setItem(AUDIO_KEY, on ? 'on' : 'off');
+  } catch {
+    /* storage unavailable */
+  }
+}
 
 export interface SaveEnvelope {
   runId: string;

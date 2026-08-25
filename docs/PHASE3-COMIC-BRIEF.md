@@ -99,7 +99,7 @@ Every Screen from the sim renders as a **comic page** built from panels:
   saves ~1 MB JPEGs under .png names); the registry prefers the .webp, so that is what ships. A raw
   masthead sheet is not used in the header — only an SVG masthead replaces the lettering.
 - **Not done / deferred:** night region plates and weather art are placeholders only; the snack run
-  uses the snack-stand strip frames; audio and video slots exist in the registry but nothing plays.
+  uses the snack-stand strip frames. Audio landed 2026-08-25: `src/ui/comic/audio.ts` plans music / ambience / engine / one-shots per screen transition, `src/ui/comic/mixer.ts` plays them (Web Audio, gapless loops, crossfades, SOUND: ON/OFF in the masthead); video slots still play nothing.
 
 ## Working rules (Frank's global CLAUDE.md)
 

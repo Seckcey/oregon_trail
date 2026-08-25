@@ -23,7 +23,9 @@ with no code change.
 | `events/` | three-panel strips | `flat-tire`, `radiator`, `sushi`, `dust-storm`, `tow-truck`, `river-ford`, `the-grade`, … (27; see the list) |
 | `scenes/` | full-page splashes | `outfitter`, `loading`, `tucson`, `yuma-decision`, `laguna-decision`, `victory`, `victory-night`, `memorial`, `game-over` |
 | `furniture/`, `icons/`, `heritage/` | references and extras | `paper`, `halftone`, `burst`, `reference-sheet`, `crt-bezel`, … |
-| `audio/`, `video/` | optional | `title-loop`, `travel-day`, `travel-night`, `victory`, `death-sting`, `intro`, `billboards-loop` |
+| `audio/` | the music: 11 tracks (audio-asset-brief.md §4–§5) | `title-loop`, `travel-day`, `travel-night`, `victory`, `death-sting`, `outfitter-loop`, `stop-loop`, `grade-tension`, `crossing-tension`, `snack-loop`, `grave-theme` |
+| `audio/sfx/` | the sound effects: 74 files (brief §6–§13) | the 16 lettering words, `ui-*`, `van-*`, `amb-*` beds, `ev-*` foley, `snack-hit`, `snack-miss`, `stop-arrive`, `victory-fireworks`, `grave-shovel` |
+| `video/` | optional | `intro`, `billboards-loop` |
 
 The full slot table lives in `src/ui/assets.ts` (`ALL_SLOTS`). Files outside the table still
 resolve by base path, so extra layers (`regions/03-texas-canyon-sky.png`) are fine.

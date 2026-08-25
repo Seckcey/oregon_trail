@@ -52,8 +52,11 @@ describe('the slot table is the asset-list contract', () => {
   test('every slot is a bare base path: category/name, no extension, no leading slash', () => {
     expect(ALL_SLOTS.length).toBeGreaterThan(150);
     for (const slot of ALL_SLOTS) {
-      expect(slot).toMatch(/^[a-z0-9-]+\/[a-z0-9-]+$/);
+      expect(slot).toMatch(/^[a-z0-9-]+(\/[a-z0-9-]+)+$/);
     }
+    expect(ALL_SLOTS).toContain('audio/grave-theme');
+    expect(ALL_SLOTS).toContain('audio/sfx/bang');
+    expect(ALL_SLOTS).toContain('audio/sfx/amb-ocean');
     expect(new Set(ALL_SLOTS).size).toBe(ALL_SLOTS.length);
     expect(ALL_SLOTS).toContain('brand/cover-01');
     expect(ALL_SLOTS).toContain('van/van-clean');
