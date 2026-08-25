@@ -9,6 +9,7 @@ import { clientIp, hashIp } from './iphash.ts';
 import { saveMemorial } from './memorials.ts';
 import { standardLimits } from './ratelimit.ts';
 import { isReportReason, reportMemorial } from './reports.ts';
+import { normaliseEmail, upsertLead } from './leads.ts';
 import { rankOf, saveRun } from './runs.ts';
 import { sampleMemorials } from './sample.ts';
 import { turnstileGate } from './turnstile.ts';
@@ -99,10 +100,20 @@ export function createApp(opts: AppOptions = {}): App {
     if (!parsed.ok) return c.json({ error: parsed.error }, parsed.status);
     const valid = validateRun(parsed.body);
     if (!valid.ok) return c.json({ error: valid.error }, 400);
-    const saved = saveRun(db, valid.value, playerToken, ipHashOf(c.req.raw));
+    const claiming = valid.value.consent && valid.value.email !== null;
+    const email = claiming ? normaliseEmail(valid.value.email!) : null;
+    if (claiming && !email) return c.json({ error: 'bad-email' }, 400);
+    const ipHash = ipHashOf(c.req.raw);
+    const saved = saveRun(db, valid.value, playerToken, ipHash);
     if (!saved.ok) return c.json({ error: saved.error }, saved.status);
+    let unsubscribeUrl: string | undefined;
+    if (email) {
+      const lead = upsertLead(db, email, saved.row.display_name, saved.row.run_id, ipHash);
+      db.run('update runs set lead_id = ? where id = ?', [lead.id, saved.row.id]);
+      unsubscribeUrl = `${config.publicUrl}/unsubscribe/${lead.unsubscribe_token}`;
+    }
     const { rank, total } = rankOf(db, saved.row);
-    return c.json({ id: saved.row.id, rank, total, claimed: false }, 201);
+    return c.json({ id: saved.row.id, rank, total, claimed: Boolean(email), ...(unsubscribeUrl ? { unsubscribeUrl } : {}) }, 201);
   });
 
   return { fetch: app.fetch, request: app.request.bind(app), config, db, limits };

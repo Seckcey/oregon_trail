@@ -103,7 +103,7 @@ export function validateRun(body: unknown): Validated<RunBody> {
   const celebration = b['celebration'] ?? null;
   if (celebration !== null && !oneOf(celebration, CELEBRATIONS)) return { ok: false, error: 'bad-celebration' };
   const displayName = b['displayName'] ?? null;
-  if (displayName !== null && (typeof displayName !== 'string' || displayName.length < 2 || displayName.length > 40)) {
+  if (displayName !== null && (typeof displayName !== 'string' || displayName.length < 2 || displayName.length > LIMITS.nameMax)) {
     return { ok: false, error: 'bad-display-name' };
   }
   const email = b['email'] ?? null;

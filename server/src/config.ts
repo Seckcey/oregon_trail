@@ -9,6 +9,8 @@ export interface Config {
   turnstileSecret: string | null;
   /** Secret for the daily-salted IP hash; unset = a random per-process one. */
   ipHashSecret: string | null;
+  /** Where the game lives, for the unsubscribe link. */
+  publicUrl: string;
 }
 
 export function configFrom(env: Record<string, string | undefined>): Config {
@@ -18,5 +20,6 @@ export function configFrom(env: Record<string, string | undefined>): Config {
     dbPath: env['DB_PATH'] ?? './data/8wt.db',
     turnstileSecret: env['TURNSTILE_SECRET'] || null,
     ipHashSecret: env['IP_HASH_SECRET'] || null,
+    publicUrl: (env['PUBLIC_URL'] || 'https://8wt.8westit.com').replace(/\/+$/, ''),
   };
 }

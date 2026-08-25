@@ -97,7 +97,7 @@ describe('POST /api/runs', () => {
 
   it('a display name with contact info is rejected with the one message', async () => {
     const app = createApp({ dbPath: ':memory:' });
-    const res = await post(app, { ...good, displayName: 'call 555-123-4567' });
+    const res = await post(app, { ...good, displayName: 'insta dana' });
     expect(res.status).toBe(422);
     expect(await res.json()).toEqual({ error: 'no-contact' });
   });

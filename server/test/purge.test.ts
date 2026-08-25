@@ -18,7 +18,7 @@ describe('the 30-day purge', () => {
     memorial(app, 'NEW', '2026-08-24T00:00:00Z');
     expect(RETENTION_DAYS).toBe(30);
     const result = purge(app.db, new Date('2026-08-25T00:00:00Z'));
-    expect(result).toEqual({ memorials: 1, reports: 1 });
+    expect(result).toEqual({ memorials: 1, reports: 1, runs: 0, leads: 0 });
     const hashes = Object.fromEntries(app.db.all<{ id: string; ip_hash: string | null }>('select id, ip_hash from memorials').map((r) => [r.id, r.ip_hash]));
     expect(hashes).toEqual({ OLD: null, EDGE: 'hash', NEW: 'hash' });
     expect(app.db.get<{ ip_hash: string | null }>("select ip_hash from reports where id = 'ROLD'")?.ip_hash).toBeNull();
@@ -29,6 +29,6 @@ describe('the 30-day purge', () => {
     const app = createApp({ dbPath: ':memory:' });
     memorial(app, 'OLD', '2026-07-01T00:00:00Z');
     purge(app.db, new Date('2026-08-25T00:00:00Z'));
-    expect(purge(app.db, new Date('2026-08-25T00:00:00Z'))).toEqual({ memorials: 0, reports: 0 });
+    expect(purge(app.db, new Date('2026-08-25T00:00:00Z'))).toEqual({ memorials: 0, reports: 0, runs: 0, leads: 0 });
   });
 });
