@@ -28,10 +28,14 @@ export interface PageContext {
 // Art
 // ---------------------------------------------------------------------------
 
+// Art the reader has already seen this session. A repeat is shown at once,
+// no fade, so turning a page never flashes the placeholder under it.
+const shownArt = new Set<string>();
+
 function artHtml(ref: ArtRef, resolver: AssetResolver): string {
   const src = artSource(ref, resolver);
   const frame = ref.kind === 'event' ? ` strip-frame f${ref.frame}` : '';
-  const real = src.url ? `<img class="real${frame}" src="${esc(src.url)}" alt="${esc(src.alt)}" loading="lazy" decoding="async">` : '';
+  const real = src.url ? `<img class="real${frame}" src="${esc(src.url)}" alt="${esc(src.alt)}" decoding="async">` : '';
   return `<div class="panel-art" aria-label="${esc(src.alt)}">${src.placeholder}${real}</div>`;
 }
 
@@ -39,8 +43,18 @@ function headHtml(castId: number, mood: CrewMood, resolver: AssetResolver): stri
   const sheet: CrewSheet | undefined = mood === 'critical' ? 'critical' : mood === 'poor' ? 'rough' : undefined;
   const url = (sheet ? resolver.crew(castId, sheet) : null) ?? resolver.crew(castId);
   const member = castMember(castId);
-  const real = url ? `<img class="real" src="${esc(url)}" alt="${esc(member.name)}" loading="lazy" decoding="async">` : '';
+  const real = url ? `<img class="real" src="${esc(url)}" alt="${esc(member.name)}" decoding="async">` : '';
   return `${crewHeadSvg(castId, mood)}${real}`;
+}
+
+/** Fetch art ahead of the page that needs it, so it is in cache when it turns up. */
+export function preloadArt(urls: (string | null | undefined)[]): void {
+  for (const url of urls) {
+    if (!url || shownArt.has(url)) continue;
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+  }
 }
 
 function stageHtml(panel: Panel, page: ComicPage, resolver: AssetResolver): string {
@@ -303,8 +317,20 @@ ${signs ? `<div class="signs" role="menu">${signs}</div>` : ''}`;
     });
   }
   for (const img of host.querySelectorAll<HTMLImageElement>('img.real')) {
-    if (img.complete && img.naturalWidth > 0) img.classList.add('loaded');
-    else img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+    const src = img.getAttribute('src') ?? '';
+    if (shownArt.has(src) || (img.complete && img.naturalWidth > 0)) {
+      img.classList.add('loaded', 'instant');
+      shownArt.add(src);
+    } else {
+      img.addEventListener(
+        'load',
+        () => {
+          img.classList.add('loaded');
+          shownArt.add(src);
+        },
+        { once: true },
+      );
+    }
   }
   return host.querySelector<HTMLInputElement>('#comic-input');
 }

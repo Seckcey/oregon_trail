@@ -23,7 +23,7 @@ function isChroma(r, g, b) {
  * rack that the flood fill from the border can never reach.
  */
 function isScreen(r, g, b) {
-  return r <= 40 && b <= 40 && g >= 225;
+  return r <= 12 && b <= 12 && g >= 245;
 }
 
 /**
@@ -83,43 +83,71 @@ export function keyGreen(rgba, width, height, opts = {}) {
   const n = width * height;
   const background = new Uint8Array(n);
   const queue = new Int32Array(n);
-  let head = 0;
-  let tail = 0;
 
-  const push = (idx) => {
-    if (background[idx]) return;
-    const p = idx * 4;
-    if (!isChroma(out[p], out[p + 1], out[p + 2])) return;
-    background[idx] = 1;
-    queue[tail++] = idx;
+  // Flood from the seeds through every neighbour `accept` admits. Returns how
+  // many pixels this call marked; they sit in queue[0..count) until the next call.
+  const flood = (seeds, accept) => {
+    let head = 0;
+    let tail = 0;
+    const push = (idx) => {
+      if (background[idx]) return;
+      const p = idx * 4;
+      if (!accept(out[p], out[p + 1], out[p + 2])) return;
+      background[idx] = 1;
+      queue[tail++] = idx;
+    };
+    for (const idx of seeds) push(idx);
+    while (head < tail) {
+      const idx = queue[head++];
+      const x = idx % width;
+      const y = (idx - x) / width;
+      if (x > 0) push(idx - 1);
+      if (x < width - 1) push(idx + 1);
+      if (y > 0) push(idx - width);
+      if (y < height - 1) push(idx + width);
+    }
+    return tail;
+  };
+  const everyPixel = { *[Symbol.iterator]() { for (let idx = 0; idx < n; idx++) yield idx; } };
+  const borderPixels = {
+    *[Symbol.iterator]() {
+      for (let x = 0; x < width; x++) {
+        yield x;
+        yield (height - 1) * width + x;
+      }
+      for (let y = 0; y < height; y++) {
+        yield y * width;
+        yield y * width + width - 1;
+      }
+    },
   };
 
   if (opts.window) {
-    for (let idx = 0; idx < n; idx++) push(idx);
+    flood(everyPixel, isChroma);
   } else {
-    // Seed the fill from every border pixel and from every pixel that is the
-    // screen colour itself (sealed pockets), then grow through the green band.
-    for (let x = 0; x < width; x++) {
-      push(x);
-      push((height - 1) * width + x);
-    }
-    for (let y = 0; y < height; y++) {
-      push(y * width);
-      push(y * width + width - 1);
-    }
+    // The screen around the drawing: grow from the border through the whole
+    // green band, so anti-aliased fringe goes with it.
+    flood(borderPixels, isChroma);
+    // Sealed pockets (the gap in a roof rack): only the screen colour itself,
+    // grown only through the screen colour itself — a bright cartoon green
+    // next to a pocket is art and stays. And a "pocket" bigger than 1% of the
+    // frame is not a gap at all but a shape somebody painted in screen green
+    // (a letter, a checkmark): that stays too.
+    const maxPocket = Math.max(64, Math.floor(n * 0.01));
+    // Each pocket is examined once: a reverted shape must not be re-flooded
+    // from every one of its pixels.
+    const examined = new Uint8Array(n);
     for (let idx = 0; idx < n; idx++) {
+      if (background[idx] || examined[idx]) continue;
       const p = idx * 4;
-      if (isScreen(out[p], out[p + 1], out[p + 2])) push(idx);
+      if (!isScreen(out[p], out[p + 1], out[p + 2])) continue;
+      const count = flood([idx], isScreen);
+      const keep = count > maxPocket;
+      for (let i = 0; i < count; i++) {
+        examined[queue[i]] = 1;
+        if (keep) background[queue[i]] = 0;
+      }
     }
-  }
-  while (head < tail) {
-    const idx = queue[head++];
-    const x = idx % width;
-    const y = (idx - x) / width;
-    if (x > 0) push(idx - 1);
-    if (x < width - 1) push(idx + 1);
-    if (y > 0) push(idx - width);
-    if (y < height - 1) push(idx + width);
   }
 
   // Background out; the ring next to it softened and de-spilled.

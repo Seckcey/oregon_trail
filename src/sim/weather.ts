@@ -15,6 +15,11 @@ const HEAT_RANGE: Record<Month, readonly [number, number]> = {
   10: [0, 1],
 };
 
+/** The heat tier to plan for in a month: its worst, because water math should be pessimistic. */
+export function typicalHeat(month: Month): 0 | 1 | 2 | 3 {
+  return HEAT_RANGE[month][1] as 0 | 1 | 2 | 3;
+}
+
 // Real regional weather: spring dust storms plague I-10 between Las Cruces
 // and the Arizona line; summer monsoons build over the high desert east of
 // the lowlands.

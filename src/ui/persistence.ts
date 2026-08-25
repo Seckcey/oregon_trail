@@ -32,6 +32,8 @@ function upgradeState(state: GameState): GameState {
     claim: state.claim ?? null,
     board: state.board ?? null,
     boardStatus: state.boardStatus ?? 'idle',
+    upgrades: state.upgrades ?? { waterTank: false, fuelTank: false, cargo: false, ac: false },
+    storeTab: state.storeTab ?? 'supplies',
   };
 }
 

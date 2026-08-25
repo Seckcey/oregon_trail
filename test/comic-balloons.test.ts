@@ -28,7 +28,11 @@ describe('assignBalloons — choices become speech balloons from the crew, utili
   test('on the road, the crew takes turns speaking the choices; menus are road signs', () => {
     const screen = view(departed());
     const { balloons, signs } = assignBalloons(screen);
-    expect(balloons.map((b) => b.label)).toEqual(['Drive on', 'Rest a day', 'Snack run (spend a day foraging)']);
+    expect(balloons.map((b) => b.label)).toEqual([
+      'Drive on',
+      'Rest a day (heal up — everyone still eats and drinks)',
+      'Snack run (a day foraging — food only, no water)',
+    ]);
     expect(balloons.map((b) => b.speakerIndex)).toEqual([0, 1, 2]);
     expect(balloons.map((b) => b.speaker)).toEqual(['M0', 'M1', 'M2']);
     expect(signs.map((s) => s.label)).toEqual(['Change pace', 'Change rations', 'Check supplies', 'Look at the map']);
@@ -54,7 +58,7 @@ describe('assignBalloons — choices become speech balloons from the crew, utili
   test('balloon shapes follow the words: shouts, whispers, and plain speech', () => {
     const { balloons } = assignBalloons(view(departed()));
     expect(balloons.find((b) => b.label.startsWith('Snack run'))!.shape).toBe('shout');
-    expect(balloons.find((b) => b.label === 'Rest a day')!.shape).toBe('whisper');
+    expect(balloons.find((b) => b.label.startsWith('Rest a day'))!.shape).toBe('whisper');
     expect(balloons.find((b) => b.label === 'Drive on')!.shape).toBe('speech');
     const summit = assignBalloons(view(arriveAt(departed(), 'laguna-summit'))).balloons;
     expect(summit[0]!.shape).toBe('shout'); // "Ride the 6% grade"
@@ -74,7 +78,7 @@ describe('assignBalloons — choices become speech balloons from the crew, utili
     let s = run(createGame('x'), { type: 'START_NEW' }, { type: 'CHOOSE_OCCUPATION', occupation: 'ceo' }, { type: 'CHOOSE_MONTH', month: 5 });
     for (let i = 0; i < 5; i++) s = reduce(s, { type: 'SUBMIT_NAME', name: `M${i}` });
     const { balloons, signs } = assignBalloons(view(s));
-    expect(signs.map((b) => b.action.type)).toEqual(['BUY', 'BUY', 'BUY', 'BUY', 'BUY', 'BUY']);
+    expect(signs.map((b) => b.action.type)).toEqual(['BUY', 'BUY', 'BUY', 'BUY', 'BUY', 'BUY', 'STORE_TAB']);
     expect(balloons.map((b) => b.label)).toEqual(['Load up and hit the road']);
   });
 });

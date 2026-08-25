@@ -185,9 +185,9 @@ export const POOL_EVENTS: PoolEvent[] = [
       const fee = Math.min(s.cash, 18500);
       s.cash -= fee;
       return [
-        'The work laptop pings on truck-stop wifi: every file encrypted, a countdown, a wallet address.',
-        'A guy two booths over "knows computers." He charges $185 and mostly fixes it.',
-        '8 West IT 365 customers would’ve been fine.',
+        'Somebody opened an email attachment on the work laptop over truck-stop wifi. Now every file on it is locked, and a message on the screen wants $500 in Bitcoin to unlock them. That is ransomware: crooks holding your own files hostage.',
+        'A guy two booths over says he "knows computers." He charges $185 and mostly fixes it. You will never know what else he did in there.',
+        '8 West IT 365 customers would’ve been fine: the backups bring the files back, the monitoring catches it early, and nobody pays a crook.',
       ];
     },
   },

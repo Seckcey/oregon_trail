@@ -124,10 +124,17 @@ game earns shares by being good; the brand rides along.
 - **Art pipeline: SHIPPED 2026-08-25 (PR #6).** `npm run art` keys the neon-green screen out of
   every cutout (flood fill from the border, sealed pockets, a window mode for the dashboard) and
   writes the `.webp` the registry prefers; `--root` targets another checkout's assets. 11 tests.
-- **Real art: SHIPPING (PR #7).** Codex works docs/ASSET-LIST.md ten images at a time; the keyed
-  `.webp`/`.svg` files are committed (PNG masters are gitignored) so `git archive` deploys carry
-  them. Landed so far: masthead, cover, icon, splashes, all eleven van poses and the dashboard,
-  twelve crew model sheets, twelve headshots, the first mood variants.
+- **Real art: COMPLETE 2026-08-25.** Every image and video slot in docs/ASSET-LIST.md is filled —
+  231 keyed `.webp`/`.svg` files plus the videos, all live. Brand and covers; the van in eleven
+  poses and the dashboard; twelve crew as model sheets, headshots, two mood variants and pose
+  sheets, plus both group shots; twelve road backdrops with two night plates; three weather
+  plates; all seventeen stop postcards with clean plates; the sixteen SFX words; eight billboards
+  with the blank plate, the parent-company winks and the twelve-piece signage kit; twenty-eight
+  event strips; nine splashes; furniture, icons and the Heritage extras; covers 2–5; the 6s intro
+  sting and the 10s billboard loop. Masters stay out of git (`art-masters/`); `npm run art` keys
+  the green screen and slims oversized files. **Still open** (see ASSET-LIST §20): §15 audio,
+  which was never in the image tool's scope; the §19.4 heat-shimmer plate; and a few images
+  carrying a Ford badge on the van grille that wants painting out.
 - **Phase 4 (the trail remembers): 4A SHIPPED 2026-08-25 (PR #9).** docs/PHASE4-PLAN.md
   is the plan (PR #8). Step 4A — networked roadside memorials — is on branch `phase4/memorials`:
   the `server/` API (Hono, `node:sqlite`, the text filter and word list, the route-wide sampler,
