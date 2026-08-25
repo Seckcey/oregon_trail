@@ -120,7 +120,16 @@ game earns shares by being good; the brand rides along.
   tilted three-panel event strips with SFX lettering, Cover No. 1, the cliff-jump splash — drawn with
   inked SVG placeholders for every slot in docs/ASSET-LIST.md until real art lands in public/assets/.
   296 vitest tests plus a Playwright playthrough in both themes (`npm run e2e`). Heritage untouched.
-- Phase 4 (networked memorials): not started.
+- **Kannon and Type 1 awareness: SHIPPED 2026-08-24 (PR #5).** See the section below; 14 tests.
+- **Art pipeline: SHIPPED 2026-08-25 (PR #6).** `npm run art` keys the neon-green screen out of
+  every cutout (flood fill from the border, sealed pockets, a window mode for the dashboard) and
+  writes the `.webp` the registry prefers; `--root` targets another checkout's assets. 11 tests.
+- **Real art: SHIPPING (PR #7).** Codex works docs/ASSET-LIST.md ten images at a time; the keyed
+  `.webp`/`.svg` files are committed (PNG masters are gitignored) so `git archive` deploys carry
+  them. Landed so far: masthead, cover, icon, splashes, all eleven van poses and the dashboard,
+  twelve crew model sheets, twelve headshots, the first mood variants.
+- **Phase 4 (the trail remembers): PLANNING.** docs/PHASE4-BRIEF.md seeds it; the planning
+  session writes docs/PHASE4-PLAN.md on its own branch and stops before code.
 
 ## Build plan
 
