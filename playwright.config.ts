@@ -17,6 +17,9 @@ export default defineConfig({
   },
   webServer: {
     command: 'npm run build && npx vite preview --port 4173 --strictPort --host 127.0.0.1',
+    // The build under test is the networked one (the API at /api, no Turnstile, no GA4);
+    // e2e/memorials.spec.ts mocks the API and proves ?offline=1 and "API down" are silent.
+    env: { VITE_8WT_API: '/api', VITE_TURNSTILE_SITE_KEY: '', VITE_GA4_ID: '' },
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: true,
     timeout: 120_000,

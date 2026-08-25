@@ -128,8 +128,13 @@ game earns shares by being good; the brand rides along.
   `.webp`/`.svg` files are committed (PNG masters are gitignored) so `git archive` deploys carry
   them. Landed so far: masthead, cover, icon, splashes, all eleven van poses and the dashboard,
   twelve crew model sheets, twelve headshots, the first mood variants.
-- **Phase 4 (the trail remembers): PLANNING.** docs/PHASE4-BRIEF.md seeds it; the planning
-  session writes docs/PHASE4-PLAN.md on its own branch and stops before code.
+- **Phase 4 (the trail remembers): 4A BUILT 2026-08-25, awaiting deploy (A17).** docs/PHASE4-PLAN.md
+  is the plan (PR #8). Step 4A — networked roadside memorials — is on branch `phase4/memorials`:
+  the `server/` API (Hono, `node:sqlite`, the text filter and word list, the route-wide sampler,
+  reports, rate limits, Turnstile, the 30-day IP-hash purge, `admin.mjs`), the compose + nginx
+  wiring, `src/ui/net/` and `src/ui/session.ts` in the game, the report Screen and the §6 copy in
+  the sim, the privacy note at `/privacy`, GA4. 391 + 95 tests, Playwright with the API mocked,
+  offline, and down. 4B (leaderboard + leads) and 4C (share cards) follow.
 
 ## Build plan
 
@@ -144,8 +149,9 @@ snack run) is a shader and a font.
    Summit climax, death screens and epitaphs.
 3. **Dress and wink.** Art direction (letterpress-meets-phosphor, matching the prospectus),
    sound, the shareable diary, Heritage Mode, 8 West IT 365 tie-in copy, embed on 8westit.com.
-4. **The trail remembers.** Small persistence service: shared roadside memorials + leaderboard
-   with email capture.
+4. **The trail remembers.** Small persistence service: shared roadside memorials (4A) + leaderboard
+   with email capture (4B) + share cards (4C). Network I/O lives in `src/ui/` only; the sim takes
+   memorials in and reports deaths out, and never fetches.
 
 ## Deployment
 
