@@ -15,5 +15,5 @@ public/assets/**/*.jpg
 public/assets/**/*.jpeg
 
 # Phase 4: the API's database and the secrets
-data/
+/data/
 .env
