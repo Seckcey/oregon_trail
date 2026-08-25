@@ -10,9 +10,18 @@
 
 import sharp from 'sharp';
 
-/** Pure-screen green: high G, low R and B, and G well above both. */
+/** Screen-ish green: high G, low R and B, and G well above both — the band the flood fill grows through. */
 function isChroma(r, g, b) {
   return r <= 110 && b <= 110 && g >= 170 && g - Math.max(r, b) >= 110;
+}
+
+/**
+ * The screen itself, near-exactly #00FF00. Nothing in the palette is this
+ * green, so it is background wherever it sits — including the gap in a roof
+ * rack that the flood fill from the border can never reach.
+ */
+function isScreen(r, g, b) {
+  return r <= 40 && b <= 40 && g >= 225;
 }
 
 /**
@@ -86,7 +95,8 @@ export function keyGreen(rgba, width, height, opts = {}) {
   if (opts.window) {
     for (let idx = 0; idx < n; idx++) push(idx);
   } else {
-    // Seed the fill from every border pixel, then grow inwards through green only.
+    // Seed the fill from every border pixel and from every pixel that is the
+    // screen colour itself (sealed pockets), then grow through the green band.
     for (let x = 0; x < width; x++) {
       push(x);
       push((height - 1) * width + x);
@@ -94,6 +104,10 @@ export function keyGreen(rgba, width, height, opts = {}) {
     for (let y = 0; y < height; y++) {
       push(y * width);
       push(y * width + width - 1);
+    }
+    for (let idx = 0; idx < n; idx++) {
+      const p = idx * 4;
+      if (isScreen(out[p], out[p + 1], out[p + 2])) push(idx);
     }
   }
   while (head < tail) {

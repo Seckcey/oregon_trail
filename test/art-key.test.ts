@@ -48,6 +48,8 @@ function sprite(): Uint8Array {
   }
   put(px, 32, 24, LIME);
   put(px, 15, 24, BLEND); // just outside the left outline, touching the screen
+  // A pocket of pure screen green sealed inside the drawing — the gap in a roof rack.
+  for (let y = 26; y < 31; y++) for (let x = 38; x < 44; x++) put(px, x, y, GREEN);
   return px;
 }
 
@@ -83,6 +85,12 @@ describe('keyGreen', () => {
   test('cartoon greens inside the drawing are art, not screen', () => {
     const out = keyGreen(sprite(), W, H);
     expect(at(out, 32, 24)).toEqual([...LIME, 255]);
+  });
+
+  test('a sealed pocket of pure screen green is still screen (the gap in the roof rack)', () => {
+    const out = keyGreen(sprite(), W, H);
+    expect(at(out, 40, 28)[3]).toBe(0);
+    expect(at(out, 37, 28)).toEqual([...RED, 255]); // the red around it stays
   });
 
   test('an anti-aliased edge goes semi-transparent with the green spill removed', () => {
