@@ -5,6 +5,7 @@ import { Hono } from 'hono';
 import { configFrom, type Config } from './config.ts';
 import { migrate, openDb, type Db } from './db.ts';
 import { saveMemorial } from './memorials.ts';
+import { sampleMemorials } from './sample.ts';
 import { validateMemorial } from './validate.ts';
 
 export interface AppOptions {
@@ -42,6 +43,12 @@ export function createApp(opts: AppOptions = {}): App {
   const app = new Hono();
 
   app.get('/api/health', (c) => c.json({ ok: true }));
+
+  app.get('/api/memorials', (c) => {
+    const seed = (c.req.query('seed') ?? '').slice(0, 64);
+    c.header('Cache-Control', 'public, max-age=300');
+    return c.json(sampleMemorials(db, seed));
+  });
 
   app.post('/api/memorials', async (c) => {
     const parsed = await readJson(c.req.raw);
