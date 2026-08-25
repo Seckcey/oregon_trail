@@ -9,7 +9,7 @@ docs/PLAN.md, and docs/PHASE3-COMIC-BRIEF.md. This is the plan; no code has been
 |---|---|---|
 | Where the backend runs | **A second container on coastline** (Node 26 + Hono + `node:sqlite`), proxied by the game's nginx under `/api/` and `/r/` | Same deploy recipe, same box, one `sqlite3 data/8wt.db` away from Frank; Workers would split the app across two deploy pipelines for load we will never have |
 | Moderation | **Automatic filter + shadow-hide + two-report auto-hide; Frank reviews the hidden queue from a CLI** | Nothing a stranger sees is unfiltered; nothing a player types teaches them how to beat the filter |
-| Privacy | **No accounts, no cookies, no email required, 18+ for the email field, salted-and-rotated IP hashes purged at 30 days, Google Analytics 4 for visits** | The audience is the generation that played the original; the lead list is adults who run businesses, so the email field says so plainly |
+| Privacy | **No accounts, no cookies of our own, no email required, 18+ for the email field, salted-and-rotated IP hashes purged at 30 days, Google Analytics 4 for visits** | The audience is the generation that played the original; the lead list is adults who run businesses, so the email field says so plainly |
 | Identity | **Client-generated run id + a per-browser player token in localStorage; rank computed server-side and returned on POST** | No login, no PII, and the player still sees "you are #37" |
 | Rollout | **4A memorials → 4B leaderboard + leads → 4C share cards**, every network call behind a flag, the game whole with the API down | Delight first, lead list second, unfurls third; nothing regresses the offline game |
 
