@@ -45,8 +45,7 @@ describe('deploy/nginx.conf', () => {
     expect(block).toMatch(/proxy_set_header\s+CF-Connecting-IP\s+\$http_cf_connecting_ip/);
   });
   it('proxies /unsubscribe/ to the API (4B) with no access log', () => {
-    const block = /location \/unsubscribe\/ \{([\s\S]*?)
-\s*\}/.exec(conf)?.[1] ?? '';
+    const block = /location \/unsubscribe\/ \{([\s\S]*?)\n\s*\}/.exec(conf)?.[1] ?? '';
     expect(block).toMatch(/proxy_pass\s+http:\/\/eight-west-api:3000\/unsubscribe\//);
     expect(block).toMatch(/access_log\s+off/);
   });
