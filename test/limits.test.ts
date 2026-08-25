@@ -35,7 +35,7 @@ describe('the limits the API shares with the sim', () => {
   });
 
   it('publishes the score parts so the API can bound a score by survivors: multiplier × (survivors × 500 + supplyCap + cashCap)', () => {
-    const supplyCap = Math.floor(TUNING.foodMax / 25) + Math.floor(TUNING.waterMax / 5) + Math.floor(TUNING.fuelTankMax / 5) + 3 * TUNING.partsMax * 2;
+    const supplyCap = Math.floor((TUNING.foodMax + TUNING.upgradeFoodLbs) / 25) + Math.floor((TUNING.waterMax + TUNING.upgradeWaterGallons) / 5) + Math.floor((TUNING.fuelTankMax + TUNING.upgradeFuelGallons) / 5) + 3 * TUNING.partsMax * 2;
     expect(limits.score).toEqual({
       healthMax: TUNING.healthPoints.good,
       supplyCap,
