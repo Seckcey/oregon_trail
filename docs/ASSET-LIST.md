@@ -518,3 +518,49 @@ a heart, a skull in a cowboy hat. Saturday-morning comic-book illustration: bold
 
 Every slot has a placeholder until then. Send me anything as it lands — I'll key it out,
 vectorize what needs vectorizing, tune colors to the bible, and wire it in.
+
+---
+
+## 19. Additions (added after the list was first written — work these when you reach the end)
+
+New slots that came out of gameplay changes. Same rules as everything above.
+
+### 19.1 · Kannon's Dexcom strip — `events/dexcom.webp` ★★★
+Three-panel event strip, 3:1, min 3600×1200, thick black panel borders with white gutters, no
+speech balloons, no text, no readable numbers on any screen. Use Kannon exactly as drawn in
+`crew/07-model.png` (short curly brown hair faded at the sides, black tee with the small blue
+circle, black jeans, black-and-white skate shoes, the small round sensor on the back of his upper
+arm) and Wes as drawn in `crew/01-model.png`.
+```
+A three-panel comic strip, 3:1, thick black panel borders with white gutters, no speech
+balloons, no text. Panel 1: inside the moving van, Kannon in the back seat glancing down at a
+phone that is buzzing with little motion lines, the small round sensor visible on the back of
+his upper arm, the blue circle on his black tee, desert blurring past the window. Panel 2: the
+white van pulled off on a wide desert shoulder, Kannon sitting on the open rear tailgate calmly
+drinking a juice box, Wes beside him checking her watch, the rest of the crew hovering a
+respectful distance away pretending not to hover, a saguaro, big sky. Panel 3: Kannon rolling
+his eyes with a thumbs-up, the phone in his other hand showing only a big arrow pointing up (no
+numbers), everyone visibly relaxing, Wes grinning. Saturday-morning comic-book illustration:
+bold, uniform black ink outlines; flat, saturated cel-shaded colors with simple hard-edged
+two-tone shadows; exaggerated cartoon proportions and big expressive faces; dynamic low or
+tilted camera angles; motion lines, speed lines, and dust puffs for action; a subtle
+halftone-dot texture in the shadows; clean bright backgrounds. Palette: ink black, interstate
+red #C41E2A, ocean-wave blue #1F8FD6, sunflower yellow #FFC72C, lime green #7AC143, sky blue
+#5BC0EB, hot orange #F58220, grape purple #6A4C93, white. Original characters and an original
+van. No gradients, no painterly texture, no photorealism. Same illustrated universe as the other
+8 West Trail assets. The van: a boxy 1980s cargo van of no real make or model drawn with bold
+ink outlines and slightly cartoon-squashed proportions, big round friendly headlights, a WHITE
+body with a wide red-over-blue racing stripe along the beltline, chrome bumpers, a roof rack
+carrying two blue water jugs and a spare tire, a slightly sagging rear end, and a magnetic door
+sign reading "8 WEST IT" in bold navy capitals beside a small red-and-blue interstate-style
+shield. Never teal or green, never flowers, never psychedelic paint.
+```
+
+### 19.2 · Kannon's headshot, moods, and poses — `crew/07.png`, `07-rough.png`, `07-critical.png`, `07-poses.png` ★★
+Already covered by the section 4 frames — just make sure slot 07 uses **Kannon** (above), not
+the retired Sky description, and keep him consistent with `crew/07-model.png`.
+
+### 19.3 · Note on backgrounds
+The game's art pipeline now keys the neon-green #00FF00 background out automatically (only green
+touching the border is removed, so lime-green plants and shirts inside a drawing are safe). Keep
+generating cutouts on solid #00FF00 exactly as before.
