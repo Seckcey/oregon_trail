@@ -73,6 +73,7 @@ game, and `eight-west-api` (no published port; nginx proxies `/api/`) with its S
 `docker-compose.yml`.
 
 ```
+npm test && npm run build            # typecheck + suite, from a clean git tree
 git archive --format=tar.gz -o /tmp/8wt-deploy.tar.gz HEAD
 scp /tmp/8wt-deploy.tar.gz coastline:/tmp/8wt-deploy.tar.gz
 ssh coastline "tar xzf /tmp/8wt-deploy.tar.gz -C ~/apps/eight-west-trail && cd ~/apps/eight-west-trail && docker compose up -d --build"
@@ -80,6 +81,13 @@ ssh coastline "tar xzf /tmp/8wt-deploy.tar.gz -C ~/apps/eight-west-trail && cd ~
 
 **Never `rm -rf` the app directory before extracting** — `data/` (the live memorial database) and
 `.env` (the secrets) live there and are not in git. Extract over the tree; Docker rebuilds the rest.
+
+Because the tree is extracted over rather than replaced, a file that leaves git stays on the box.
+That is why the image **builds without typechecking** (`npx vite build`) and `.dockerignore` keeps
+`test/`, `e2e/` and `scripts/` out of the build context: one leftover file must never fail a
+deploy it has nothing to do with. Unimported leftovers under `src/` are tree-shaken away. The
+authoritative typecheck is the `npm test && npm run build` line above, run from the git tree —
+don't skip it.
 
 Frank's review queue, from the box:
 

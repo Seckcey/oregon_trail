@@ -7,3 +7,17 @@ data
 test-results
 playwright-report
 .git
+
+# The image builds the app; it does not run the suite. Keeping tests and tools
+# out of the build context also means a stale file left in the deploy directory
+# (from an interrupted deploy, say) can never break a production build.
+test
+e2e
+server/test
+scripts
+playwright.config.ts
+
+# Art masters and working screenshots never ship; public/assets does.
+art-masters
+shot-*.png
+live-*.png
