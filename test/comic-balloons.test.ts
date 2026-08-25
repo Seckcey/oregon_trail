@@ -64,7 +64,7 @@ describe('assignBalloons — choices become speech balloons from the crew, utili
     const title = assignBalloons(view(run(departed(), { type: 'RESTART' })));
     expect(title.balloons.map((b) => b.label)).toEqual(['Hit the road']);
     expect(title.balloons[0]).toMatchObject({ speaker: null, speakerIndex: null, shape: 'burst' });
-    expect(title.signs.map((s) => s.label)).toEqual(['How to play', 'About 8 West']);
+    expect(title.signs.map((s) => s.label)).toEqual(['How to play', 'About 8 West', 'The 8 West leaderboard']);
     const occupation = assignBalloons(view(reduce(createGame('x'), { type: 'START_NEW' })));
     expect(occupation.balloons).toHaveLength(3);
     expect(occupation.balloons.every((b) => b.speaker === null && b.shape === 'burst')).toBe(true);

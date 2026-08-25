@@ -32,6 +32,12 @@ describe('every screen is a comic page', () => {
     const reportable = { ...departed(), lastMemorial: { id: 'SRV1', names: ['A'], mile: 1, day: 1, cause: 'THIRST', epitaph: 'E' }, memorialSeenDay: departed().day };
     const report = page(reduce(reportable, { type: 'OPEN', screen: 'report' }));
     expect(report.kind).toBe('overlay');
+    // 4B: the leaderboard and the claim flow are overlays too — captions and one balloon.
+    expect(page(reduce(createGame('x'), { type: 'OPEN', screen: 'leaderboard' })).kind).toBe('overlay');
+    const cliffs = reduce(arriveAt(departed(), 'sunset-cliffs'), { type: 'EVENT_CHOICE', index: 1 });
+    const claim = page(reduce(cliffs, { type: 'CLAIM_START' }));
+    expect(claim.kind).toBe('overlay');
+    expect(claim.input?.kind).toBe('name');
     expect(report.title).toBe('REPORT A MEMORIAL');
     expect(report.balloons.length + report.signs.length).toBe(5);
     expect(page({ ...departed(), phase: 'epitaph', deathCause: 'THIRST' }).kind).toBe('grave');
