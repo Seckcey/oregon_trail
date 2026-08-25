@@ -1,0 +1,21 @@
+{
+  "causes": [
+    "GAS-STATION SUSHI",
+    "HEATSTROKE",
+    "SNAKEBITE",
+    "THE ROAD",
+    "THIRST",
+    "HUNGER",
+    "THE RIVER"
+  ],
+  "maxMile": 730,
+  "maxDay": 400,
+  "crewSize": 5,
+  "nameMax": 16,
+  "epitaphMax": 60,
+  "scoreMax": {
+    "ceo": 3054,
+    "sysadmin": 5508,
+    "intern": 7902
+  }
+}

@@ -11,7 +11,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "art": "node scripts/optimize-art.mjs"
+    "art": "node scripts/optimize-art.mjs",
+    "shared": "vite-node scripts/write-shared.ts",
+    "test:server": "npm --prefix server test",
+    "test:all": "npm test && npm run test:server"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
