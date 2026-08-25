@@ -9,10 +9,11 @@ import { clientIp, hashIp } from './iphash.ts';
 import { saveMemorial } from './memorials.ts';
 import { standardLimits } from './ratelimit.ts';
 import { isReportReason, reportMemorial } from './reports.ts';
-import { normaliseEmail, upsertLead } from './leads.ts';
-import { rankOf, saveRun } from './runs.ts';
+import { normaliseEmail, unsubscribe, upsertLead } from './leads.ts';
+import { hashPlayerToken, rankOf, saveRun, type RunRow } from './runs.ts';
 import { sampleMemorials } from './sample.ts';
 import { turnstileGate } from './turnstile.ts';
+import { unsubscribePage } from './unsubscribe.ts';
 import { validateMemorial, validateRun } from './validate.ts';
 
 export interface AppOptions {
@@ -89,6 +90,40 @@ export function createApp(opts: AppOptions = {}): App {
     const outcome = reportMemorial(db, c.req.param('id'), reason, ipHashOf(c.req.raw));
     if (outcome === 'missing') return c.json({ error: 'not-found' }, 404);
     return c.body(null, 204);
+  });
+
+  app.get('/api/leaderboard', (c) => {
+    if (!limits.get.take(ipHashOf(c.req.raw))) return over(c);
+    const rows = db.all<RunRow>(`select * from runs where status in ('visible', 'reviewed_ok') order by score desc, created_at asc, id asc limit 25`);
+    const top = rows.map((r, i) => ({
+      rank: i + 1,
+      displayName: r.display_name,
+      score: r.score,
+      occupation: r.occupation,
+      days: r.days,
+      survivors: r.survivors,
+      summitRoute: r.summit_route,
+      celebration: r.celebration,
+    }));
+    const runId = c.req.query('run');
+    const token = c.req.header('x-player-token');
+    let yours: { rank: number; score: number; total: number } | null = null;
+    if (runId && token) {
+      const mine = db.get<RunRow>(`select * from runs where run_id = ? and player_token = ? and status in ('visible', 'reviewed_ok')`, [runId, hashPlayerToken(token)]);
+      if (mine) {
+        const { rank, total } = rankOf(db, mine);
+        yours = { rank, score: mine.score, total };
+      }
+    }
+    c.header('Cache-Control', token ? 'private, max-age=60' : 'public, max-age=60');
+    return c.json({ top, yours });
+  });
+
+  app.get('/unsubscribe/:token', (c) => {
+    if (!limits.get.take(ipHashOf(c.req.raw))) return over(c);
+    unsubscribe(db, c.req.param('token'));
+    c.header('Cache-Control', 'no-store');
+    return c.html(unsubscribePage());
   });
 
   app.post('/api/runs', async (c) => {
