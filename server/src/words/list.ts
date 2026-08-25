@@ -13,7 +13,7 @@ export const WORDS: readonly string[] = [
   // profanity and its spellings
   'fuck', 'fuk', 'fck', 'fvck', 'phuck', 'fuq', 'feck',
   'shit', 'shyt', 'bullshit', 'dipshit',
-  'asshole', 'arsehole', 'azz',
+  'ass', 'arse', 'asshole', 'arsehole', 'azz',
   'bitch', 'biatch', 'beotch', 'bytch',
   'bastard', 'motherfuck', 'cunt', 'twat', 'wanker', 'prick', 'douche',
   'piss', 'pissed', 'goddamn',
