@@ -8,3 +8,8 @@ shot-*.png
 public/qa-states.json
 test-results/
 playwright-report/
+
+# Art masters stay out of git; the keyed .webp/.svg siblings are what ships.
+public/assets/**/*.png
+public/assets/**/*.jpg
+public/assets/**/*.jpeg
