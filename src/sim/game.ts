@@ -20,7 +20,8 @@ import { chance, createRng, nextInt, pick, seedFromString } from './rng';
 import { sceneOf, type SceneHint } from './scene';
 import { computeScore, type ScoreBreakdown } from './score';
 import { snackTotal, snackWordsFor, snackYield } from './snack';
-import { fmtCents, priceCentsAt, purchase, repairQuote, STORE_ITEMS, type StoreItemId } from './store';
+import { supplyOutlook } from './outlook';
+import { capacities, fmtCents, priceCentsAt, purchase, purchaseUpgrade, repairQuote, STORE_ITEMS, UPGRADE_ITEMS, type StoreItemId } from './store';
 import { ABOUT_T1D_LINES, DEXCOM, isKannon, KANNON, kannonAboard, kannonIndex, SNACK_CARB_LINE, T1D_RULES } from './t1d';
 import { dailyFoodNeed, dailyWaterNeed, fuelNeed, milesForDay } from './travel';
 import type {
@@ -36,7 +37,9 @@ import type {
   PendingEvent,
   Rations,
   Stop,
+  StoreTab,
   SummitRoute,
+  UpgradeId,
   Weather,
 } from './types';
 import { DAYS_IN_MONTH, healthStatus, MONTH_NAMES, TUNING } from './types';
@@ -54,6 +57,8 @@ export type Action =
   | { type: 'CHOOSE_MONTH'; month: DepartureMonth }
   | { type: 'SUBMIT_NAME'; name: string }
   | { type: 'BUY'; item: StoreItemId; units: number }
+  | { type: 'STORE_TAB'; tab: StoreTab }
+  | { type: 'UPGRADE'; id: UpgradeId }
   | { type: 'REPAIR' }
   | { type: 'LEAVE_STORE' }
   | { type: 'DRIVE' }
@@ -156,7 +161,9 @@ export type SetPiece =
       outfitting: boolean;
       stopName: string;
       cashCents: number;
+      tab: StoreTab;
       items: { id: StoreItemId; label: string; unitLabel: string; cents: number }[];
+      upgrades: { id: UpgradeId; label: string; blurb: string; cents: number; owned: boolean }[];
       tuneUp: { cents: number; points: number } | null;
     }
   | { kind: 'grave'; cause: string; epitaph: string; names: string[]; day: number; mile: number }
@@ -219,6 +226,8 @@ export function createGame(seed: string, memorials: Memorial[] = []): GameState 
     crew: [],
     namingIndex: 0,
     supplies: { food: 0, water: 0, fuel: 0, tires: 0, belts: 0, hoses: 0 },
+    upgrades: { waterTank: false, fuelTank: false, cargo: false, ac: false },
+    storeTab: 'supplies',
     van: { condition: 100 },
     pace: 'steady',
     rations: 'filling',
@@ -469,10 +478,12 @@ function completeDay(s: GameState, opts: DayOptions): void {
   s.milesToday = miles;
 
   // Health
+  // Air conditioning makes the day feel a tier cooler; the water math above
+  // already ran on the real heat, because the crew still sweats it out.
   const ctx: DayContext = {
     rations: s.rations,
     pace: s.pace,
-    heat: weather.heat,
+    heat: s.upgrades.ac ? (Math.max(0, weather.heat - 1) as 0 | 1 | 2 | 3) : weather.heat,
     hasFood,
     hasWater,
     resting: opts.resting,
@@ -544,8 +555,12 @@ function completeDay(s: GameState, opts: DayOptions): void {
     }
   }
 
-  if (!opts.resting && chance(s.rng, 0.25)) {
-    log(s, pick(s.rng, DRIVE_LINES));
+  // Every driving day leaves a line, so the road screen never shows a stale
+  // one: a random pick a quarter of the time (the same RNG draws as before),
+  // otherwise the calendar chooses.
+  if (!opts.resting) {
+    if (chance(s.rng, 0.25)) log(s, pick(s.rng, DRIVE_LINES));
+    else log(s, DRIVE_LINES[s.day % DRIVE_LINES.length]!);
   }
   s.phase = s.resumePhase;
 }
@@ -1118,7 +1133,7 @@ export function reduce(state: GameState, action: Action): GameState {
 
     case 'BUY': {
       const stopIndex = s.atStopIndex ?? 0;
-      const result = purchase(s.cash, s.supplies, action.item, action.units, stopIndex);
+      const result = purchase(s.cash, s.supplies, action.item, action.units, stopIndex, capacities(s.upgrades));
       if (result.ok) {
         s.cash = result.cash;
         s.supplies = result.supplies;
@@ -1127,7 +1142,32 @@ export function reduce(state: GameState, action: Action): GameState {
         s.storeNotice =
           result.reason === 'funds'
             ? 'Your wallet says no. The register agrees.'
-            : 'The van is full. Physics says no.';
+            : 'The van is full. Physics says no. (Van upgrades make it bigger.)';
+      }
+      return s;
+    }
+
+    case 'STORE_TAB':
+      if (s.phase !== 'store') return s;
+      s.storeTab = action.tab;
+      s.storeNotice = null;
+      return s;
+
+    case 'UPGRADE': {
+      if (s.phase !== 'store') return s;
+      const stopIndex = s.atStopIndex ?? 0;
+      const result = purchaseUpgrade(s.cash, s.upgrades, action.id, stopIndex);
+      const def = UPGRADE_ITEMS.find((u) => u.id === action.id)!;
+      if (result.ok) {
+        s.cash = result.cash;
+        s.upgrades = result.upgrades;
+        s.storeNotice = `${def.label}: bolted on. ${fmtCents(priceCentsAt(action.id, stopIndex))}, and it stays with the van.`;
+        log(s, `${def.label} fitted at the shop for ${fmtCents(priceCentsAt(action.id, stopIndex))}.`);
+      } else {
+        s.storeNotice =
+          result.reason === 'owned'
+            ? `You already have the ${def.label.toLowerCase()}. One is plenty.`
+            : 'Your wallet says no. The mechanic goes back to his radio.';
       }
       return s;
     }
@@ -1203,7 +1243,11 @@ export function reduce(state: GameState, action: Action): GameState {
       return s;
 
     case 'STOP_SHOP':
-      if (s.phase === 'stop') s.phase = 'store';
+      if (s.phase === 'stop') {
+        s.phase = 'store';
+        s.storeTab = 'supplies';
+        s.storeNotice = null;
+      }
       return s;
 
     case 'STOP_TALK': {
@@ -1465,31 +1509,60 @@ export function view(s: GameState): Screen {
       const stopIndex = s.atStopIndex ?? 0;
       const stop = stopAt(stopIndex);
       const quote = repairQuote(s.van.condition, stopIndex);
-      const lines = [
-        stopIndex === 0
-          ? 'THE OUTFITTER, LAS CRUCES. Everything ends in .85 — the owner says it’s a tribute.'
-          : `SUPPLIES AT ${stop.name.toUpperCase()}. Prices climb the farther west you get.`,
-        `Cash: ${fmtCents(s.cash)}`,
-        '',
-        ...STORE_ITEMS.map(
-          (item, i) =>
-            `${i + 1}) ${item.label.padEnd(16)} ${fmtCents(priceCentsAt(item.id, stopIndex))} per ${item.unitLabel}`,
-        ),
-        ...(quote ? [`7) ${'Tune-up'.padEnd(16)} ${fmtCents(quote.cents)} for +${quote.points} van condition`] : []),
-        '',
-        `Aboard: ${s.supplies.food} lbs food · ${s.supplies.water} gal water · ${s.supplies.fuel} gal fuel · spares ${s.supplies.tires}t/${s.supplies.belts}b/${s.supplies.hoses}h · van ${Math.round(s.van.condition)}/100`,
-        ...(s.storeNotice ? ['', s.storeNotice] : []),
-      ];
-      const buys: ScreenChoice[] = [
-        { key: '1', label: 'Buy food (1 case, 25 lbs)', action: { type: 'BUY', item: 'food', units: 1 } },
-        { key: '2', label: 'Buy water (2 jugs, 10 gal)', action: { type: 'BUY', item: 'water', units: 2 } },
-        { key: '3', label: 'Buy gas (5 gal)', action: { type: 'BUY', item: 'fuel', units: 5 } },
-        { key: '4', label: 'Buy a spare tire', action: { type: 'BUY', item: 'tire', units: 1 } },
-        { key: '5', label: 'Buy a belt', action: { type: 'BUY', item: 'belt', units: 1 } },
-        { key: '6', label: 'Buy a radiator hose', action: { type: 'BUY', item: 'hose', units: 1 } },
-      ];
-      if (quote) {
-        buys.push({ key: '7', label: `Tune-up the van (+${quote.points}, ${fmtCents(quote.cents)})`, action: { type: 'REPAIR' } });
+      const caps = capacities(s.upgrades);
+      const aboard = `Aboard: ${s.supplies.food}/${caps.food} lbs food · ${s.supplies.water}/${caps.water} gal water · ${s.supplies.fuel}/${caps.fuel} gal fuel · spares ${s.supplies.tires}t/${s.supplies.belts}b/${s.supplies.hoses}h · van ${Math.round(s.van.condition)}/100`;
+      const outlook = supplyOutlook(s);
+      const heads = stopIndex === 0 ? ['THE OUTFITTER, LAS CRUCES. Everything ends in .85 — the owner says it’s a tribute.'] : [`SUPPLIES AT ${stop.name.toUpperCase()}. Prices climb the farther west you get.`];
+      let lines: string[];
+      let buys: ScreenChoice[];
+      if (s.storeTab === 'upgrades') {
+        lines = [
+          ...heads,
+          `Cash: ${fmtCents(s.cash)}`,
+          '',
+          'THE BACK COUNTER. Bolt it on once, keep it for the run.',
+          ...UPGRADE_ITEMS.map(
+            (u, i) =>
+              `${i + 1}) ${u.label.padEnd(18)} ${s.upgrades[u.id] ? 'OWNED'.padEnd(8) : fmtCents(priceCentsAt(u.id, stopIndex)).padEnd(8)} ${u.blurb}`,
+          ),
+          '',
+          aboard,
+          ...(s.storeNotice ? ['', s.storeNotice] : []),
+        ];
+        buys = UPGRADE_ITEMS.map((u, i) => ({
+          key: String(i + 1),
+          label: s.upgrades[u.id] ? `${u.label} (owned)` : `${u.label} (${fmtCents(priceCentsAt(u.id, stopIndex))})`,
+          action: { type: 'UPGRADE', id: u.id } as Action,
+        }));
+        buys.push({ key: '8', label: 'Back to supplies', action: { type: 'STORE_TAB', tab: 'supplies' } });
+      } else {
+        lines = [
+          ...heads,
+          `Cash: ${fmtCents(s.cash)}`,
+          '',
+          ...STORE_ITEMS.map(
+            (item, i) =>
+              `${i + 1}) ${item.label.padEnd(16)} ${fmtCents(priceCentsAt(item.id, stopIndex))} per ${item.unitLabel}`,
+          ),
+          ...(quote ? [`7) ${'Tune-up'.padEnd(16)} ${fmtCents(quote.cents)} for +${quote.points} van condition`] : []),
+          '',
+          aboard,
+          ...(outlook.nextShop ? [`Next shop after this one: ${outlook.nextShop.shop ? outlook.nextShop.name : 'none — ' + outlook.nextShop.name + ' is the end of the road'}, ${outlook.nextShop.miles} miles (about ${outlook.nextShop.days} ${outlook.nextShop.days === 1 ? 'day' : 'days'}).`] : []),
+          ...outlook.warnings.map((w) => `⚠ ${w}`),
+          ...(s.storeNotice ? ['', s.storeNotice] : []),
+        ];
+        buys = [
+          { key: '1', label: 'Buy food (1 case, 25 lbs)', action: { type: 'BUY', item: 'food', units: 1 } },
+          { key: '2', label: 'Buy water (2 jugs, 10 gal)', action: { type: 'BUY', item: 'water', units: 2 } },
+          { key: '3', label: 'Buy gas (5 gal)', action: { type: 'BUY', item: 'fuel', units: 5 } },
+          { key: '4', label: 'Buy a spare tire', action: { type: 'BUY', item: 'tire', units: 1 } },
+          { key: '5', label: 'Buy a belt', action: { type: 'BUY', item: 'belt', units: 1 } },
+          { key: '6', label: 'Buy a radiator hose', action: { type: 'BUY', item: 'hose', units: 1 } },
+        ];
+        if (quote) {
+          buys.push({ key: '7', label: `Tune-up the van (+${quote.points}, ${fmtCents(quote.cents)})`, action: { type: 'REPAIR' } });
+        }
+        buys.push({ key: '8', label: 'Van upgrades (bigger tanks, A/C)', action: { type: 'STORE_TAB', tab: 'upgrades' } });
       }
       return screen(s, {
         title: stopIndex === 0 && s.day === 0 ? 'OUTFITTING' : `SHOP — ${stop.name.toUpperCase()}`,
@@ -1498,11 +1571,19 @@ export function view(s: GameState): Screen {
           outfitting: stopIndex === 0 && s.day === 0,
           stopName: stop.name,
           cashCents: s.cash,
+          tab: s.storeTab,
           items: STORE_ITEMS.map((item) => ({
             id: item.id,
             label: item.label,
             unitLabel: item.unitLabel,
             cents: priceCentsAt(item.id, stopIndex),
+          })),
+          upgrades: UPGRADE_ITEMS.map((u) => ({
+            id: u.id,
+            label: u.label,
+            blurb: u.blurb,
+            cents: priceCentsAt(u.id, stopIndex),
+            owned: s.upgrades[u.id],
           })),
           tuneUp: quote ? { cents: quote.cents, points: quote.points } : null,
         },
@@ -1521,17 +1602,21 @@ export function view(s: GameState): Screen {
 
     case 'travel': {
       const w = s.weatherToday;
+      const outlook = supplyOutlook(s);
+      // Today's news only: yesterday's event must not ride along as if it were new.
+      const today = s.log.filter((l) => l.day === s.day).slice(-3);
       return screen(s, {
         title: 'THE ROAD',
         lines: [
           `Day ${s.day}. ${MONTH_NAMES[s.month]} ${s.dayOfMonth}. ${w ? `Weather: ${w.label}.` : 'Morning, and the key is in the ignition.'}`,
           s.milesToday > 0 ? `Yesterday the van made ${s.milesToday} miles.` : '',
-          ...s.log.slice(-3).map((l) => `· ${l.text}`),
+          ...today.map((l) => `· ${l.text}`),
+          ...outlook.warnings.slice(0, 2).map((wn) => `· ⚠ ${wn}`),
         ].filter(Boolean),
         choices: [
           { key: '1', label: 'Drive on', action: { type: 'DRIVE' } },
-          { key: '2', label: 'Rest a day', action: { type: 'REST' } },
-          { key: '3', label: 'Snack run (spend a day foraging)', action: { type: 'SNACK_START' } },
+          { key: '2', label: 'Rest a day (heal up — everyone still eats and drinks)', action: { type: 'REST' } },
+          { key: '3', label: 'Snack run (a day foraging — food only, no water)', action: { type: 'SNACK_START' } },
           { key: '4', label: 'Change pace', action: { type: 'OPEN', screen: 'pace' } },
           { key: '5', label: 'Change rations', action: { type: 'OPEN', screen: 'rations' } },
           { key: '6', label: 'Check supplies', action: { type: 'OPEN', screen: 'supplies' } },
@@ -1579,18 +1664,31 @@ export function view(s: GameState): Screen {
     case 'stop': {
       const stop = stopAt(s.atStopIndex ?? 0);
       const special = specialAt(s);
-      const choices: ScreenChoice[] = [{ key: '1', label: 'Back on the road', action: { type: 'STOP_LEAVE' } }];
-      if (stop.hasShop) choices.push({ key: '2', label: 'Shop for supplies', action: { type: 'STOP_SHOP' } });
+      const outlook = supplyOutlook(s);
+      // The shop comes first where there is one: the next one may be 155 miles off.
+      const choices: ScreenChoice[] = [];
+      if (stop.hasShop) choices.push({ key: '1', label: 'Shop for supplies', action: { type: 'STOP_SHOP' } });
+      choices.push({ key: stop.hasShop ? '2' : '1', label: 'Back on the road', action: { type: 'STOP_LEAVE' } });
       choices.push(
         { key: '3', label: 'Talk to the locals', action: { type: 'STOP_TALK' } },
-        { key: '4', label: 'Rest a day', action: { type: 'REST' } },
+        { key: '4', label: 'Rest a day (heal up — everyone still eats and drinks)', action: { type: 'REST' } },
         { key: '5', label: 'Check supplies', action: { type: 'OPEN', screen: 'supplies' } },
         { key: '6', label: 'Look at the map', action: { type: 'OPEN', screen: 'map' } },
       );
       if (special) choices.push({ key: '7', label: special.special.label, action: { type: 'STOP_SPECIAL' } });
+      const ahead = outlook.nextShop
+        ? outlook.nextShop.shop
+          ? `Next shop: ${outlook.nextShop.name}, ${outlook.nextShop.miles} miles (about ${outlook.nextShop.days} ${outlook.nextShop.days === 1 ? 'day' : 'days'}).`
+          : `No more shops: ${outlook.nextShop.name} is ${outlook.nextShop.miles} miles (about ${outlook.nextShop.days} days). What you carry is what you have.`
+        : '';
       return screen(s, {
         title: stop.name.toUpperCase(),
-        lines: [stop.flavor, ...(s.storeNotice ? ['', s.storeNotice] : [])],
+        lines: [
+          stop.flavor,
+          ...(stop.hasShop && ahead ? ['', ahead] : []),
+          ...outlook.warnings.map((wn) => `⚠ ${wn}${stop.hasShop ? ' Stock up here.' : ''}`),
+          ...(s.storeNotice ? ['', s.storeNotice] : []),
+        ],
         choices,
         status: statusOf(s),
       });
@@ -1774,10 +1872,12 @@ export function view(s: GameState): Screen {
           '',
           '· Every DRIVE is one day: the van moves, everyone eats and drinks, the desert rolls its dice.',
           '· PACE trades health for miles. RATIONS trade food for health.',
-          '· Heat is the enemy. Water is the answer. Watch both.',
+          '· Heat is the enemy. Water is the answer. Five people drink 4 to 15 gallons a DAY depending on the heat — the road screen tells you how many days are aboard.',
+          '· SHOPS are only in some towns, and the gaps are long (Lordsburg to Tucson is 155 miles). When a stop warns you, buy before you leave. Prices climb westward.',
+          '· VAN UPGRADES at any shop: a bigger water tank, an auxiliary gas tank, a cargo rack, air conditioning. Bought once, kept for the run. This is what the money is for.',
           '· Spares (tire, belt, hose) turn disasters into anecdotes. Shops sell a TUNE-UP for the van, too.',
-          '· The SNACK RUN spends a day to type for your supper. You can only carry 100 lbs.',
-          '· RESTING heals — and doubles the healing of the sick and bitten.',
+          '· The SNACK RUN spends a day to type for your supper. Food only, no water, and you can only carry 100 lbs.',
+          '· RESTING heals (and doubles the healing of the sick and bitten) — but everyone still eats and drinks that day.',
           '· RIVERS: ford it under two and a half feet, float it on a flatbed, pay the ferry, or wait for the water to drop.',
           '· The DUNES close the road when the wind is up. The IN-KO-PAH grade eats vans. LAGUNA SUMMIT is the big decision.',
           '· When someone dies, they stay dead. This is that kind of game.',

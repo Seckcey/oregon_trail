@@ -22,10 +22,11 @@ export interface SharedLimits {
 const OCCUPATIONS: readonly Occupation[] = ['ceo', 'sysadmin', 'intern'];
 
 export function sharedLimits(): SharedLimits {
+  // The ceiling assumes every upgrade: the biggest tanks the van can carry.
   const supplyCap =
-    Math.floor(TUNING.foodMax / 25) +
-    Math.floor(TUNING.waterMax / 5) +
-    Math.floor(TUNING.fuelTankMax / 5) +
+    Math.floor((TUNING.foodMax + TUNING.upgradeFoodLbs) / 25) +
+    Math.floor((TUNING.waterMax + TUNING.upgradeWaterGallons) / 5) +
+    Math.floor((TUNING.fuelTankMax + TUNING.upgradeFuelGallons) / 5) +
     3 * TUNING.partsMax * 2;
   const scoreMax = {} as Record<Occupation, number>;
   for (const occ of OCCUPATIONS) {

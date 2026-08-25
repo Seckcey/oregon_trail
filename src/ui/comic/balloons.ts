@@ -54,7 +54,7 @@ export function castCrew(names: readonly string[]): number[] {
 /** Utility choices are highway signs, not things the crew says. */
 function isSign(choice: ScreenChoice): boolean {
   const t = choice.action.type;
-  return t === 'OPEN' || t === 'BACK' || t === 'BUY' || t === 'REPAIR';
+  return t === 'OPEN' || t === 'BACK' || t === 'BUY' || t === 'REPAIR' || t === 'STORE_TAB' || t === 'UPGRADE';
 }
 
 const SHOUT = /!|snack|ride the|floor it|push|ford|cannonball|swan|hit the road/i;

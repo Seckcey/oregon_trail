@@ -10,7 +10,7 @@ import type { Renderer, UiHandlers } from '../renderer';
 import { burst } from './art-shared';
 import comicCss from './comic.css?inline';
 import { layoutPage, type ComicPage } from './layout';
-import { renderPage } from './page';
+import { preloadArt, renderPage } from './page';
 import { SFX_COLORS, SFX_WORDS, sfxForTransition } from './sfx';
 import type { SfxId } from '../assets';
 
@@ -167,6 +167,19 @@ export function createComicRenderer(): Renderer {
         favicon.dataset['heritage'] ??= favicon.href;
         favicon.href = icon;
       }
+      // Warm the cache for the first pages — splash, outfitter, the first
+      // stretch of road, the van, the cast — so turning them never shows the
+      // placeholder under art that is still on its way.
+      preloadArt([
+        assets.scene('loading'),
+        assets.scene('outfitter'),
+        assets.region(1),
+        assets.region(2),
+        assets.van('clean'),
+        assets.van('dusty'),
+        ...Array.from({ length: 12 }, (_, i) => assets.crew(i + 1)),
+        ...Array.from({ length: 8 }, (_, i) => assets.slot(`billboards/8westit-${String(i + 1).padStart(2, '0')}`)),
+      ]);
     },
 
     render(screen) {

@@ -1,5 +1,5 @@
 import { ROUTE } from './data/route';
-import type { Supplies } from './types';
+import type { Supplies, UpgradeId, Upgrades } from './types';
 import { TUNING } from './types';
 
 export type StoreItemId = 'food' | 'water' | 'fuel' | 'tire' | 'belt' | 'hose';
@@ -23,18 +23,47 @@ export const STORE_ITEMS: StoreItemDef[] = [
   { id: 'hose', label: 'Radiator hose', unitLabel: 'hose', baseCents: 985, qtyPerUnit: 1, supplyKey: 'hoses' },
 ];
 
-const SUPPLY_MAX: Record<keyof Supplies, number> = {
-  food: TUNING.foodMax,
-  water: TUNING.waterMax,
-  fuel: TUNING.fuelTankMax,
-  tires: TUNING.partsMax,
-  belts: TUNING.partsMax,
-  hoses: TUNING.partsMax,
-};
+export interface UpgradeDef {
+  id: UpgradeId;
+  label: string;
+  /** What it does, in the player's words. */
+  blurb: string;
+  baseCents: number;
+}
+
+// The other counter: what a CEO's money is for. Bought once, kept for the run.
+export const UPGRADE_ITEMS: UpgradeDef[] = [
+  { id: 'waterTank', label: 'Bigger water tank', blurb: `carry ${TUNING.waterMax + TUNING.upgradeWaterGallons} gal instead of ${TUNING.waterMax}`, baseCents: 18485 },
+  { id: 'fuelTank', label: 'Auxiliary gas tank', blurb: `carry ${TUNING.fuelTankMax + TUNING.upgradeFuelGallons} gal instead of ${TUNING.fuelTankMax}`, baseCents: 24485 },
+  { id: 'cargo', label: 'Roof cargo rack', blurb: `carry ${TUNING.foodMax + TUNING.upgradeFoodLbs} lbs of food instead of ${TUNING.foodMax}`, baseCents: 12485 },
+  { id: 'ac', label: 'Air conditioning', blurb: 'every day feels one heat tier cooler (the crew still drinks the same)', baseCents: 38485 },
+];
+
+export const NO_UPGRADES: Upgrades = { waterTank: false, fuelTank: false, cargo: false, ac: false };
+
+export type Capacities = Record<keyof Supplies, number>;
+
+/** How much the van holds, given what has been bolted onto it. */
+export function capacities(upgrades: Upgrades): Capacities {
+  return {
+    food: TUNING.foodMax + (upgrades.cargo ? TUNING.upgradeFoodLbs : 0),
+    water: TUNING.waterMax + (upgrades.waterTank ? TUNING.upgradeWaterGallons : 0),
+    fuel: TUNING.fuelTankMax + (upgrades.fuelTank ? TUNING.upgradeFuelGallons : 0),
+    tires: TUNING.partsMax,
+    belts: TUNING.partsMax,
+    hoses: TUNING.partsMax,
+  };
+}
 
 function itemDef(item: StoreItemId): StoreItemDef {
   const def = STORE_ITEMS.find((i) => i.id === item);
   if (!def) throw new Error(`unknown store item ${item}`);
+  return def;
+}
+
+function upgradeDef(id: UpgradeId): UpgradeDef {
+  const def = UPGRADE_ITEMS.find((u) => u.id === id);
+  if (!def) throw new Error(`unknown upgrade ${id}`);
   return def;
 }
 
@@ -49,10 +78,17 @@ function shopNumber(stopIndex: number): number {
 
 const ESCALATION_PER_SHOP = 1.2;
 
-export function priceCentsAt(item: StoreItemId, stopIndex: number): number {
-  const def = itemDef(item);
-  const raw = def.baseCents * Math.pow(ESCALATION_PER_SHOP, shopNumber(stopIndex));
+function escalate(baseCents: number, stopIndex: number): number {
+  const raw = baseCents * Math.pow(ESCALATION_PER_SHOP, shopNumber(stopIndex));
   return Math.round(raw / 5) * 5;
+}
+
+function isUpgrade(item: StoreItemId | UpgradeId): item is UpgradeId {
+  return UPGRADE_ITEMS.some((u) => u.id === item);
+}
+
+export function priceCentsAt(item: StoreItemId | UpgradeId, stopIndex: number): number {
+  return escalate(isUpgrade(item) ? upgradeDef(item).baseCents : itemDef(item).baseCents, stopIndex);
 }
 
 export type PurchaseResult =
@@ -65,17 +101,29 @@ export function purchase(
   item: StoreItemId,
   units: number,
   stopIndex: number,
+  caps: Capacities = capacities(NO_UPGRADES),
 ): PurchaseResult {
   const def = itemDef(item);
   const cost = priceCentsAt(item, stopIndex) * units;
   if (cost > cash) return { ok: false, reason: 'funds' };
   const nextQty = supplies[def.supplyKey] + def.qtyPerUnit * units;
-  if (nextQty > SUPPLY_MAX[def.supplyKey]) return { ok: false, reason: 'capacity' };
+  if (nextQty > caps[def.supplyKey]) return { ok: false, reason: 'capacity' };
   return {
     ok: true,
     cash: cash - cost,
     supplies: { ...supplies, [def.supplyKey]: nextQty },
   };
+}
+
+export type UpgradeResult =
+  | { ok: true; cash: number; upgrades: Upgrades }
+  | { ok: false; reason: 'funds' | 'owned' };
+
+export function purchaseUpgrade(cash: number, upgrades: Upgrades, id: UpgradeId, stopIndex: number): UpgradeResult {
+  if (upgrades[id]) return { ok: false, reason: 'owned' };
+  const cost = priceCentsAt(id, stopIndex);
+  if (cost > cash) return { ok: false, reason: 'funds' };
+  return { ok: true, cash: cash - cost, upgrades: { ...upgrades, [id]: true } };
 }
 
 // ---------------------------------------------------------------------------
@@ -96,8 +144,7 @@ export interface RepairQuote {
 export function repairQuote(condition: number, stopIndex: number): RepairQuote | null {
   const points = Math.min(REPAIR_MAX_POINTS, Math.max(0, Math.round(100 - condition)));
   if (points < REPAIR_MIN_POINTS) return null;
-  const raw = points * REPAIR_CENTS_PER_POINT * Math.pow(ESCALATION_PER_SHOP, shopNumber(stopIndex));
-  return { points, cents: Math.round(raw / 5) * 5 };
+  return { points, cents: escalate(points * REPAIR_CENTS_PER_POINT, stopIndex) };
 }
 
 export function fmtCents(cents: number): string {

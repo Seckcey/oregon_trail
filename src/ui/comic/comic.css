@@ -191,6 +191,8 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   transition: opacity 0.5s ease;
 }
 .panel-art > img.real.loaded { opacity: 1; }
+/* Art seen before this session shows at once: a fade would flash the placeholder under it. */
+img.real.instant { transition: none !important; }
 
 .panel-captions {
   position: absolute;
@@ -225,7 +227,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 .stage .billboard {
   position: absolute;
   bottom: 26%;
-  width: 27%;
+  width: 36%;
   z-index: 1;
   filter: drop-shadow(2px 2px 0 var(--ink));
 }
@@ -237,8 +239,10 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 
 .stage.moving .van { animation: bob 0.45s ease-in-out infinite alternate; }
 .stage.moving .dust { animation: puff 1.2s ease-out 2; }
-.stage.moving .billboard.b1 { animation: ride 3.2s linear both; }
-.stage.moving .billboard.b2 { animation: ride 3.2s linear 1.4s both; }
+/* The van points west (left) and the world slides past it the other way,
+   left to right, slowly enough to read the sign. */
+.stage.moving .billboard.b1 { animation: ride 9s linear both; }
+.stage.moving .billboard.b2 { animation: ride 9s linear 4s both; }
 @keyframes bob {
   from { transform: translateY(0) rotate(0deg); }
   to { transform: translateY(-2%) rotate(-0.6deg); }
@@ -249,8 +253,8 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   100% { opacity: 0; transform: translate(60%, -20%) scale(1.3); }
 }
 @keyframes ride {
-  from { transform: translateX(240%); }
-  to { transform: translateX(-460%); }
+  from { transform: translateX(-300%); }
+  to { transform: translateX(260%); }
 }
 
 /* ------------------------------------------------------------------ */
@@ -705,7 +709,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   .say { width: 100%; }
   .say .balloon { flex: 1; }
   .stage .van { width: 34%; }
-  .stage .billboard { width: 30%; }
+  .stage .billboard { width: 42%; }
   .page-cover .page { grid-template-columns: 1fr; }
   .page-cover .panels { grid-row: auto; }
   .page-snack .page { grid-template-columns: 1fr; }

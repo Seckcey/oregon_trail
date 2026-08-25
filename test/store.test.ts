@@ -86,3 +86,41 @@ describe('fmtCents', () => {
     expect(fmtCents(5)).toBe('$0.05');
   });
 });
+
+// ---------------------------------------------------------------------------
+// upgrades: what the CEO's money is for
+// ---------------------------------------------------------------------------
+
+import { capacities, purchaseUpgrade, UPGRADE_ITEMS } from '../src/sim/store';
+import type { Upgrades } from '../src/sim/types';
+
+const noUpgrades = (): Upgrades => ({ waterTank: false, fuelTank: false, cargo: false, ac: false });
+const allUpgrades = (): Upgrades => ({ waterTank: true, fuelTank: true, cargo: true, ac: true });
+
+describe('upgrades', () => {
+  test('four of them, and every Las Cruces price ends in 85 cents', () => {
+    expect(UPGRADE_ITEMS.map((u) => u.id)).toEqual(['waterTank', 'fuelTank', 'cargo', 'ac']);
+    for (const u of UPGRADE_ITEMS) expect(priceCentsAt(u.id, 0) % 100).toBe(85);
+  });
+
+  test('capacities grow with the tanks and the rack', () => {
+    expect(capacities(noUpgrades())).toMatchObject({ water: 40, fuel: 40, food: 500 });
+    expect(capacities(allUpgrades())).toMatchObject({ water: 65, fuel: 60, food: 700 });
+  });
+
+  test('purchase respects the bigger tank', () => {
+    const supplies = { ...emptySupplies(), water: 40 };
+    expect(purchase(100000, supplies, 'water', 1, 0, capacities(noUpgrades()))).toEqual({ ok: false, reason: 'capacity' });
+    const grown = purchase(100000, supplies, 'water', 1, 0, capacities(allUpgrades()));
+    expect(grown.ok).toBe(true);
+  });
+
+  test('purchaseUpgrade deducts the price, marks it owned, and refuses a second sale', () => {
+    const first = purchaseUpgrade(100000, noUpgrades(), 'waterTank', 0);
+    if (!first.ok) throw new Error('expected ok');
+    expect(first.cash).toBe(100000 - 18485);
+    expect(first.upgrades.waterTank).toBe(true);
+    expect(purchaseUpgrade(100000, first.upgrades, 'waterTank', 0)).toEqual({ ok: false, reason: 'owned' });
+    expect(purchaseUpgrade(100, noUpgrades(), 'ac', 0)).toEqual({ ok: false, reason: 'funds' });
+  });
+});
