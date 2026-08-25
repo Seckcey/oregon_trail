@@ -1,6 +1,7 @@
 import { view } from './sim/game';
 import { computeScore } from './sim/score';
 import type { GameState } from './sim/types';
+import { createTracker } from './ui/analytics';
 import { netConfig } from './ui/net/api';
 import { newRunId } from './ui/net/identity';
 import { fetchMemorials, postMemorial, reportMemorial } from './ui/net/memorials';
@@ -46,7 +47,7 @@ const session = createSession(query.seed ?? freshSeed(), {
   reportMemorial,
   // No site key in the build → '' (post without a token; the dev server accepts it).
   turnstile: () => (TURNSTILE_SITE_KEY ? turnstileToken(TURNSTILE_SITE_KEY) : Promise.resolve('')),
-  track: () => {},
+  track: createTracker(import.meta.env['VITE_GA4_ID'] ?? ''),
 });
 
 function shareText(s: GameState): string {

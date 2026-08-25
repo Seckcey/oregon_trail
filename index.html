@@ -14,7 +14,36 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" />
   <!-- Paint the canvas before any theme mounts; each renderer injects its own stylesheet. -->
-  <style>html { background: #050805; } html[data-theme="comic"] { background: #f3ebd3; }</style>
+  <style>html { background: #050805; } html[data-theme="comic"] { background: #f3ebd3; } .turnstile-host { position: fixed; right: 0.5rem; bottom: 0.5rem; z-index: 50; }</style>
+  <!--
+    Phase 4 (docs/PHASE4-PLAN.md §5): Google Analytics 4 for visits and Cloudflare
+    Turnstile for the POSTs. Both are build-time ids (Vite fills %VITE_…% from the
+    environment); an empty id loads nothing, so dev and the offline game carry no tags.
+    GA4 runs with IP anonymised and Google signals off; the game sends only outcomes.
+  -->
+  <script>
+    (function () {
+      var ga = '%VITE_GA4_ID%';
+      if (ga && ga.indexOf('%') < 0) {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ga);
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', ga, { anonymize_ip: true, allow_google_signals: false, allow_ad_personalization_signals: false });
+      }
+      var ts = '%VITE_TURNSTILE_SITE_KEY%';
+      if (ts && ts.indexOf('%') < 0 && /(^|[?&])offline=1(&|$)/.test(location.search) === false) {
+        var t = document.createElement('script');
+        t.async = true;
+        t.defer = true;
+        t.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+        document.head.appendChild(t);
+      }
+    })();
+  </script>
   <script type="module" src="/src/main.ts"></script>
 </head>
 <body>

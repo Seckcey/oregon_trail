@@ -1,4 +1,5 @@
 import { CREW_NAME_POOL, DEATH_CAUSES, DRIVE_LINES, EPITAPH_DEFAULT, TOWN_TALK } from './data/text';
+import { PRIVACY_NOTE } from './data/privacy';
 import { ROUTE, stopAt } from './data/route';
 import {
   floatRisk,
@@ -1797,6 +1798,8 @@ export function view(s: GameState): Screen {
           'built with our own words, our own desert, and our own terrible van.',
           '',
           ...ABOUT_T1D_LINES,
+          '',
+          ...PRIVACY_NOTE,
           '',
           '8westit.com',
         ],
