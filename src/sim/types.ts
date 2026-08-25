@@ -126,6 +126,11 @@ export type SummitRoute = 'grade' | 'old80';
 /** How you went off the cliffs at the finish. */
 export type Celebration = 'cannonball' | 'swan' | 'towels';
 
+/** What the outfitter bolts onto the van. Each is bought once and lasts the run. */
+export type UpgradeId = 'waterTank' | 'fuelTank' | 'cargo' | 'ac';
+export type Upgrades = Record<UpgradeId, boolean>;
+export type StoreTab = 'supplies' | 'upgrades';
+
 export interface GameState {
   phase: GamePhase;
   returnPhase: GamePhase; // where sub-screens (supplies/map/pace/rations) return to
@@ -147,6 +152,8 @@ export interface GameState {
   namingIndex: number;
 
   supplies: Supplies;
+  upgrades: Upgrades;
+  storeTab: StoreTab; // which counter the store screen is showing
   van: Van;
   pace: Pace;
   rations: Rations;
@@ -210,6 +217,11 @@ export const TUNING = {
   waterMax: 40, // gallons
   foodMax: 500, // lbs
   partsMax: 3,
+
+  /** what the upgrades add to the caps above */
+  upgradeWaterGallons: 25,
+  upgradeFuelGallons: 20,
+  upgradeFoodLbs: 200,
 
   hungerHealthPerDay: -10,
   thirstBaseHealth: -8,

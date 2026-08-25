@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { createGame, reduce, view, type Action } from '../src/sim/game';
 import type { GameState, Memorial } from '../src/sim/types';
+import { sharedLimits } from '../src/sim/limits';
+import { POOL_EVENTS } from '../src/sim/events';
+import { arriveAt } from './helpers';
 
 // ---------------------------------------------------------------------------
 // helpers
@@ -451,5 +454,134 @@ describe('view', () => {
     s.supplies.water = 0;
     const out = reduce(s, { type: 'DRIVE' });
     expect(view(out).input?.kind).toBe('epitaph');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// playability: what the road tells you, and what the money buys
+// ---------------------------------------------------------------------------
+
+describe('the road screen tells you where you stand', () => {
+  test('shows only today’s news — yesterday’s lines do not linger', () => {
+    let s = departed('today-seed', 6);
+    s = driveUntil(s, (x) => x.day >= 2 && x.phase === 'travel');
+    expect(view(s).lines.join(' ')).not.toContain('You pull out of Las Cruces');
+    s = driveUntil(s, (x) => x.day >= 3 && x.phase === 'travel');
+    expect(view(s).lines.some((l) => l.startsWith('· '))).toBe(true);
+  });
+
+  test('every driving day leaves a line in the log, event or no event', () => {
+    let s = departed('quiet-seed', 4);
+    for (let i = 0; i < 6; i++) {
+      const before = s.day;
+      s = driveUntil(s, (x) => x.day > before && (x.phase === 'travel' || x.phase === 'stop'));
+      if (s.phase !== 'travel') break;
+      expect(s.log.some((l) => l.day === s.day)).toBe(true);
+    }
+  });
+
+  test('warns on the road when the water will not reach the next shop', () => {
+    const s = structuredClone(departed());
+    s.supplies.water = 8;
+    const text = view(s).lines.join(' ');
+    expect(text).toContain('WATER');
+    expect(text).toContain('Deming');
+  });
+
+  test('the choices say what resting and the snack run actually do', () => {
+    const labels = view(departed()).choices.map((c) => c.label);
+    expect(labels.find((l) => l.startsWith('Rest a day'))).toMatch(/eats and drinks/);
+    expect(labels.find((l) => l.startsWith('Snack run'))).toMatch(/food only/);
+  });
+
+  test('at a town with a store, shopping is the first thing offered', () => {
+    const s = driveUntil(departed(), (x) => x.phase === 'stop');
+    const labels = view(s).choices.map((c) => c.label);
+    expect(labels[0]).toMatch(/^Shop for supplies/);
+    expect(labels[1]).toBe('Back on the road');
+  });
+
+  test('a store stop warns before the long dry leg', () => {
+    const s = arriveAt(departed(), 'lordsburg');
+    s.supplies.water = 12;
+    const text = view(s).lines.join(' ');
+    expect(text).toContain('WATER');
+    expect(text).toContain('Tucson');
+    expect(text).toMatch(/155 miles/);
+  });
+
+  test('the help page explains shops, water, rest and the snack run', () => {
+    const text = view(run(createGame('help'), { type: 'OPEN', screen: 'help' })).lines.join(' ').toLowerCase();
+    expect(text).toContain('shop');
+    expect(text).toContain('water');
+    expect(text).toContain('food only');
+    expect(text).toContain('upgrade');
+  });
+});
+
+describe('the outfitter’s upgrades', () => {
+  function atTheOutfitter(seed = 'upg'): GameState {
+    let s = run(createGame(seed), { type: 'START_NEW' }, { type: 'CHOOSE_OCCUPATION', occupation: 'ceo' }, { type: 'CHOOSE_MONTH', month: 6 });
+    for (let i = 0; i < 5; i++) s = reduce(s, { type: 'SUBMIT_NAME', name: '' });
+    return s;
+  }
+
+  test('the store has a second tab of van upgrades, and a way back', () => {
+    let s = atTheOutfitter();
+    expect(view(s).choices.some((c) => /Van upgrades/.test(c.label))).toBe(true);
+    s = reduce(s, { type: 'STORE_TAB', tab: 'upgrades' });
+    const text = view(s).lines.join('\n');
+    expect(text).toContain('$184.85');
+    expect(text).toMatch(/water tank/i);
+    expect(view(s).choices.some((c) => /Back to supplies/.test(c.label))).toBe(true);
+    s = reduce(s, { type: 'STORE_TAB', tab: 'supplies' });
+    expect(view(s).lines.join('\n')).toContain('$12.85');
+  });
+
+  test('a bigger water tank costs $184.85 and raises the cap to 65 gallons', () => {
+    let s = run(atTheOutfitter(), { type: 'STORE_TAB', tab: 'upgrades' });
+    const cash = s.cash;
+    s = reduce(s, { type: 'UPGRADE', id: 'waterTank' });
+    expect(s.upgrades.waterTank).toBe(true);
+    expect(s.cash).toBe(cash - 18485);
+    s = run(s, { type: 'STORE_TAB', tab: 'supplies' }, { type: 'BUY', item: 'water', units: 13 });
+    expect(s.supplies.water).toBe(65);
+    s = reduce(s, { type: 'BUY', item: 'water', units: 1 });
+    expect(s.supplies.water).toBe(65);
+  });
+
+  test('an upgrade is sold once', () => {
+    let s = run(atTheOutfitter(), { type: 'STORE_TAB', tab: 'upgrades' }, { type: 'UPGRADE', id: 'cargo' });
+    const cash = s.cash;
+    s = reduce(s, { type: 'UPGRADE', id: 'cargo' });
+    expect(s.cash).toBe(cash);
+    expect(s.storeNotice).toMatch(/already/i);
+  });
+
+  test('air conditioning takes the edge off a hot day', () => {
+    const base = departed('ac-seed', 7);
+    const withAc = structuredClone(base);
+    withAc.upgrades = { ...withAc.upgrades, ac: true };
+    const a = driveUntil(base, (x) => x.day >= 2);
+    const b = driveUntil(withAc, (x) => x.day >= 2);
+    expect(b.crew[0]!.health).toBeGreaterThan(a.crew[0]!.health);
+  });
+
+  test('the shared score ceiling counts upgraded tanks', () => {
+    // 5 crew × 500, plus food 700/25 + water 65/5 + fuel 60/5 + parts 3×3×2, plus $2,500/5.
+    expect(sharedLimits().scoreMax.ceo).toBe(2500 + (28 + 13 + 12 + 18) + 500);
+  });
+});
+
+describe('the ransomware event speaks plain English', () => {
+  test('says what happened, what it costs, and why 8 West IT customers would be fine', () => {
+    const ev = POOL_EVENTS.find((e) => e.id === 'ransomware')!;
+    const s = structuredClone(departed());
+    const text = ev.fire(s).join(' ');
+    expect(text.toLowerCase()).toContain('locked');
+    expect(text.toLowerCase()).toContain('ransomware');
+    expect(text).toContain('$185');
+    expect(text).toContain('8 West IT 365');
+    expect(text.toLowerCase()).toContain('backup');
   });
 });

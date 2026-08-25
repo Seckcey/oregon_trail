@@ -27,7 +27,7 @@ describe('the limits the API shares with the sim', () => {
   });
 
   it('bounds the score per occupation: multiplier × (5 × 500 + supply cap + cash cap)', () => {
-    const supplyCap = Math.floor(TUNING.foodMax / 25) + Math.floor(TUNING.waterMax / 5) + Math.floor(TUNING.fuelTankMax / 5) + 3 * TUNING.partsMax * 2;
+    const supplyCap = Math.floor((TUNING.foodMax + TUNING.upgradeFoodLbs) / 25) + Math.floor((TUNING.waterMax + TUNING.upgradeWaterGallons) / 5) + Math.floor((TUNING.fuelTankMax + TUNING.upgradeFuelGallons) / 5) + 3 * TUNING.partsMax * 2;
     for (const occ of ['ceo', 'sysadmin', 'intern'] as const) {
       const cashCap = Math.floor(TUNING.startingCashCents[occ] / 500);
       expect(limits.scoreMax[occ]).toBe(TUNING.scoreMultiplier[occ] * (5 * 500 + supplyCap + cashCap));

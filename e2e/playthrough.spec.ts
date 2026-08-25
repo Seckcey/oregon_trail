@@ -61,7 +61,7 @@ function decide(o: Offer, shopped: Set<string>, restStreak: Mind): string | null
     // "The van is full" retires the item just bought; an empty wallet ends the visit.
     if (/The van is full/.test(o.body) && restStreak.lastBuy) restStreak.maxed.add(restStreak.lastBuy);
     if (/Your wallet says no/.test(o.body)) return key(/Load up|Back to town/);
-    const m = /(\d+) lbs food · (\d+) gal water · (\d+) gal fuel/.exec(o.body);
+    const m = /(\d+)\/\d+ lbs food · (\d+)\/\d+ gal water · (\d+)\/\d+ gal fuel/.exec(o.body);
     if (!m) return key(/Load up|Back to town/);
     const [food, water, fuel] = [Number(m[1]), Number(m[2]), Number(m[3])];
     const want: [string, boolean, RegExp][] = [
@@ -82,6 +82,7 @@ function decide(o: Offer, shopped: Set<string>, restStreak: Mind): string | null
     shopped.add(o.title);
     return shop;
   }
+  if (key(/^Back on the road/)) return key(/^Back on the road/);
   if (key(/^Take the ferry/)) {
     const cash = Number(/cash\s*\$([\d.]+)/i.exec(o.body)?.[1] ?? 0);
     return cash >= 90 ? key(/^Take the ferry/) : key(/^Ford it/);
