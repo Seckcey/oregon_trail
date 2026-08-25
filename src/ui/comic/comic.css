@@ -343,6 +343,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 .t1d-badge:hover, .t1d-badge[aria-expanded="true"] { background: var(--yellow); }
 .t1d-badge:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 .t1d-note { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; padding-top: 4px; border-top: 2px dashed var(--ink); }
+.t1d-note[hidden] { display: none; }
 .t1d-note a { color: var(--blue); font-weight: 700; }
 
 /* ------------------------------------------------------------------ */
