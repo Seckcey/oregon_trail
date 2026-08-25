@@ -141,7 +141,13 @@ game earns shares by being good; the brand rides along.
   reports, rate limits, Turnstile, the 30-day IP-hash purge, `admin.mjs`), the compose + nginx
   wiring, `src/ui/net/` and `src/ui/session.ts` in the game, the report Screen and the §6 copy in
   the sim, the privacy note at `/privacy`, GA4. 391 + 95 tests, Playwright with the API mocked,
-  offline, and down. 4B (leaderboard + leads) and 4C (share cards) follow.
+  offline, and down.
+- **Phase 4B (the leaderboard and the list): BUILT 2026-08-25, awaiting deploy (B9).** Branch
+  `phase4/leaderboard`: `runs` + `leads`, `POST /api/runs` with the score ceiling by survivors and
+  rank with ties, lead capture behind the verbatim consent sentence, `GET /api/leaderboard`,
+  `/unsubscribe/:token`, `admin.mjs leads.csv`; in the sim the `claim` flow and the `leaderboard`
+  Screen (both themes draw them as overlays); the session posts at the cliffs and re-posts through
+  the claim. 4C (share cards) follows.
 
 ## Build plan
 

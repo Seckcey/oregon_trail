@@ -2,9 +2,10 @@
 // the sim on boot, on progress, on death. Every dependency is a fake.
 import { describe, expect, it } from 'vitest';
 import { reduce, view } from '../src/sim/game';
+import { computeScore } from '../src/sim/score';
 import type { GameState, Memorial } from '../src/sim/types';
 import { createSession, type SessionDeps } from '../src/ui/session';
-import { departed } from './helpers';
+import { arriveAt, departed } from './helpers';
 
 function deps(over: Partial<SessionDeps> = {}) {
   const calls: Record<string, unknown[][]> = {
@@ -15,6 +16,9 @@ function deps(over: Partial<SessionDeps> = {}) {
     tagMemorial: [],
     track: [],
     reportMemorial: [],
+    postRun: [],
+    fetchLeaderboard: [],
+    storeUnsubscribeUrl: [],
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rec = (name: string, ret: unknown): any => (...args: unknown[]) => {
@@ -34,6 +38,10 @@ function deps(over: Partial<SessionDeps> = {}) {
     reportMemorial: rec('reportMemorial', Promise.resolve(true)),
     turnstile: () => Promise.resolve('tok'),
     track: rec('track', undefined),
+    playerToken: 'player-tok',
+    postRun: rec('postRun', Promise.resolve({ rank: 37, total: 1204, claimed: false, unsubscribeUrl: null })),
+    fetchLeaderboard: rec('fetchLeaderboard', Promise.resolve({ top: [], yours: null })),
+    storeUnsubscribeUrl: rec('storeUnsubscribeUrl', undefined),
     ...over,
   };
   return { d, calls };
@@ -189,3 +197,145 @@ describe('death', () => {
     expect(view(a)).toEqual(view(b));
   });
 });
+
+/** A run that has just made the cliffs. */
+function winning(): GameState {
+  const s = reduce(arriveAt(departed('session-win', 5, 'sysadmin'), 'sunset-cliffs'), { type: 'EVENT_CHOICE', index: 1 });
+  if (s.phase !== 'victory') throw new Error(`expected victory, got ${s.phase}`);
+  return s;
+}
+
+describe('victory and the board', () => {
+  it('posts the run once at the cliffs — score, first survivor as the name, no email — and the rank comes back into the sim', async () => {
+    const { d, calls } = deps();
+    const session = createSession('seed-1', d);
+    session.state = arriveAt(departed('session-win', 5, 'sysadmin'), 'sunset-cliffs');
+    session.dispatch({ type: 'EVENT_CHOICE', index: 1 });
+    expect(session.state.phase).toBe('victory');
+    await tick();
+    expect(calls.postRun).toHaveLength(1);
+    const [net, body, playerToken, token] = calls.postRun![0] as [unknown, Record<string, unknown>, string, string];
+    expect(net).toEqual({ base: '/api' });
+    expect(playerToken).toBe('player-tok');
+    expect(token).toBe('tok');
+    const s = session.state;
+    expect(body).toEqual({
+      runId: 'run-uuid',
+      score: computeScore(s.crew, s.supplies, s.cash, s.occupation!).total,
+      occupation: 'sysadmin',
+      days: s.day,
+      survivorNames: s.crew.filter((m) => m.alive).map((m) => m.name),
+      summitRoute: s.summitRoute,
+      celebration: 'swan',
+      displayName: s.crew.find((m) => m.alive)!.name,
+      email: null,
+      consent: false,
+    });
+    expect(session.state.runRank).toEqual({ rank: 37, total: 1204 });
+    expect(calls.track!.some((c) => c[0] === 'run_finished')).toBe(true);
+    session.dispatch({ type: 'OPEN', screen: 'help' });
+    await tick();
+    expect(calls.postRun).toHaveLength(1);
+  });
+
+  it('a nickname re-posts with the new name; consent re-posts with the email; the unsubscribe link lands in the sim and on the device', async () => {
+    const sent: Record<string, unknown>[] = [];
+    const { d, calls } = deps({
+      postRun: (_net, body) => {
+        sent.push(body as unknown as Record<string, unknown>);
+        return Promise.resolve(body.consent ? { rank: 37, total: 1204, claimed: true, unsubscribeUrl: 'https://8wt.8westit.com/unsubscribe/abc' } : { rank: 37, total: 1204, claimed: false, unsubscribeUrl: null });
+      },
+    });
+    const session = createSession('seed-1', d);
+    session.state = winning();
+    session.dispatch({ type: 'CLAIM_START' });
+    session.dispatch({ type: 'SUBMIT_NAME', name: 'The Dane' });
+    await tick();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ displayName: 'The Dane', email: null, consent: false });
+    session.dispatch({ type: 'SUBMIT_EMAIL', email: 'dana@example.com' });
+    session.dispatch({ type: 'CLAIM_CONSENT' });
+    await tick();
+    expect(sent).toHaveLength(2);
+    expect(sent[1]).toMatchObject({ displayName: 'The Dane', email: 'dana@example.com', consent: true });
+    expect(session.state.claim?.unsubscribeUrl).toBe('https://8wt.8westit.com/unsubscribe/abc');
+    expect(calls.storeUnsubscribeUrl![0]).toEqual(['https://8wt.8westit.com/unsubscribe/abc']);
+    expect(calls.track!.some((c) => c[0] === 'run_claimed')).toBe(true);
+  });
+
+  it('skipping posts nothing more', async () => {
+    const { d, calls } = deps();
+    const session = createSession('seed-1', d);
+    session.state = winning();
+    session.dispatch({ type: 'CLAIM_START' });
+    session.dispatch({ type: 'CLAIM_SKIP' });
+    await tick();
+    expect(calls.postRun).toHaveLength(0);
+    expect(session.state.phase).toBe('victory');
+  });
+
+  it('the email is only ever sent with consent', async () => {
+    const { d, calls } = deps();
+    const session = createSession('seed-1', d);
+    session.state = winning();
+    session.dispatch({ type: 'CLAIM_START' });
+    session.dispatch({ type: 'SUBMIT_NAME', name: 'Dana' });
+    session.dispatch({ type: 'SUBMIT_EMAIL', email: 'dana@example.com' });
+    session.dispatch({ type: 'CLAIM_SKIP' }); // Actually, no
+    await tick();
+    expect(calls.postRun!.length).toBeGreaterThan(0);
+    for (const c of calls.postRun!) expect((c[1] as { email: unknown }).email).toBeNull();
+  });
+
+  it('no Turnstile token: no run post, and the claim still walks through locally', async () => {
+    const { d, calls } = deps({ turnstile: () => Promise.resolve(null) });
+    const session = createSession('seed-1', d);
+    session.state = winning();
+    session.dispatch({ type: 'CLAIM_START' });
+    session.dispatch({ type: 'SUBMIT_NAME', name: 'Dana' });
+    await tick();
+    expect(calls.postRun).toHaveLength(0);
+    expect(session.state.claim?.step).toBe('email');
+  });
+
+  it('opening the board fetches it with the run id and the token; the answer (or null) lands in the sim', async () => {
+    const board = { top: [{ rank: 1, displayName: 'Dana', score: 3240, occupation: 'ceo' as const, days: 41, survivors: 5, summitRoute: 'grade' as const, celebration: 'swan' as const }], yours: null };
+    const { d, calls } = deps({ fetchLeaderboard: rec2(board) });
+    const session = createSession('seed-1', d);
+    session.dispatch({ type: 'OPEN', screen: 'leaderboard' });
+    expect(session.state.boardStatus).toBe('loading');
+    await tick();
+    expect(session.state.board).toEqual(board);
+    expect(session.state.boardStatus).toBe('ready');
+    expect(calls.fetchLeaderboard).toHaveLength(0);
+    expect(seen).toEqual([[{ base: '/api' }, null, 'player-tok']]); // the title screen: no run of ours yet
+
+    const { d: dWon } = deps({ fetchLeaderboard: rec2(board) });
+    const won = createSession('seed-1', dWon);
+    won.state = winning();
+    won.dispatch({ type: 'OPEN', screen: 'leaderboard' });
+    await tick();
+    expect(seen.at(-1)).toEqual([{ base: '/api' }, 'run-uuid', 'player-tok']); // after a run: ask where ours landed
+
+    const { d: d2 } = deps({ fetchLeaderboard: () => Promise.resolve(null) });
+    const broken = createSession('seed-1', d2);
+    broken.dispatch({ type: 'OPEN', screen: 'leaderboard' });
+    await tick();
+    expect(broken.state.boardStatus).toBe('failed');
+
+    const { d: d3, calls: c3 } = deps({ net: { base: null } });
+    const offline = createSession('seed-1', d3);
+    offline.dispatch({ type: 'OPEN', screen: 'leaderboard' });
+    await tick();
+    expect(offline.state.boardStatus).toBe('failed');
+    expect(c3.fetchLeaderboard).toHaveLength(0);
+  });
+});
+
+const seen: unknown[][] = [];
+function rec2<T>(ret: T): SessionDeps['fetchLeaderboard'] {
+  return (...args: unknown[]) => {
+    seen.push(args);
+    return Promise.resolve(ret as never);
+  };
+}

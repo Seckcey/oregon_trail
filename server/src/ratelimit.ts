@@ -46,10 +46,11 @@ const HOUR = 3_600_000;
 const MINUTE = 60_000;
 const DAY = 24 * HOUR;
 
-/** The plan's numbers: 6 memorial posts/hour, 20 reports/day, 60 GETs/minute. */
-export function standardLimits(): { memorialPost: RateLimiter; report: RateLimiter; get: RateLimiter } {
+/** The plan's numbers: 6 memorial posts/hour, 6 run posts/hour, 20 reports/day, 60 GETs/minute. */
+export function standardLimits(): { memorialPost: RateLimiter; runPost: RateLimiter; report: RateLimiter; get: RateLimiter } {
   return {
     memorialPost: new RateLimiter({ burst: 6, perMs: HOUR }),
+    runPost: new RateLimiter({ burst: 6, perMs: HOUR }),
     report: new RateLimiter({ burst: 20, perMs: DAY }),
     get: new RateLimiter({ burst: 60, perMs: MINUTE }),
   };

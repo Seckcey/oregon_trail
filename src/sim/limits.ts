@@ -17,6 +17,8 @@ export interface SharedLimits {
   nameMax: number;
   epitaphMax: number;
   scoreMax: Record<Occupation, number>;
+  /** The parts of the formula, so the API can bound a score by how many survived. */
+  score: { healthMax: number; supplyCap: number; cashCap: Record<Occupation, number>; multiplier: Record<Occupation, number> };
 }
 
 const OCCUPATIONS: readonly Occupation[] = ['ceo', 'sysadmin', 'intern'];
@@ -29,9 +31,12 @@ export function sharedLimits(): SharedLimits {
     Math.floor((TUNING.fuelTankMax + TUNING.upgradeFuelGallons) / 5) +
     3 * TUNING.partsMax * 2;
   const scoreMax = {} as Record<Occupation, number>;
+  const cashCap = {} as Record<Occupation, number>;
+  const multiplier = {} as Record<Occupation, number>;
   for (const occ of OCCUPATIONS) {
-    const cashCap = Math.floor(TUNING.startingCashCents[occ] / 500);
-    scoreMax[occ] = TUNING.scoreMultiplier[occ] * (TUNING.crewSize * TUNING.healthPoints.good + supplyCap + cashCap);
+    cashCap[occ] = Math.floor(TUNING.startingCashCents[occ] / 500);
+    multiplier[occ] = TUNING.scoreMultiplier[occ];
+    scoreMax[occ] = multiplier[occ] * (TUNING.crewSize * TUNING.healthPoints.good + supplyCap + cashCap[occ]);
   }
   return {
     causes: [...new Set([...Object.values(DEATH_CAUSES), 'THE ROAD'])],
@@ -41,5 +46,6 @@ export function sharedLimits(): SharedLimits {
     nameMax: 16,
     epitaphMax: 60,
     scoreMax,
+    score: { healthMax: TUNING.healthPoints.good, supplyCap, cashCap, multiplier },
   };
 }

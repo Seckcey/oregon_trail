@@ -9,7 +9,7 @@ const app = createApp({ env: process.env });
 const HOUR = 3_600_000;
 const housekeeping = () => {
   const done = purge(app.db);
-  if (done.memorials || done.reports) console.log(`purge: nulled ${done.memorials} memorial and ${done.reports} report ip hashes`);
+  if (done.memorials || done.reports || done.runs || done.leads) console.log(`purge: nulled ${done.memorials} memorial, ${done.reports} report, ${done.runs} run ip hashes; hashed ${done.leads} unsubscribed emails`);
   for (const rl of Object.values(app.limits)) rl.sweep();
 };
 housekeeping();

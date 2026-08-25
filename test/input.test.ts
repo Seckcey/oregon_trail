@@ -15,6 +15,6 @@ describe('inputAction — the one place a text field becomes a sim action', () =
   });
 
   it('keeps the Phase 1 field limits so both skins measure the same run', () => {
-    expect(INPUT_MAX_LENGTH).toEqual({ name: 16, epitaph: 60, snack: 24 });
+    expect(INPUT_MAX_LENGTH).toEqual({ name: 16, epitaph: 60, snack: 24, email: 80 });
   });
 });

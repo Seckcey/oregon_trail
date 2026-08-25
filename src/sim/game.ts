@@ -25,6 +25,7 @@ import { capacities, fmtCents, priceCentsAt, purchase, purchaseUpgrade, repairQu
 import { ABOUT_T1D_LINES, DEXCOM, isKannon, KANNON, kannonAboard, kannonIndex, SNACK_CARB_LINE, T1D_RULES } from './t1d';
 import { dailyFoodNeed, dailyWaterNeed, fuelNeed, milesForDay } from './travel';
 import type {
+  Board,
   Celebration,
   DepartureMonth,
   EventChoice,
@@ -63,7 +64,7 @@ export type Action =
   | { type: 'LEAVE_STORE' }
   | { type: 'DRIVE' }
   | { type: 'REST' }
-  | { type: 'OPEN'; screen: 'supplies' | 'map' | 'pace' | 'rations' | 'help' | 'about' | 'report' }
+  | { type: 'OPEN'; screen: 'supplies' | 'map' | 'pace' | 'rations' | 'help' | 'about' | 'report' | 'leaderboard' }
   | { type: 'BACK' }
   | { type: 'SET_PACE'; pace: Pace }
   | { type: 'SET_RATIONS'; rations: Rations }
@@ -82,7 +83,15 @@ export type Action =
   // Data in from the UI layer (the sim never fetches): the road's memorials, and word that ours was posted.
   | { type: 'MEMORIALS_LOADED'; memorials: Memorial[] }
   | { type: 'MEMORIAL_POSTED'; id: string; mile: number }
-  | { type: 'REPORT_MEMORIAL'; id: string; reason: ReportReason };
+  | { type: 'REPORT_MEMORIAL'; id: string; reason: ReportReason }
+  // 4B: the leaderboard. The UI posts the run and fetches the board; the sim only renders.
+  | { type: 'RUN_POSTED'; rank: number; total: number }
+  | { type: 'CLAIM_START' }
+  | { type: 'CLAIM_SKIP' }
+  | { type: 'CLAIM_CONSENT' }
+  | { type: 'SUBMIT_EMAIL'; email: string }
+  | { type: 'CLAIM_POSTED'; unsubscribeUrl: string }
+  | { type: 'LEADERBOARD_LOADED'; board: Board | null };
 
 export type ReportReason = 'rude' | 'real-name' | 'spam' | 'other';
 
@@ -95,6 +104,17 @@ export const COPY = {
   reportWhy: 'Why should this come down?',
   reportThanks: 'Thanks. We’ll take a look.',
   cta: 'Presented by 8 West IT 365 — the company named for the highway. 8westit.com',
+  // 4B
+  boardTitle: 'THE 8 WEST LEADERBOARD',
+  offlineBoard: 'The leaderboard is out of range here. Try again from a town with signal.',
+  claimAsk: 'Put a nickname on the board? (2–16 letters; this is all anyone sees)',
+  emailAsk: 'Want 8 West IT to email you now and then — news about the company, the game, and what’s new on the road? Grown-ups only; if you’re under 18, skip this.',
+  consent: 'I’m 18 or older, and I’d like occasional email from 8 West IT. I can unsubscribe with one click, any time.',
+  savedHere: '(it’s saved on this device too)',
+  boardLoading: 'Checking the board…',
+  boardEmpty: 'Nobody has made the cliffs yet. Be the first.',
+  boardCta1: 'Every run on this board got here on a 1985 van. Your business should be on something newer.',
+  boardCta2: '8 West IT 365 — flat-rate IT for small business — 8westit.com/365',
 } as const;
 
 export interface ScreenChoice {
@@ -182,7 +202,7 @@ export interface Screen {
   title: string;
   lines: string[];
   choices: ScreenChoice[];
-  input: { prompt: string; kind: 'name' | 'epitaph' | 'snack'; placeholder: string } | null;
+  input: { prompt: string; kind: 'name' | 'epitaph' | 'snack' | 'email'; placeholder: string } | null;
   status: StatusData | null;
   art: ScreenArt;
   /** What a graphical renderer needs to draw the moment. See scene.ts. */
@@ -249,6 +269,10 @@ export function createGame(seed: string, memorials: Memorial[] = []): GameState 
     memorialPosted: null,
     lastMemorial: null,
     reportedMemorialIds: [],
+    runRank: null,
+    claim: null,
+    board: null,
+    boardStatus: 'idle',
     suggestedNames,
     storeNotice: null,
     pendingArrival: false,
@@ -1121,6 +1145,13 @@ export function reduce(state: GameState, action: Action): GameState {
       return s;
 
     case 'SUBMIT_NAME': {
+      if (s.phase === 'claim') {
+        if (!s.claim || s.claim.step !== 'name') return s;
+        const nick = action.name.trim().slice(0, 16);
+        if (nick.length >= 2) s.claim.name = nick;
+        s.claim.step = 'email';
+        return s;
+      }
       const name = action.name.trim() || s.suggestedNames[s.namingIndex] || `Crew ${s.namingIndex + 1}`;
       s.crew.push({ name: name.slice(0, 16), health: 100, alive: true, conditions: [] });
       s.namingIndex += 1;
@@ -1214,6 +1245,10 @@ export function reduce(state: GameState, action: Action): GameState {
 
     case 'OPEN':
       if (action.screen === 'report' && !reportableMemorial(s)) return s;
+      if (action.screen === 'leaderboard') {
+        s.board = null;
+        s.boardStatus = 'loading';
+      }
       s.returnPhase = s.phase;
       s.phase = action.screen;
       return s;
@@ -1344,6 +1379,61 @@ export function reduce(state: GameState, action: Action): GameState {
       s.phase = s.returnPhase;
       return s;
     }
+
+    case 'RUN_POSTED':
+      s.runRank = { rank: action.rank, total: action.total };
+      return s;
+
+    case 'CLAIM_START': {
+      if (s.phase !== 'victory') return s;
+      const first = s.crew.find((m) => m.alive)?.name ?? 'Somebody';
+      s.claim = { step: 'name', name: first.slice(0, 16), email: null, consented: false, unsubscribeUrl: null };
+      s.returnPhase = 'victory';
+      s.phase = 'claim';
+      return s;
+    }
+
+    case 'CLAIM_SKIP': {
+      if (s.phase !== 'claim' || !s.claim) return s;
+      if (s.claim.step === 'name') {
+        s.claim = null;
+        s.phase = 'victory';
+      } else {
+        s.claim.email = null;
+        s.claim.consented = false;
+        s.claim.step = 'done';
+      }
+      return s;
+    }
+
+    case 'SUBMIT_EMAIL': {
+      if (s.phase !== 'claim' || !s.claim || s.claim.step !== 'email') return s;
+      const email = action.email.trim().slice(0, 80);
+      if (email) {
+        s.claim.email = email;
+        s.claim.step = 'consent';
+      } else {
+        s.claim.email = null;
+        s.claim.step = 'done';
+      }
+      return s;
+    }
+
+    case 'CLAIM_CONSENT': {
+      if (s.phase !== 'claim' || !s.claim || s.claim.step !== 'consent') return s;
+      s.claim.consented = true;
+      s.claim.step = 'done';
+      return s;
+    }
+
+    case 'CLAIM_POSTED':
+      if (s.claim) s.claim.unsubscribeUrl = action.unsubscribeUrl;
+      return s;
+
+    case 'LEADERBOARD_LOADED':
+      s.board = action.board;
+      s.boardStatus = action.board ? 'ready' : 'failed';
+      return s;
   }
 }
 
@@ -1452,6 +1542,7 @@ export function view(s: GameState): Screen {
           { key: '1', label: 'Hit the road', action: { type: 'START_NEW' } },
           { key: '2', label: 'How to play', action: { type: 'OPEN', screen: 'help' } },
           { key: '3', label: 'About 8 West', action: { type: 'OPEN', screen: 'about' } },
+          { key: '4', label: 'The 8 West leaderboard', action: { type: 'OPEN', screen: 'leaderboard' } },
         ],
       });
 
@@ -1948,11 +2039,98 @@ export function view(s: GameState): Screen {
         art: 'victory',
         set: victorySet(s),
         lines: buildVictoryLines(s),
-        choices: [{ key: '1', label: 'Run it again', action: { type: 'RESTART' } }],
+        choices: [
+          { key: '1', label: 'Run it again', action: { type: 'RESTART' } },
+          { key: '2', label: 'Put your name on the board', action: { type: 'CLAIM_START' } },
+          { key: '3', label: 'See the leaderboard', action: { type: 'OPEN', screen: 'leaderboard' } },
+        ],
         status: statusOf(s),
       });
     }
+
+    case 'claim':
+      return claimScreen(s);
+
+    case 'leaderboard':
+      return screen(s, { title: COPY.boardTitle, lines: boardLines(s), choices: [{ key: '0', label: 'Back', action: { type: 'BACK' } }] });
   }
+}
+
+const n = (x: number) => x.toLocaleString('en-US');
+
+function claimScreen(s: GameState): Screen {
+  const c = s.claim;
+  if (!c || !s.occupation) return screen(s, { title: COPY.boardTitle, lines: [COPY.offlineBoard], choices: [{ key: '0', label: 'Back', action: { type: 'CLAIM_SKIP' } }] });
+  const score = computeScore(s.crew, s.supplies, s.cash, s.occupation).total;
+  const rank = s.runRank;
+  switch (c.step) {
+    case 'name':
+      return screen(s, {
+        title: COPY.boardTitle,
+        lines: [
+          rank ? `You made the cliffs with a score of ${n(score)}. That’s good for #${n(rank.rank)} of ${n(rank.total)} runs.` : `You made the cliffs with a score of ${n(score)}.`,
+          ...(rank ? [] : [COPY.offlineBoard]),
+          '',
+          COPY.claimAsk,
+        ],
+        input: { kind: 'name', prompt: 'Nickname', placeholder: c.name },
+        choices: [{ key: '0', label: 'Skip it', action: { type: 'CLAIM_SKIP' } }],
+      });
+    case 'email':
+      return screen(s, {
+        title: COPY.boardTitle,
+        lines: [COPY.emailAsk],
+        input: { kind: 'email', prompt: 'Email (optional)', placeholder: '' },
+        choices: [{ key: '0', label: 'No thanks', action: { type: 'CLAIM_SKIP' } }],
+      });
+    case 'consent':
+      return screen(s, {
+        title: COPY.boardTitle,
+        lines: [`☐ ${COPY.consent}`],
+        choices: [
+          { key: '1', label: 'That’s right, sign me up', action: { type: 'CLAIM_CONSENT' } },
+          { key: '0', label: 'Actually, no', action: { type: 'CLAIM_SKIP' } },
+        ],
+      });
+    case 'done':
+      return screen(s, {
+        title: COPY.boardTitle,
+        lines: [
+          rank ? `You’re #${n(rank.rank)}.` : COPY.offlineBoard,
+          ...(c.unsubscribeUrl ? [`Your unsubscribe link, if you ever want it: ${c.unsubscribeUrl}`, COPY.savedHere] : []),
+        ],
+        choices: [
+          { key: '1', label: 'See the leaderboard', action: { type: 'OPEN', screen: 'leaderboard' } },
+          { key: '2', label: 'Run it again', action: { type: 'RESTART' } },
+        ],
+      });
+  }
+}
+
+const SUMMIT_LABEL: Record<SummitRoute, string> = { grade: 'the 6% grade', old80: 'Old Highway 80' };
+const CELEBRATION_LABEL: Record<Celebration, string> = { cannonball: 'cannonball', swan: 'swan dive', towels: 'held the towels' };
+
+function boardRow(r: Board['top'][number], you: boolean): string {
+  const bits = [r.displayName, n(r.score), r.occupation.toUpperCase(), `${r.days} days`, `${r.survivors} made it`];
+  if (r.summitRoute) bits.push(SUMMIT_LABEL[r.summitRoute]);
+  if (r.celebration) bits.push(CELEBRATION_LABEL[r.celebration]);
+  return `#${r.rank} · ${bits.join(' · ')}${you ? ' — that’s you' : ''}`;
+}
+
+function boardLines(s: GameState): string[] {
+  const lines: string[] = [];
+  if (s.boardStatus === 'loading' || s.boardStatus === 'idle') lines.push(COPY.boardLoading);
+  else if (s.boardStatus === 'failed' || !s.board) lines.push(COPY.offlineBoard);
+  else {
+    const { top, yours } = s.board;
+    if (top.length === 0) lines.push(COPY.boardEmpty);
+    for (const r of top) lines.push(boardRow(r, yours !== null && yours.rank === r.rank));
+    if (yours && yours.rank > top.length) {
+      lines.push('…', `#${n(yours.rank)} · You · ${n(yours.score)} · of ${n(yours.total)} runs`);
+    }
+  }
+  lines.push('', COPY.boardCta1, COPY.boardCta2);
+  return lines;
 }
 
 function buildVictoryLines(s: GameState): string[] {

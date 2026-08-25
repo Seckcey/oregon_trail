@@ -3,11 +3,13 @@
 //   docker compose exec eight-west-api node admin.mjs queue
 //   docker compose exec eight-west-api node admin.mjs ok <id>
 //   docker compose exec eight-west-api node admin.mjs remove <id>
+//   docker compose exec eight-west-api node admin.mjs leads.csv > leads.csv
 // DB_PATH names the database (the container sets it).
 
 import { migrate, openDb } from './src/db.ts';
+import { leadsCsv } from './src/leads.ts';
 
-const USAGE = 'usage: node admin.mjs queue | ok <id> | remove <id>';
+const USAGE = 'usage: node admin.mjs queue | ok <id> | remove <id> | leads.csv';
 
 function fail(msg) {
   process.stderr.write(`${msg}\n`);
@@ -42,6 +44,7 @@ try {
   if (cmd === 'queue') process.stdout.write(queue(db));
   else if (cmd === 'ok' && id) process.stdout.write(setStatus(db, id, 'reviewed_ok', null));
   else if (cmd === 'remove' && id) process.stdout.write(setStatus(db, id, 'removed', 'admin'));
+  else if (cmd === 'leads.csv') process.stdout.write(leadsCsv(db));
   else fail(USAGE);
 } finally {
   db.close();

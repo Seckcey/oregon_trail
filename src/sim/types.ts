@@ -76,6 +76,8 @@ export type GamePhase =
   | 'help'
   | 'about'
   | 'report'
+  | 'claim'
+  | 'leaderboard'
   | 'epitaph'
   | 'dead'
   | 'victory';
@@ -114,6 +116,32 @@ export interface Memorial {
   day: number;
   cause: string;
   epitaph: string;
+}
+
+/** One row of the leaderboard, as the API answers it (docs/PHASE4-PLAN.md §3). */
+export interface BoardRow {
+  rank: number;
+  displayName: string;
+  score: number;
+  occupation: Occupation;
+  days: number;
+  survivors: number;
+  summitRoute: SummitRoute | null;
+  celebration: Celebration | null;
+}
+
+export interface Board {
+  top: BoardRow[];
+  yours: { rank: number; score: number; total: number } | null;
+}
+
+/** The claim flow after victory: nickname → optional email → consent → done. */
+export interface ClaimState {
+  step: 'name' | 'email' | 'consent' | 'done';
+  name: string;
+  email: string | null;
+  consented: boolean;
+  unsubscribeUrl: string | null;
 }
 
 export interface LogEntry {
@@ -179,6 +207,10 @@ export interface GameState {
   memorialPosted: { id: string; mile: number } | null; // the UI says the road took this run's memorial
   lastMemorial: Memorial | null; // the memorial passed most recently (reportable on the day it was passed)
   reportedMemorialIds: string[]; // reported this run; never offered twice
+  runRank: { rank: number; total: number } | null; // the UI says where this run landed on the board
+  claim: ClaimState | null; // the leaderboard claim in progress (after victory)
+  board: Board | null; // the leaderboard the UI fetched
+  boardStatus: 'idle' | 'loading' | 'ready' | 'failed';
 
   suggestedNames: string[]; // deterministic name suggestions for blank entries
   storeNotice: string | null; // last outfitter message (sold-out wallet, full van)
