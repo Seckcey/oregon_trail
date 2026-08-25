@@ -520,9 +520,8 @@ without a running server.
 3. Create the **GA4 property** (web stream for `8wt.8westit.com`) and send the Measurement ID for `VITE_GA4_ID`. Done 2026-08-25: `G-5FT9ZWRB08`. Search Console has no
    property for `8wt.8westit.com` yet — optional; add it when 8 Westalytics should watch the game.
 4. `privacy@8westit.com` — created as an Office 365 shared mailbox, 2026-08-25.
-5. The CTA link: `8westit.com/365` does not exist (404 on 2026-08-25). Until a landing page
-   exists the CTA links to `https://8westit.com/services.html?utm_source=8wt`; swap when Frank has a
-   page he wants the game to send people to.
+5. The CTA link: `8westit.com/365` does not exist (404 on 2026-08-25). Frank's call 2026-08-25:
+   every CTA links to `https://8westit.com/?utm_source=8wt&utm_medium=game`; swap when a page exists.
 6. Nothing changes in the tunnel.
 
 ## 11. Open questions (defaults chosen; say so if wrong)
