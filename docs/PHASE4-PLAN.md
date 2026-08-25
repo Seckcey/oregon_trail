@@ -9,7 +9,7 @@ docs/PLAN.md, and docs/PHASE3-COMIC-BRIEF.md. This is the plan; no code has been
 |---|---|---|
 | Where the backend runs | **A second container on coastline** (Node 26 + Hono + `node:sqlite`), proxied by the game's nginx under `/api/` and `/r/` | Same deploy recipe, same box, one `sqlite3 data/8wt.db` away from Frank; Workers would split the app across two deploy pipelines for load we will never have |
 | Moderation | **Automatic filter + shadow-hide + two-report auto-hide; Frank reviews the hidden queue from a CLI** | Nothing a stranger sees is unfiltered; nothing a player types teaches them how to beat the filter |
-| Privacy | **No accounts, no cookies, no email required, 18+ for the email field, salted-and-rotated IP hashes purged at 30 days, Cloudflare Web Analytics** | Kids play this; the lead list is adults who run businesses, so the email field can simply say so |
+| Privacy | **No accounts, no cookies, no email required, 18+ for the email field, salted-and-rotated IP hashes purged at 30 days, Google Analytics 4 for visits** | The audience is the generation that played the original; the lead list is adults who run businesses, so the email field says so plainly |
 | Identity | **Client-generated run id + a per-browser player token in localStorage; rank computed server-side and returned on POST** | No login, no PII, and the player still sees "you are #37" |
 | Rollout | **4A memorials → 4B leaderboard + leads → 4C share cards**, every network call behind a flag, the game whole with the API down | Delight first, lead list second, unfurls third; nothing regresses the offline game |
 
@@ -41,8 +41,8 @@ Both options work. The tie-breakers all point at coastline:
   job in Node (`@resvg/resvg-js`); on Workers it is WASM plus a font-loading dance. Same
   container, same fonts, done.
 
-**What we still take from Cloudflare:** Turnstile (bots), the edge cache (GETs and card
-PNGs), and Web Analytics (no cookies). All three are dashboard toggles inside the account that
+**What we still take from Cloudflare:** Turnstile (bots) and the edge cache (GETs and card
+PNGs). Both are dashboard toggles inside the account that
 owns the tunnel; none of them cares where the origin lives.
 
 **The escape hatch:** the API is a Hono app. Hono runs unchanged on Workers. If coastline ever
@@ -52,7 +52,7 @@ worth an interface boundary in the code (`server/src/db.ts`) and no more.
 ### 1.2 The pieces
 
 ```
-browser ──── Cloudflare (Turnstile, edge cache, Web Analytics)
+browser ──── Cloudflare (Turnstile, edge cache) · Google Analytics 4 (visits)
                 │  tunnel
                 ▼
       coastline :1985  eight-west-trail (nginx, static game)
@@ -271,10 +271,12 @@ player), no ML moderation.
 
 ### 5.1 Rules the code enforces
 
-- **No cookies.** No session, no tracker, no consent banner needed. Analytics is **Cloudflare
-  Web Analytics** (a script tag; no cookies, no fingerprint, IPs not stored by us at all) —
-  it is already inside the account, and it is what the site host uses. Plausible would be
-  fine too but is a second bill and a second dashboard.
+- **No cookies of our own.** No session, no login. Visits are counted by **Google Analytics 4**
+  (Frank's call, 2026-08-25: the players are the generation that played the original, and
+  GA4 is what 8 Westalytics already reads). GA4 sets its own cookies; the privacy note says
+  so. The tag is loaded with `anonymize_ip` on and Google signals off, and the game sends no
+  custom events that carry names, epitaphs, or emails — only screen/phase names and outcomes
+  (died / made the cliffs / claimed).
 - **No email is ever required, shown, or hinted at.** The leaderboard shows `display_name`
   only. `leads` is never joined into a public response.
 - **18+ for the email field.** The consent sentence says so (§6). The site is general
@@ -315,9 +317,9 @@ note; it is meant to be read by a twelve-year-old and their parent.
 > occasional news about the company and the game. Every email has an unsubscribe link, and so
 > does the screen where you signed up. Your email is never shown to anyone and never sold.
 >
-> We don't use cookies or trackers. We count visits with Cloudflare Web Analytics, which
-> doesn't identify you. To stop bots, the game uses Cloudflare Turnstile when you post. To
-> stop spam, we keep a scrambled version of your internet address for 30 days and then delete
+> We use Google Analytics to see how many people play and how far they get. It sets cookies,
+> and it doesn't tell us who you are. To stop bots, the game uses Cloudflare Turnstile when
+> you post. To stop spam, we keep a scrambled version of your internet address for 30 days and then delete
 > it; nobody can turn it back into you.
 >
 > Want something removed, or your email gone? Write to privacy@8westit.com and say which
@@ -424,7 +426,7 @@ Phase 3 game — verified by the existing Playwright playthrough running with th
 /api/memorials`, report endpoint, rate limiter, Turnstile verify, IP hashing + purge job,
 `admin.mjs`, compose + nginx wiring, `src/ui/net/`, the merge of remote + local memorials at
 `createGame`, the post at death, the naming/epitaph copy, the report Screen, the privacy note
-+ `/privacy`, Cloudflare Web Analytics tag, the CTA line on the endings. Deploy, verify at
++ `/privacy`, the GA4 tag and the handful of outcome events, the CTA line on the endings. Deploy, verify at
 8wt.8westit.com, watch the queue for a few days.
 
 **4B — Leaderboard and the lead list.**
@@ -468,7 +470,7 @@ without a running server.
 | A12 | `src/ui/net/api.ts` (timeout, swallow, flag) and `memorials.ts` | fetch mocked: timeout → null; 500 → null; flag off → never calls fetch |
 | A13 | Merge remote + local at `createGame`; dedupe by id; local wins on collision; post at death; the `Memorial.id` field | sim tests unchanged; merge unit tests; `main.ts` side-effect test via a fake renderer |
 | A14 | Sim: naming/epitaph copy lines, the `report` Screen, the CTA line | `view()` snapshot tests in `test/game.test.ts`; both renderers render the new Screen (existing renderer tests) |
-| A15 | Privacy note in About + `public/privacy.html`; Web Analytics tag in `index.html` | a test greps every string in §5.2/§6 for "Oregon Trail" (must be absent) |
+| A15 | Privacy note in About + `public/privacy.html`; GA4 tag in `index.html` (`VITE_GA4_ID`), outcome events from `main.ts` | a test greps every string in §5.2/§6 for "Oregon Trail" (must be absent) |
 | A16 | Playwright: playthrough with `page.route('/api/**')` — online (mocked 201) and offline (`?offline=1`); the death path posts once; the memorial sighting appears from a mocked GET | `npm run e2e` |
 | A17 | Deploy and verify live: post a real memorial, see it from a second browser, report it twice from two networks, `admin.mjs queue` shows it | manual, recorded in the PR |
 
@@ -514,8 +516,8 @@ without a running server.
    dashboard; put the site key in the build (`VITE_TURNSTILE_SITE_KEY`) and the secret in
    coastline's `~/apps/eight-west-trail/.env`.
 2. Generate `IP_HASH_SECRET` (`openssl rand -hex 32`) into the same `.env`.
-3. Enable **Cloudflare Web Analytics** for the site and paste the token into `index.html`.
-4. Decide whether `privacy@8westit.com` exists or should be another address.
+3. Create the **GA4 property** (web stream for `8wt.8westit.com`) and send the Measurement ID (`G-…`) for `VITE_GA4_ID`. Done 2026-08-25.
+4. `privacy@8westit.com` — created as an Office 365 shared mailbox, 2026-08-25.
 5. Confirm the `8westit.com/365` landing URL for the CTA.
 6. Nothing changes in the tunnel.
 
@@ -529,3 +531,6 @@ without a running server.
 - **Email sending.** Phase 4 stores leads; it sends nothing. The mailing tool Frank already
   uses takes the CSV. If he wants a welcome email from the game itself, that is a 4D item and
   needs an email provider.
+- **Audience (settled 2026-08-25).** Frank: this is not a kids' game; the players are the
+  generation that played the original. The nickname rules and the 18+ email line stay because
+  they cost nothing, but analytics is GA4, not a cookieless counter.
