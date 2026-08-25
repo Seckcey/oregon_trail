@@ -1,6 +1,7 @@
 import { ROUTE } from './data/route';
 import { addCondition } from './health';
 import { chance, nextInt, pick } from './rng';
+import { INSULIN_COOLER_LINES, kannonAboard } from './t1d';
 import type { GameState } from './types';
 import { TUNING } from './types';
 
@@ -243,6 +244,13 @@ export const POOL_EVENTS: PoolEvent[] = [
         'The 8 was the 80, once — the same dirt that ran clear to the coast. The crew goes quiet in a good way. Everyone feels a little better about the mission.',
       ];
     },
+  },
+  {
+    id: 'insulin-cooler',
+    once: true,
+    when: (s) => (s.weatherToday?.heat ?? 0) === 3 && kannonAboard(s),
+    weight: () => 1.5,
+    fire: () => [...INSULIN_COOLER_LINES],
   },
   {
     id: 'border-checkpoint',

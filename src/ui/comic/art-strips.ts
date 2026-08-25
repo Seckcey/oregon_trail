@@ -102,6 +102,8 @@ const STRIPS: Record<EventStripId, StripSpec> = {
   'runaway-ramp': { setting: 'mountain', prop: 'ramp', mood: 'critical', van: 'skid' },
   'the-grade': { setting: 'mountain', prop: 'grade-sign', mood: 'fair', van: 'skid' },
   'old-80': { setting: 'dusk', prop: 'old-80', mood: 'good', van: 'night' },
+  // Kannon's Dexcom alert: pulled over, juice box on the tailgate. The cup stands in until his strip lands.
+  dexcom: { setting: 'desert', prop: 'shake', mood: 'fair', van: 'clean' },
 };
 
 const VIEW = '0 0 400 400';

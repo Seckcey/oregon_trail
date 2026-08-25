@@ -47,9 +47,19 @@ export function run(state: GameState, ...actions: Action[]): GameState {
 
 /** Walk the setup flow to the moment the van leaves Las Cruces. */
 export function departed(seed = 'test-seed', month: DepartureMonth = 6, occupation: Occupation = 'ceo'): GameState {
+  return departedWith(['M0', 'M1', 'M2', 'M3', 'M4'], seed, month, occupation);
+}
+
+/** The same, with a crew of your choosing. */
+export function departedWith(
+  names: readonly string[],
+  seed = 'test-seed',
+  month: DepartureMonth = 6,
+  occupation: Occupation = 'ceo',
+): GameState {
   let s = createGame(seed);
   s = run(s, { type: 'START_NEW' }, { type: 'CHOOSE_OCCUPATION', occupation }, { type: 'CHOOSE_MONTH', month });
-  for (let i = 0; i < 5; i++) s = reduce(s, { type: 'SUBMIT_NAME', name: `M${i}` });
+  for (let i = 0; i < 5; i++) s = reduce(s, { type: 'SUBMIT_NAME', name: names[i] ?? `M${i}` });
   s = run(
     s,
     { type: 'BUY', item: 'food', units: 8 },

@@ -19,7 +19,7 @@ const isSvg = (s: string) => s.trimStart().startsWith('<svg') && s.trimEnd().end
 describe('the cast', () => {
   test('twelve original characters with the names and looks from the asset list', () => {
     expect(CREW).toHaveLength(12);
-    expect(CREW.map((c) => c.name)).toEqual(['Wes', 'Dot', 'Cache', 'Sol', 'Piper', 'Hank', 'Sky', 'Ping', 'Rosa', 'Bo', 'Marge', 'Kit']);
+    expect(CREW.map((c) => c.name)).toEqual(['Wes', 'Dot', 'Cache', 'Sol', 'Piper', 'Hank', 'Kannon', 'Ping', 'Rosa', 'Bo', 'Marge', 'Kit']);
     expect(CREW[0]!.id).toBe(1);
   });
 

@@ -20,6 +20,7 @@ import { sceneOf, type SceneHint } from './scene';
 import { computeScore, type ScoreBreakdown } from './score';
 import { snackTotal, snackWordsFor, snackYield } from './snack';
 import { fmtCents, priceCentsAt, purchase, repairQuote, STORE_ITEMS, type StoreItemId } from './store';
+import { ABOUT_T1D_LINES, DEXCOM, isKannon, KANNON, kannonAboard, kannonIndex, SNACK_CARB_LINE, T1D_RULES } from './t1d';
 import { dailyFoodNeed, dailyWaterNeed, fuelNeed, milesForDay } from './travel';
 import type {
   Celebration,
@@ -94,7 +95,8 @@ export interface StatusData {
   rations: Rations;
   van: number;
   weather: string | null;
-  crew: { name: string; label: string }[];
+  /** badge: 't1d' marks Kannon, who lives with Type 1 diabetes — the blue circle. */
+  crew: { name: string; label: string; badge: 't1d' | null }[];
 }
 
 export type ScreenArt = 'title' | 'grave' | 'victory' | 'crossing' | 'grade' | 'summit' | 'hazard' | null;
@@ -170,14 +172,17 @@ export interface Screen {
 
 export function createGame(seed: string, memorials: Memorial[] = []): GameState {
   const rng = createRng(seedFromString(seed));
-  // Deal name suggestions up front so the naming screen is stable.
-  const pool = [...CREW_NAME_POOL];
+  // Deal name suggestions up front so the naming screen is stable. Kannon
+  // always rides; where he sits in the line-up is the seed's call. (Still
+  // five RNG draws, so every seed's road plays out exactly as before.)
+  const pool = CREW_NAME_POOL.filter((n) => n !== KANNON);
   const suggestedNames: string[] = [];
-  for (let i = 0; i < TUNING.crewSize; i++) {
+  for (let i = 0; i < TUNING.crewSize - 1; i++) {
     const idx = nextInt(rng, 0, pool.length - 1);
     suggestedNames.push(pool[idx]!);
     pool.splice(idx, 1);
   }
+  suggestedNames.splice(nextInt(rng, 0, TUNING.crewSize - 1), 0, KANNON);
 
   return {
     phase: 'title',
@@ -558,8 +563,42 @@ function driveDay(s: GameState): void {
     );
     return;
   }
+  if (dexcomDue(s)) {
+    s.usedEventIds.push('dexcom-low');
+    notice(s, 'dexcom-low', [...DEXCOM.alert], [...DEXCOM.choices], DEXCOM.title);
+    return;
+  }
   const miles = milesForDay(s.rng, s.pace, s.van.condition, w);
   completeDay(s, { miles, resting: false, allowPool: true });
+}
+
+// ---------------------------------------------------------------------------
+// Kannon and the Dexcom: a lesson, not a punishment. See t1d.ts.
+// ---------------------------------------------------------------------------
+
+/** The RNG is only consulted when Kannon is aboard, so other runs play out unchanged. */
+function dexcomDue(s: GameState): boolean {
+  if (!kannonAboard(s)) return false;
+  if (s.usedEventIds.includes('dexcom-low')) return false;
+  if (s.mile <= T1D_RULES.minMile) return false;
+  return chance(s.rng, T1D_RULES.dailyChance);
+}
+
+function resolveDexcom(s: GameState, index: number, w: Weather): void {
+  const rolled = milesForDay(s.rng, s.pace, s.van.condition, w);
+  if (index === 0) {
+    log(s, DEXCOM.pullOverLine);
+    completeDay(s, { miles: Math.max(0, rolled - T1D_RULES.pullOverMiles), resting: false, allowPool: false });
+    if (s.phase === 'travel') notice(s, 'dexcom-15', [...DEXCOM.lesson15], null, 'THE RULE OF 15');
+    return;
+  }
+  // The low gets ahead of him. It costs him, and it costs the day — and it never kills him.
+  const k = kannonIndex(s);
+  const m = s.crew[k];
+  if (m && m.alive) s.crew[k] = { ...m, health: Math.max(1, m.health - T1D_RULES.lateHealth) };
+  log(s, DEXCOM.lateLine);
+  completeDay(s, { miles: Math.max(0, rolled - T1D_RULES.lateMiles), resting: false, allowPool: false });
+  if (s.phase === 'travel') notice(s, 'dexcom-late', [...DEXCOM.lessonLate], null, 'THE RULE OF 15');
 }
 
 // ---------------------------------------------------------------------------
@@ -933,6 +972,10 @@ function resolveEventChoice(s: GameState, index: number): void {
     finishAtTheCliffs(s, index);
     return;
   }
+  if (ev.id === 'dexcom-low') {
+    resolveDexcom(s, index, w);
+    return;
+  }
   s.phase = s.resumePhase;
 }
 
@@ -999,6 +1042,7 @@ function finishSnackRun(s: GameState): void {
       : gained > 0
         ? [`You haul ${gained} lbs of roadside provisions back to the van. The day is spent, and worth it.`]
         : ['The stand was picked clean and your order came out wrong. A day lost for a lesson learned.'];
+  if (gained > 0 && kannonAboard(s)) lines.push(SNACK_CARB_LINE);
   completeDay(s, { miles: 0, resting: false, allowPool: false });
   if (s.phase === 'travel' || s.phase === 'stop') {
     notice(s, 'snack-done', lines);
@@ -1238,6 +1282,7 @@ function statusOf(s: GameState): StatusData {
     crew: s.crew.map((m) => ({
       name: m.name,
       label: m.alive ? healthStatus(m.health).toUpperCase() : 'LOST',
+      badge: isKannon(m) ? 't1d' : null,
     })),
   };
 }
@@ -1682,6 +1727,8 @@ export function view(s: GameState): Screen {
           '',
           'It is a loving homage to the green-screen trail games of the school computer lab,',
           'built with our own words, our own desert, and our own terrible van.',
+          '',
+          ...ABOUT_T1D_LINES,
           '',
           '8westit.com',
         ],

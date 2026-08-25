@@ -107,6 +107,7 @@ export const EVENT_STRIPS = [
   'runaway-ramp',
   'the-grade',
   'old-80',
+  'dexcom',
 ] as const;
 export type EventStripId = (typeof EVENT_STRIPS)[number];
 

@@ -3,7 +3,7 @@
 
 export const CREW_NAME_POOL = [
   'Wes', 'Dot', 'Cache', 'Piper', 'Ruby', 'Sol', 'Marge', 'Ping',
-  'Dusty', 'Fern', 'Bo', 'Sky', 'Kit', 'Rosa', 'Hank', 'Lupe',
+  'Dusty', 'Fern', 'Bo', 'Kannon', 'Kit', 'Rosa', 'Hank', 'Lupe',
 ];
 
 export const SNACK_WORDS = [
