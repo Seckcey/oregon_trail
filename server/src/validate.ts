@@ -12,6 +12,12 @@ export const LIMITS: {
   nameMax: number;
   epitaphMax: number;
   scoreMax: Record<'ceo' | 'sysadmin' | 'intern', number>;
+  score: {
+    healthMax: number;
+    supplyCap: number;
+    cashCap: Record<'ceo' | 'sysadmin' | 'intern', number>;
+    multiplier: Record<'ceo' | 'sysadmin' | 'intern', number>;
+  };
 } = limits;
 
 export interface MemorialBody {
@@ -51,5 +57,72 @@ export function validateMemorial(body: unknown): Validated<MemorialBody> {
   return {
     ok: true,
     value: { runId: b['runId'], mile: b['mile'], day: b['day'], cause: b['cause'], names: names as string[], epitaph: b['epitaph'] },
+  };
+}
+
+export interface RunBody {
+  runId: string;
+  score: number;
+  occupation: 'ceo' | 'sysadmin' | 'intern';
+  days: number;
+  survivorNames: string[];
+  summitRoute: 'grade' | 'old80' | null;
+  celebration: 'cannonball' | 'swan' | 'towels' | null;
+  displayName: string | null;
+  email: string | null;
+  consent: boolean;
+}
+
+const OCCUPATIONS = ['ceo', 'sysadmin', 'intern'] as const;
+const SUMMITS = ['grade', 'old80'] as const;
+const CELEBRATIONS = ['cannonball', 'swan', 'towels'] as const;
+
+function oneOf<T extends string>(x: unknown, list: readonly T[]): x is T {
+  return typeof x === 'string' && (list as readonly string[]).includes(x);
+}
+
+/** Shape and ranges only; the score ceiling by survivors is runs.ts (it needs the filtered names). */
+export function validateRun(body: unknown): Validated<RunBody> {
+  if (typeof body !== 'object' || body === null) return { ok: false, error: 'bad-body' };
+  const b = body as Record<string, unknown>;
+  if (typeof b['runId'] !== 'string' || !UUID.test(b['runId'])) return { ok: false, error: 'bad-run-id' };
+  if (!oneOf(b['occupation'], OCCUPATIONS)) return { ok: false, error: 'bad-occupation' };
+  if (!isInt(b['score'], 0, LIMITS.scoreMax[b['occupation']])) return { ok: false, error: 'bad-score' };
+  if (!isInt(b['days'], 1, LIMITS.maxDay)) return { ok: false, error: 'bad-days' };
+  const names = b['survivorNames'];
+  if (
+    !Array.isArray(names) ||
+    names.length < 1 ||
+    names.length > LIMITS.crewSize ||
+    !names.every((n) => typeof n === 'string' && n.length >= 1 && n.length <= LIMITS.nameMax)
+  ) {
+    return { ok: false, error: 'bad-survivors' };
+  }
+  const summit = b['summitRoute'] ?? null;
+  if (summit !== null && !oneOf(summit, SUMMITS)) return { ok: false, error: 'bad-summit' };
+  const celebration = b['celebration'] ?? null;
+  if (celebration !== null && !oneOf(celebration, CELEBRATIONS)) return { ok: false, error: 'bad-celebration' };
+  const displayName = b['displayName'] ?? null;
+  if (displayName !== null && (typeof displayName !== 'string' || displayName.length < 2 || displayName.length > 40)) {
+    return { ok: false, error: 'bad-display-name' };
+  }
+  const email = b['email'] ?? null;
+  if (email !== null && (typeof email !== 'string' || email.length > 254)) return { ok: false, error: 'bad-email' };
+  const consent = b['consent'] ?? false;
+  if (typeof consent !== 'boolean') return { ok: false, error: 'bad-consent' };
+  return {
+    ok: true,
+    value: {
+      runId: b['runId'],
+      score: b['score'],
+      occupation: b['occupation'],
+      days: b['days'],
+      survivorNames: names as string[],
+      summitRoute: summit as RunBody['summitRoute'],
+      celebration: celebration as RunBody['celebration'],
+      displayName: displayName as string | null,
+      email: email as string | null,
+      consent,
+    },
   };
 }

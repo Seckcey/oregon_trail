@@ -17,5 +17,19 @@
     "ceo": 3054,
     "sysadmin": 5508,
     "intern": 7902
+  },
+  "score": {
+    "healthMax": 500,
+    "supplyCap": 54,
+    "cashCap": {
+      "ceo": 500,
+      "sysadmin": 200,
+      "intern": 80
+    },
+    "multiplier": {
+      "ceo": 1,
+      "sysadmin": 2,
+      "intern": 3
+    }
   }
 }
