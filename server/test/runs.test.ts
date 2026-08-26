@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createApp, type App } from '../src/app.ts';
-import { rankOf } from '../src/runs.ts';
+import { rankOf, scoreCeiling } from '../src/runs.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;
@@ -64,9 +64,10 @@ describe('POST /api/runs', () => {
 
   it('rejects a score the occupation and survivor count cannot reach', async () => {
     const app = createApp({ dbPath: ':memory:' });
-    // sysadmin ×2, 3 survivors: max = 2 × (3 × 500 + 54 + 200) = 3508
-    expect((await post(app, { ...good, score: 3508 })).status).toBe(201);
-    const res = await post(app, { ...good, runId: RUN.replace(/.$/, 'f'), score: 3509 });
+    // sysadmin ×2, 3 survivors: multiplier × (3 × 500 + supplyCap + cashCap), from the shared fixture
+    const ceiling = scoreCeiling('sysadmin', 3);
+    expect((await post(app, { ...good, score: ceiling })).status).toBe(201);
+    const res = await post(app, { ...good, runId: RUN.replace(/.$/, 'f'), score: ceiling + 1 });
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ error: 'bad-score' });
   });
