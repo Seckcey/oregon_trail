@@ -5,7 +5,7 @@ Trail, pointed at the beach. Load the van in Las Cruces, survive the desert, the
 6% grade, and don't stop until Interstate 8 dead-ends at the Pacific.
 
 Built by **8 West Ventures, LLC** as a marketing tool for **8 West IT 365**: the company is named
-for the highway, and now the highway is the game. Free to play, embedded on the website, designed
+for the highway, and now the highway is the game. Free to play, featured on the website, designed
 to be shared. Everyone who plays it will know exactly what game it's tipping its hat to.
 
 The ending screens connect the joke to the product without interrupting the game: Comic and
@@ -28,7 +28,7 @@ draws itself with inked SVG placeholders for every slot in [docs/ASSET-LIST.md](
 real art dropped into [public/assets/](public/assets/README.md) replaces a placeholder with no code
 change. The green-phosphor **Heritage** look is untouched on the other side of the toggle.
 
-**Phase 4B — the leaderboard and the list — is built (2026-08-25), awaiting its deploy.** A run
+**Phase 4B — the leaderboard, the list, and the 8 West IT 365 bridge — is live (2026-08-27).** A run
 that makes the cliffs is posted to the API (idempotent on its run id); the claim screens put a
 nickname on the board, then optionally an email with an explicit 18+ consent sentence (stored
 verbatim) — the lead list Frank exports with `admin.mjs leads.csv`; every email has a one-click
