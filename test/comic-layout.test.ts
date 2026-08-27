@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { createGame, reduce, view } from '../src/sim/game';
 import type { GameState } from '../src/sim/types';
-import { billboardsFor, eventStripFor, layoutPage } from '../src/ui/comic/layout';
+import { LIVE_BILLBOARD_FACES, billboardsFor, eventStripFor, layoutPage } from '../src/ui/comic/layout';
 import { arriveAt, departed, run } from './helpers';
 
 function page(s: GameState) {
@@ -90,8 +90,9 @@ describe('the road page', () => {
     expect(billboardsFor(0)).not.toEqual(billboardsFor(120));
     for (let mile = 0; mile <= 730; mile += 10) {
       for (const n of billboardsFor(mile)) {
-        expect(n).toBeGreaterThanOrEqual(1);
-        expect(n).toBeLessThanOrEqual(8);
+        expect(LIVE_BILLBOARD_FACES).toContain(n);
+        expect(n).not.toBe(5);
+        expect(n).not.toBe(7);
       }
       expect(new Set(billboardsFor(mile)).size).toBe(2);
     }

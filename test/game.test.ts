@@ -573,8 +573,8 @@ describe('the outfitter’s upgrades', () => {
   });
 });
 
-describe('the ransomware event speaks plain English', () => {
-  test('says what happened, what it costs, and why 8 West IT customers would be fine', () => {
+describe('the ransomware event speaks plain English without an absolute promise', () => {
+  test('says what happened, what it costs, and why layered recovery still matters', () => {
     const ev = POOL_EVENTS.find((e) => e.id === 'ransomware')!;
     const s = structuredClone(departed());
     const text = ev.fire(s).join(' ');
@@ -583,5 +583,7 @@ describe('the ransomware event speaks plain English', () => {
     expect(text).toContain('$185');
     expect(text).toContain('8 West IT 365');
     expect(text.toLowerCase()).toContain('backup');
+    expect(text).toContain('no provider can promise');
+    expect(text).not.toContain('would’ve been fine');
   });
 });

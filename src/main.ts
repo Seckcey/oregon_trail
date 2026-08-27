@@ -2,6 +2,7 @@ import { view } from './sim/game';
 import { computeScore } from './sim/score';
 import type { GameState } from './sim/types';
 import { createTracker } from './ui/analytics';
+import { outcomeSurface, workflowUrl, type OutcomeSurface } from './ui/marketing';
 import { netConfig } from './ui/net/api';
 import { loadPlayerToken, newRunId } from './ui/net/identity';
 import { fetchLeaderboard, postRun } from './ui/net/leaderboard';
@@ -9,7 +10,7 @@ import { fetchMemorials, postMemorial, reportMemorial } from './ui/net/memorials
 import { turnstileToken } from './ui/net/turnstile';
 import { addMemorials, loadMemorials, loadSave, storeSave, storeUnsubscribeUrl, tagMemorial } from './ui/persistence';
 import { parseQuery } from './ui/query';
-import { RENDERERS, availableThemes, type Renderer, type UiHandlers } from './ui/renderer';
+import { RENDERERS, availableThemes, type ExtraAction, type Renderer, type UiHandlers } from './ui/renderer';
 import { createSession } from './ui/session';
 import { loadTheme, otherTheme, resolveTheme, saveTheme, toggleLabel, type ThemeId } from './ui/theme';
 
@@ -35,6 +36,8 @@ const query = parseQuery(window.location.search);
 const net = netConfig(import.meta.env, window.location.search);
 const TURNSTILE_SITE_KEY = (import.meta.env['VITE_TURNSTILE_SITE_KEY'] ?? '').trim();
 
+const track = createTracker(import.meta.env['VITE_GA4_ID'] ?? '');
+
 const session = createSession(query.seed ?? freshSeed(), {
   net,
   runIdFactory: newRunId,
@@ -48,15 +51,12 @@ const session = createSession(query.seed ?? freshSeed(), {
   reportMemorial,
   // No site key in the build → '' (post without a token; the dev server accepts it).
   turnstile: () => (TURNSTILE_SITE_KEY ? turnstileToken(TURNSTILE_SITE_KEY) : Promise.resolve('')),
-  track: createTracker(import.meta.env['VITE_GA4_ID'] ?? ''),
+  track,
   playerToken: loadPlayerToken(themeStorage()),
   postRun,
   fetchLeaderboard,
   storeUnsubscribeUrl,
 });
-
-/** Every CTA links here (Frank's call, 2026-08-25). */
-const CTA_URL = 'https://8westit.com/?utm_source=8wt&utm_medium=game';
 
 function shareText(s: GameState): string {
   const header = `THE 8 WEST TRAIL — day ${s.day}, mile ${s.mile} of 730`;
@@ -79,8 +79,24 @@ async function copyShare(): Promise<void> {
 }
 
 function flashShareButton(label: string): void {
-  const btn = document.querySelector<HTMLButtonElement>('.share-btn');
+  const btn = document.querySelector<HTMLButtonElement>('.extra-action--share');
   if (btn) btn.textContent = label;
+}
+
+function dispatch(action: Parameters<UiHandlers['dispatch']>[0]): void {
+  const surface = outcomeSurface(session.state.phase);
+  if (action.type === 'RESTART' && surface) track('trail_replay_click', { surface });
+  session.dispatch(action);
+}
+
+function productAction(surface: OutcomeSurface): ExtraAction {
+  return {
+    kind: 'product',
+    label: 'See the real workflow',
+    href: workflowUrl(surface, window.location.search),
+    surface,
+    onClick: () => track('trail_product_click', { surface }),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -96,21 +112,25 @@ let theme: ThemeId = resolveTheme({
 let renderer: Renderer | null = null;
 
 const handlers: UiHandlers = {
-  dispatch: (action) => session.dispatch(action),
+  dispatch,
   extraButtons() {
-    const buttons: { label: string; onClick(): void }[] = [];
+    const buttons: ExtraAction[] = [];
     const state = session.state;
     if (state.phase === 'title') {
       const save = loadSave();
       if (save && !save.state.gameOver) {
-        buttons.push({ label: 'Continue the last run', onClick: () => void session.continueSave() });
+        buttons.push({ kind: 'continue', label: 'Continue the last run', onClick: () => void session.continueSave() });
       }
     }
-    if (state.phase === 'dead' || state.phase === 'victory') {
-      buttons.push({ label: 'Copy your story', onClick: () => void copyShare() });
+    const surface = outcomeSurface(state.phase);
+    if (surface === 'leaderboard' && state.gameOver) {
+      buttons.push({ kind: 'replay', label: 'Run it again', surface, onClick: () => dispatch({ type: 'RESTART' }) });
     }
-    if (state.phase === 'dead' || state.phase === 'victory' || state.phase === 'leaderboard') {
-      buttons.push({ label: '8 West IT 365 → 8westit.com', onClick: () => void window.open(CTA_URL, '_blank', 'noopener') });
+    if (surface) {
+      buttons.push(productAction(surface));
+      if (state.phase === 'dead' || state.phase === 'victory') {
+        buttons.push({ kind: 'share', label: 'Copy your story', surface, onClick: () => void copyShare() });
+      }
     }
     return buttons;
   },

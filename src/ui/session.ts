@@ -13,7 +13,15 @@ import type { Posted } from './net/memorials';
 import { mergeMemorials } from './net/merge';
 import type { SaveEnvelope } from './persistence';
 
-export type Outcome = 'run_died' | 'run_finished' | 'memorial_posted' | 'memorial_reported' | 'run_posted' | 'run_claimed';
+export type Outcome =
+  | 'run_died'
+  | 'run_finished'
+  | 'memorial_posted'
+  | 'memorial_reported'
+  | 'run_posted'
+  | 'run_claimed'
+  | 'trail_product_click'
+  | 'trail_replay_click';
 
 export interface SessionDeps {
   net: NetConfig;

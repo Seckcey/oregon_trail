@@ -187,7 +187,7 @@ export const POOL_EVENTS: PoolEvent[] = [
       return [
         'Somebody opened an email attachment on the work laptop over truck-stop wifi. Now every file on it is locked, and a message on the screen wants $500 in Bitcoin to unlock them. That is ransomware: crooks holding your own files hostage.',
         'A guy two booths over says he "knows computers." He charges $185 and mostly fixes it. You will never know what else he did in there.',
-        '8 West IT 365 customers would’ve been fine: the backups bring the files back, the monitoring catches it early, and nobody pays a crook.',
+        '8 West IT 365 can help keep the response work moving, but no provider can promise an incident will never happen. Monitoring, tested backups, and a practiced recovery plan all matter.',
       ];
     },
   },

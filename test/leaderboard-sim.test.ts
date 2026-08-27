@@ -166,7 +166,7 @@ describe('the leaderboard screen', () => {
     expect(lines).toContain('…');
     expect(lines).toContain('#37 · You · 1,200 · of 1,204 runs');
     expect(lines.at(-2)).toBe('Every run on this board got here on a 1985 van. Your business should be on something newer.');
-    expect(lines.at(-1)).toBe('8 West IT 365 — flat-rate IT for small business — 8westit.com/365');
+    expect(lines.at(-1)).toBe('8 West IT 365 — alerts, tickets, time, and invoices in one connected workflow — 8westit.com/trail/');
     expect(labels(loaded)).toEqual(['0) Back']);
   });
 

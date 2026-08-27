@@ -464,6 +464,16 @@ img.real.instant { transition: none !important; }
 .sign .key { opacity: 0.8; margin-right: 6px; font-family: var(--font-sfx); font-weight: 400; letter-spacing: 1px; }
 .sign.extra { background: var(--blue); }
 .sign.extra:hover { background: #2aa0ea; }
+.extra-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.extra-action--product { background: var(--sign-green); }
+.extra-action--product:hover { background: #24984a; }
+.extra-action--share { background: var(--paper); color: var(--ink); border-style: dashed; }
+.extra-action--share:hover { background: var(--newsprint); }
 .sign.buy { background: var(--paper); color: var(--ink); }
 .sign.buy:hover { background: var(--yellow); }
 .sign.mast-theme, .sign.mast-sound { background: var(--navy); font-size: 13px; padding: 4px 10px; white-space: nowrap; }
@@ -577,7 +587,149 @@ img.real.instant { transition: none !important; }
 .page-grave .caption.narration { background: var(--ink); color: var(--paper); border-color: var(--paper); box-shadow: 3px 3px 0 var(--grape); }
 .page-grave .title-caption { background: var(--red); color: var(--paper); }
 .page-grave .sheet-inset { background: var(--ink); color: var(--paper); border-color: var(--paper); box-shadow: 3px 3px 0 var(--grape); }
-.page-victory .sheet { background: var(--yellow); }
+.page-victory .sheet { background: var(--paper); }
+
+/* The approved post-game bridge: story left, real workflow right, two clear exits below. */
+.postgame-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.62fr) minmax(280px, 1fr);
+  gap: var(--gutter);
+  align-items: start;
+  margin-bottom: var(--gutter);
+}
+.postgame-story,
+.postgame-summary { min-width: 0; }
+.postgame-story .panels { margin-top: 0; }
+.postgame-summary {
+  display: grid;
+  gap: var(--gutter);
+}
+.postgame-summary .sheet-inset { margin: 0; }
+
+.product-bridge {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(91, 192, 235, 0.16) 1px, transparent 1.5px) 0 0 / 9px 9px,
+    var(--navy);
+  color: var(--paper);
+  border: var(--line) solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: clamp(18px, 3vw, 30px);
+  margin-bottom: var(--gutter);
+}
+.product-bridge__label {
+  margin: 0 0 10px;
+  color: var(--sky);
+  font-family: var(--font-sfx);
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.product-bridge h3 {
+  margin: 0;
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-size: clamp(23px, 3vw, 34px);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.product-bridge__steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+}
+.product-bridge__steps li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  color: var(--sky);
+  font-family: var(--font-sfx);
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.product-bridge__steps li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 21px;
+  left: calc(50% + 24px);
+  width: calc(100% - 40px);
+  border-top: 2px dotted var(--sky);
+  opacity: 0.8;
+}
+.product-bridge__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--sky);
+  border-radius: 50%;
+  background: rgba(31, 143, 214, 0.12);
+  box-shadow: 0 0 12px rgba(91, 192, 235, 0.32);
+  z-index: 1;
+}
+.product-bridge__icon svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.postgame-actions { margin-bottom: var(--gutter); }
+.postgame-actions__primary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+.postgame-actions__primary > * { min-width: 0; }
+.postgame-actions__primary .say {
+  width: 100%;
+  align-items: center;
+}
+.postgame-actions__primary .choice--replay,
+.postgame-actions__primary .extra-action--replay,
+.postgame-actions__primary .extra-action--product {
+  width: 100%;
+  min-height: 74px;
+  padding: 14px 20px;
+  border: 4px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 5px 5px 0 var(--ink);
+  font-family: var(--font-sfx);
+  font-size: clamp(21px, 3vw, 30px);
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 1.05;
+  text-align: center;
+  text-transform: uppercase;
+}
+.postgame-actions__primary .choice--replay,
+.postgame-actions__primary .extra-action--replay {
+  background: var(--yellow);
+  color: var(--ink);
+}
+.postgame-actions__primary .extra-action--product { background: var(--sign-green); color: var(--paper); }
+.postgame-actions__primary .choice--replay:hover,
+.postgame-actions__primary .extra-action--replay:hover { background: #ffd85c; }
+.postgame-actions__primary .extra-action--product:hover { background: #24984a; }
+.postgame-actions__secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.postgame-actions__secondary .say { width: auto; }
+.page-grave .postgame-actions__secondary .balloon,
+.page-grave .postgame-actions__secondary .sign { border-color: var(--paper); box-shadow: 3px 3px 0 var(--grape); }
 
 /* Overlays keep the road behind them and drop a sheet on top. */
 .page-overlay .panel.wide { aspect-ratio: 8 / 2; }
@@ -715,6 +867,12 @@ img.real.instant { transition: none !important; }
   .page-cover .panels { grid-row: auto; }
   .page-snack .page { grid-template-columns: 1fr; }
   .page-snack .panels { grid-row: auto; max-width: 320px; }
+  .postgame-grid { grid-template-columns: 1fr; }
+  .postgame-actions__primary { grid-template-columns: 1fr; }
+  .postgame-actions__primary .say { display: block; }
+  .postgame-actions__primary .say .who { display: none; }
+  .product-bridge__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; }
+  .product-bridge__steps li::after { display: none; }
   .colophon { justify-content: center; text-align: center; }
 }
 

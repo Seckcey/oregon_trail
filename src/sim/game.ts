@@ -114,7 +114,7 @@ export const COPY = {
   boardLoading: 'Checking the board…',
   boardEmpty: 'Nobody has made the cliffs yet. Be the first.',
   boardCta1: 'Every run on this board got here on a 1985 van. Your business should be on something newer.',
-  boardCta2: '8 West IT 365 — flat-rate IT for small business — 8westit.com/365',
+  boardCta2: '8 West IT 365 — alerts, tickets, time, and invoices in one connected workflow — 8westit.com/trail/',
 } as const;
 
 export interface ScreenChoice {
@@ -2029,7 +2029,7 @@ export function view(s: GameState): Screen {
           '',
           COPY.cta,
         ],
-        choices: [{ key: '1', label: 'Load a new van', action: { type: 'RESTART' } }],
+        choices: [{ key: '1', label: 'Run it again', action: { type: 'RESTART' } }],
       });
 
     case 'victory': {

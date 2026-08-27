@@ -96,7 +96,8 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   gap: 6px;
   align-items: flex-start;
 }
-#screen-choices button {
+#screen-choices button,
+#screen-choices a {
   font: inherit;
   color: var(--phos);
   background: transparent;
@@ -106,14 +107,65 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   text-align: left;
   text-shadow: var(--glow);
   min-width: min(420px, 100%);
+  text-decoration: none;
 }
-#screen-choices button:hover {
+#screen-choices button:hover,
+#screen-choices a:hover {
   background: var(--bg-panel);
   border-color: var(--phos-dim);
 }
-#screen-choices button .key {
+#screen-choices button .key,
+#screen-choices a .key {
   color: var(--phos-dim);
   margin-right: 10px;
+}
+
+#screen-choices .choice--replay,
+#screen-choices .extra-action--replay {
+  order: -2;
+  color: var(--amber);
+  border: 2px solid var(--amber);
+}
+#screen-choices .extra-action--product {
+  order: -1;
+  color: var(--bg);
+  background: var(--phos);
+  border: 2px solid var(--phos);
+  font-weight: 700;
+  text-shadow: none;
+}
+#screen-choices .extra-action--product:hover {
+  color: var(--bg);
+  background: #7dffa5;
+}
+#screen-choices .extra-action--share {
+  margin-top: 8px;
+  border-style: dashed;
+}
+
+#product-bridge {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--phos-dim);
+  background: var(--bg-panel);
+  box-shadow: inset 0 0 18px rgba(75, 240, 122, 0.06);
+}
+#product-bridge .product-label {
+  margin: 0 0 4px;
+  color: var(--amber);
+  letter-spacing: 2px;
+}
+#product-bridge h2 {
+  max-width: 720px;
+  margin: 0;
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+#product-bridge .product-steps {
+  margin: 12px 0 0;
+  color: var(--phos-dim);
+  letter-spacing: 1px;
 }
 
 #screen-input { margin-top: 18px; }
@@ -167,7 +219,6 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 
 .share-btn {
   font: inherit;
-  margin-top: 14px;
   color: var(--phos);
   background: transparent;
   border: 1px dashed var(--phos-dim);

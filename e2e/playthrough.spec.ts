@@ -129,6 +129,13 @@ async function outfit(page: Page): Promise<void> {
   await page.keyboard.press('0'); // Load up and hit the road
 }
 
+function oneDayFromDeath(): GameState {
+  const state = structuredClone(departed('e2e-death'));
+  for (const member of state.crew) member.health = 1;
+  state.supplies.water = 0;
+  return state;
+}
+
 /** Drive until the run ends. Returns the pages seen. */
 async function drive(page: Page, maxSteps = 500): Promise<string[]> {
   const shopped = new Set<string>();
@@ -211,15 +218,20 @@ test.describe('the comic book', () => {
     // The driver is deterministic for the seed: this crew makes the beach.
     await expect(page.locator('#comic.page-victory')).toBeVisible();
     await expect(page.locator('.score .total').last()).toHaveText(/^\d+$/);
+    await expect(page.locator('.product-bridge')).toContainText('See how 8 West IT 365 keeps alerts, tickets, time, and invoices moving.');
+    await expect(page.getByRole('menuitem', { name: 'See the real workflow' })).toHaveAttribute('href', /8westit\.com\/trail\/\?utm_id=8w365-ft-2026-09&.*utm_campaign=founding_trail_sep_2026&.*utm_content=postgame_victory#workflow$/);
   });
 
   test('the cliff jump is a HOORAY with the score in a caption stack', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => undefined } });
+    });
     const cliffs = arriveAt(departed('e2e-cliffs', 5, 'sysadmin'), 'sunset-cliffs');
     await page.goto('/?theme=comic');
     await page.evaluate((state: GameState) => localStorage.setItem('8wt.save.v2', JSON.stringify(state)), cliffs);
     await page.reload();
     await watchSfx(page);
-    await page.getByRole('button', { name: 'Continue the last run' }).click();
+    await page.getByRole('menuitem', { name: 'Continue the last run' }).click();
     await expect(page.locator('.title-caption')).toHaveText('SUNSET CLIFFS');
     await expect(page.locator('.balloons .balloon')).toHaveCount(3);
     await page.keyboard.press('2');
@@ -231,7 +243,9 @@ test.describe('the comic book', () => {
     await expect(page.locator('.score .total').last()).toHaveText(String(total));
     await expect(page.locator('.narration-row')).toContainText('swan dive');
     expect(await sfxSeen(page)).toContain('HOORAY!');
-    await expect(page.getByRole('button', { name: 'Copy your story' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Copy your story' })).toBeVisible();
+    await page.getByRole('menuitem', { name: 'Copy your story' }).click();
+    await expect(page.getByRole('menuitem', { name: 'COPIED — go brag' })).toBeVisible();
   });
 
   test('an event is a three-panel strip drawn with zero art, and real art loads over it when it exists', async ({ page }) => {
@@ -239,7 +253,7 @@ test.describe('the comic book', () => {
     await page.goto('/?theme=comic');
     await page.evaluate((state: GameState) => localStorage.setItem('8wt.save.v2', JSON.stringify(state)), dunes);
     await page.reload();
-    await page.getByRole('button', { name: 'Continue the last run' }).click();
+    await page.getByRole('menuitem', { name: 'Continue the last run' }).click();
     await expect(page.locator('.title-caption')).toHaveText('THE IMPERIAL SAND DUNES');
     const frames = page.locator('.panels.three .panel');
     await expect(frames).toHaveCount(3);
@@ -267,6 +281,8 @@ test.describe('the green phosphor', () => {
     report('heritage', seen);
     expect(seen.length).toBeGreaterThan(10);
     await expect(page.locator('#screen-title')).toHaveText('SUNSET CLIFFS, SAN DIEGO');
+    await expect(page.locator('#product-bridge')).toContainText('See how 8 West IT 365 keeps alerts, tickets, time, and invoices moving.');
+    await expect(page.getByRole('menuitem', { name: 'See the real workflow' })).toBeVisible();
     expect(await page.locator('#comic').count()).toBe(0);
   });
 
@@ -282,3 +298,22 @@ test.describe('the green phosphor', () => {
     expect(await page.evaluate(() => localStorage.getItem('8wt.theme.v1'))).toBe('comic');
   });
 });
+
+for (const theme of ['comic', 'heritage'] as const) {
+  test(`the ${theme} death screen carries the same replay and workflow bridge`, async ({ page }) => {
+    await page.goto(`/?theme=${theme}&offline=1`);
+    await page.evaluate((state: GameState) => {
+      localStorage.setItem('8wt.save.v3', JSON.stringify({ runId: 'e2e-death-run', state }));
+    }, oneDayFromDeath());
+    await page.reload();
+    await page.getByRole('menuitem', { name: 'Continue the last run' }).click();
+    await page.keyboard.press('1');
+    await expect(page.locator('#app')).toContainText('THE ROAD HAS TAKEN EVERYONE');
+    await page.locator('#comic-input, #input-field').fill('WE WERE SO CLOSE');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#app')).toContainText('HERE ENDS THE RUN');
+    await expect(page.locator('.product-bridge, #product-bridge')).toContainText('See how 8 West IT 365 keeps alerts, tickets, time, and invoices moving.');
+    await expect(page.getByRole('menuitem', { name: 'Run it again' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'See the real workflow' })).toHaveAttribute('href', /utm_content=postgame_dead#workflow$/);
+  });
+}

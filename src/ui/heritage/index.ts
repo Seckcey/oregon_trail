@@ -4,7 +4,8 @@
 
 import type { Screen, StatusData } from '../../sim/game';
 import { INPUT_MAX_LENGTH, inputAction } from '../input';
-import type { Renderer, UiHandlers } from '../renderer';
+import { PRODUCT_BRIDGE_COPY, PRODUCT_BRIDGE_STEPS } from '../marketing';
+import type { ExtraAction, Renderer, UiHandlers } from '../renderer';
 import heritageCss from './heritage.css?inline';
 
 const SHELL = `
@@ -23,6 +24,7 @@ const SHELL = `
         <input id="input-field" autocomplete="off" autocapitalize="characters" spellcheck="false" />
       </div>
     </form>
+    <section id="product-bridge" hidden aria-labelledby="heritage-product-title"></section>
     <div id="screen-choices" role="menu"></div>
   </main>
   <aside id="status" hidden></aside>
@@ -64,6 +66,7 @@ export function createHeritageRenderer(): Renderer {
     inputPrompt: () => q<HTMLElement>('#input-prompt'),
     inputField: () => q<HTMLInputElement>('#input-field'),
     choices: () => q<HTMLElement>('#screen-choices'),
+    productBridge: () => q<HTMLElement>('#product-bridge'),
     status: () => q<HTMLElement>('#status'),
   };
 
@@ -128,12 +131,13 @@ export function createHeritageRenderer(): Renderer {
     }, 16);
   }
 
-  function renderChoices(screen: Screen, h: UiHandlers): void {
+  function renderChoices(screen: Screen, h: UiHandlers, extras: ExtraAction[]): void {
     const host = el.choices();
     host.innerHTML = '';
     for (const choice of screen.choices) {
       const btn = document.createElement('button');
       btn.type = 'button';
+      btn.className = `choice${choice.action.type === 'RESTART' ? ' choice--replay' : ''}`;
       btn.setAttribute('role', 'menuitem');
       const key = document.createElement('span');
       key.className = 'key';
@@ -143,14 +147,36 @@ export function createHeritageRenderer(): Renderer {
       btn.addEventListener('click', () => h.dispatch(choice.action));
       host.appendChild(btn);
     }
-    for (const extra of h.extraButtons()) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'share-btn';
-      btn.textContent = extra.label;
-      btn.addEventListener('click', extra.onClick);
-      host.appendChild(btn);
+    for (const [index, extra] of extras.entries()) {
+      const control = extra.href ? document.createElement('a') : document.createElement('button');
+      if (control instanceof HTMLButtonElement) control.type = 'button';
+      else {
+        control.href = extra.href!;
+        control.target = '_blank';
+        control.rel = 'noopener noreferrer';
+      }
+      control.className = `extra-action extra-action--${extra.kind}${extra.kind === 'share' ? ' share-btn' : ''}`;
+      control.dataset['extra'] = String(index);
+      if (extra.surface) control.dataset['surface'] = extra.surface;
+      control.setAttribute('role', 'menuitem');
+      if (extra.kind === 'share') control.setAttribute('aria-live', 'polite');
+      control.textContent = extra.label;
+      control.addEventListener('click', extra.onClick);
+      host.appendChild(control);
     }
+  }
+
+  function renderProductBridge(extras: readonly ExtraAction[]): void {
+    const host = el.productBridge();
+    const product = extras.find((extra) => extra.kind === 'product');
+    if (!product) {
+      host.hidden = true;
+      host.innerHTML = '';
+      return;
+    }
+    host.hidden = false;
+    if (product.surface) host.dataset['surface'] = product.surface;
+    host.innerHTML = `<p class="product-label">8 WEST IT 365</p><h2 id="heritage-product-title">${escapeHtml(PRODUCT_BRIDGE_COPY)}</h2><p class="product-steps">${PRODUCT_BRIDGE_STEPS.map((step) => escapeHtml(step.toUpperCase())).join('  ::  ')}</p>`;
   }
 
   function renderInput(screen: Screen): void {
@@ -272,7 +298,9 @@ export function createHeritageRenderer(): Renderer {
       el.title().textContent = screen.title;
       renderLines(screen.lines);
       renderInput(screen);
-      renderChoices(screen, handlers);
+      const extras = handlers.extraButtons();
+      renderProductBridge(extras);
+      renderChoices(screen, handlers, extras);
       renderStatus(screen.status);
       window.scrollTo({ top: 0 });
     },

@@ -6,11 +6,22 @@ import type { Action, Screen } from '../sim/game';
 import { createComicRenderer } from './comic/index';
 import { createHeritageRenderer } from './heritage/index';
 import type { ThemeId } from './theme';
+import type { OutcomeSurface } from './marketing';
+
+export type ExtraActionKind = 'continue' | 'share' | 'replay' | 'product';
+
+export interface ExtraAction {
+  kind: ExtraActionKind;
+  label: string;
+  onClick(): void;
+  href?: string;
+  surface?: OutcomeSurface;
+}
 
 export interface UiHandlers {
   dispatch(action: Action): void;
-  /** Extra UI-level buttons (continue-save, share) appended per screen. */
-  extraButtons(): { label: string; onClick(): void }[];
+  /** Typed UI-level actions appended per screen. Stable kinds drive both themes' hierarchy. */
+  extraButtons(): ExtraAction[];
   /** The theme toggle, or null while only one theme is registered. */
   themeToggle(): { label: string; onClick(): void } | null;
 }

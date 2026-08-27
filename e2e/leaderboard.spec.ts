@@ -53,7 +53,7 @@ async function resume(page: Page, theme: string, state: GameState, runId: string
   await page.goto(`/?theme=${theme}`);
   await page.evaluate(([s, id]) => localStorage.setItem('8wt.save.v3', JSON.stringify({ runId: id, state: s })), [state, runId] as [GameState, string]);
   await page.reload();
-  await page.getByRole('button', { name: 'Continue the last run' }).click();
+  await page.getByRole('menuitem', { name: 'Continue the last run' }).click();
 }
 
 for (const theme of ['comic', 'heritage'] as const) {
@@ -119,7 +119,9 @@ test.describe('the board from the title', () => {
     await expect(page.locator('#app')).toContainText('#2 · Wes · 3,100 · INTERN · 50 days · 3 made it · Old Highway 80');
     await expect(page.locator('#app')).toContainText('Every run on this board got here on a 1985 van.');
     expect(api.gets).toContain('/api/leaderboard');
-    await expect(page.getByRole('button', { name: /8westit\.com/ })).toBeVisible();
+    const workflow = page.getByRole('menuitem', { name: 'See the real workflow' });
+    await expect(workflow).toBeVisible();
+    await expect(workflow).toHaveAttribute('href', /8westit\.com\/trail\/\?utm_id=8w365-ft-2026-09&.*utm_campaign=founding_trail_sep_2026&.*utm_content=postgame_leaderboard#workflow$/);
     await page.keyboard.press('0');
     await expect(page.locator('.mast-title, #screen-title').first()).toContainText('THE 8 WEST TRAIL');
   });

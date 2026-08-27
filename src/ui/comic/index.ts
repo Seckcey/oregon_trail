@@ -11,7 +11,7 @@ import type { Renderer, UiHandlers } from '../renderer';
 import { burst } from './art-shared';
 import { planAudio, type AudioCue } from './audio';
 import comicCss from './comic.css?inline';
-import { layoutPage, type ComicPage } from './layout';
+import { LIVE_BILLBOARD_FACES, layoutPage, type ComicPage } from './layout';
 import { createMixer, type Mixer } from './mixer';
 import { preloadArt, renderPage } from './page';
 import { SFX_COLORS, SFX_WORDS, sfxForTransition } from './sfx';
@@ -211,7 +211,7 @@ export function createComicRenderer(): Renderer {
         assets.van('clean'),
         assets.van('dusty'),
         ...Array.from({ length: 12 }, (_, i) => assets.crew(i + 1)),
-        ...Array.from({ length: 8 }, (_, i) => assets.slot(`billboards/8westit-${String(i + 1).padStart(2, '0')}`)),
+        ...LIVE_BILLBOARD_FACES.map((n) => assets.slot(`billboards/8westit-${String(n).padStart(2, '0')}`)),
       ]);
     },
 

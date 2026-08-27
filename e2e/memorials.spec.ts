@@ -85,7 +85,7 @@ for (const theme of ['comic', 'heritage'] as const) {
       await page.goto(`/?theme=${theme}`);
       await page.evaluate((state: GameState) => localStorage.setItem('8wt.save.v3', JSON.stringify({ runId: 'e2e-run-id', state })), doomed('e2e-doom'));
       await page.reload();
-      await page.getByRole('button', { name: 'Continue the last run' }).click();
+      await page.getByRole('menuitem', { name: 'Continue the last run' }).click();
       await page.keyboard.press('1'); // Drive on — and that is that
       await expect(page.locator('#app')).toContainText('THE ROAD HAS TAKEN EVERYONE');
       await expect(page.locator('#app')).toContainText('Other crews will read this.');
@@ -118,7 +118,7 @@ test.describe('the switch', () => {
     await page.goto('/?theme=comic&offline=1');
     await page.evaluate((state: GameState) => localStorage.setItem('8wt.save.v3', JSON.stringify({ runId: 'e2e-offline', state })), doomed('e2e-offline'));
     await page.reload();
-    await page.getByRole('button', { name: 'Continue the last run' }).click();
+    await page.getByRole('menuitem', { name: 'Continue the last run' }).click();
     await page.keyboard.press('1');
     await expect(page.locator('#app')).toContainText('THE ROAD HAS TAKEN EVERYONE');
     await page.locator('#comic-input').focus();
@@ -136,7 +136,7 @@ test.describe('the switch', () => {
     await page.goto('/?theme=heritage');
     await page.evaluate((state: GameState) => localStorage.setItem('8wt.save.v3', JSON.stringify({ runId: 'e2e-down', state })), doomed('e2e-down'));
     await page.reload();
-    await page.getByRole('button', { name: 'Continue the last run' }).click();
+    await page.getByRole('menuitem', { name: 'Continue the last run' }).click();
     await page.keyboard.press('1');
     await expect(page.locator('#app')).toContainText('THE ROAD HAS TAKEN EVERYONE');
     await page.locator('#input-field').focus();

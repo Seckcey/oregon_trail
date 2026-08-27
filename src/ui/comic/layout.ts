@@ -5,7 +5,7 @@
 import type { Screen, SetPiece, StatusData } from '../../sim/game';
 import type { Region, SceneHint, VanLook } from '../../sim/scene';
 import type { Weather } from '../../sim/types';
-import { BILLBOARD_COUNT, EVENT_STRIPS, type EventStripId, type SceneId, type VanPose } from '../assets';
+import { EVENT_STRIPS, type EventStripId, type SceneId, type VanPose } from '../assets';
 import { assignBalloons, castCrew, distributeLines, type Balloon } from './balloons';
 
 export type PageKind =
@@ -89,10 +89,18 @@ export function eventStripFor(eventId: string): EventStripId | null {
   return (EVENT_STRIPS as readonly string[]).includes(eventId) ? (eventId as EventStripId) : null;
 }
 
-/** Two different billboard faces, rotating every forty miles. */
+/**
+ * Faces 5 and 7 make absolute security claims, so they are not eligible for
+ * the live road. Keep their asset slots for archive continuity; rotate only
+ * the reviewed faces below.
+ */
+export const LIVE_BILLBOARD_FACES = [1, 2, 3, 4, 6, 8] as const;
+
+/** Two different reviewed billboard faces, rotating every forty miles. */
 export function billboardsFor(mile: number): number[] {
   const step = Math.max(0, Math.floor(mile / 40));
-  return [(step % BILLBOARD_COUNT) + 1, ((step + 3) % BILLBOARD_COUNT) + 1];
+  const count = LIVE_BILLBOARD_FACES.length;
+  return [LIVE_BILLBOARD_FACES[step % count]!, LIVE_BILLBOARD_FACES[(step + 3) % count]!];
 }
 
 export function moodOf(label: string): CrewMood {

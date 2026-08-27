@@ -8,6 +8,14 @@ Built by **8 West Ventures, LLC** as a marketing tool for **8 West IT 365**: the
 for the highway, and now the highway is the game. Free to play, embedded on the website, designed
 to be shared. Everyone who plays it will know exactly what game it's tipping its hat to.
 
+The ending screens connect the joke to the product without interrupting the game: Comic and
+Heritage both pair **Run it again** with **See the real workflow**, and the latter opens
+`8westit.com/trail/#workflow` with one of three bounded surfaces (`victory`, `dead`, or
+`leaderboard`). It preserves only valid incoming campaign fields (`utm_id`, `utm_source`,
+`utm_medium`, `utm_campaign`, `utm_source_platform`, `utm_term`, and `utm_content`) and supplies fixed defaults
+when they are absent. The bridge never puts player-entered text, a seed, or a referrer in a URL or
+analytics event.
+
 ## Status
 
 **Phase 3 is live at [8wt.8westit.com](https://8wt.8westit.com)** — the comic-book edition. The
@@ -34,7 +42,9 @@ small API in a second container (`server/`: Node 26 + Hono + `node:sqlite`, prox
 Turnstile; every new game fetches a route-wide sample so strangers' memorials stand at the mile
 where they fell, and anyone can report one from the road (two reports hide it for Frank's review
 from `admin.mjs`). The game is whole with the API absent — `?offline=1` at runtime, or an empty
-`VITE_8WT_API` at build time. The privacy note lives in About and at `/privacy`; GA4 counts visits.
+`VITE_8WT_API` at build time. The privacy note lives in About and at `/privacy`; GA4 stays off
+until the player accepts the small analytics notice, then receives only allowlisted outcomes and
+numbers — never names, emails, or epitaphs. `?offline=1` loads neither GA4 nor Turnstile.
 See [docs/PHASE4-PLAN.md](docs/PHASE4-PLAN.md).
 Underneath is everything from Phase 2 (the full route, the crossings, the dunes, the In-Ko-Pah, the
 Laguna Summit decision and the 6% grade, tune-ups, landmark specials) and Phase 1 (outfitting,

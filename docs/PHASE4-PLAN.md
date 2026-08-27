@@ -9,7 +9,7 @@ docs/PLAN.md, and docs/PHASE3-COMIC-BRIEF.md. This is the plan; no code has been
 |---|---|---|
 | Where the backend runs | **A second container on coastline** (Node 26 + Hono + `node:sqlite`), proxied by the game's nginx under `/api/` and `/r/` | Same deploy recipe, same box, one `sqlite3 data/8wt.db` away from Frank; Workers would split the app across two deploy pipelines for load we will never have |
 | Moderation | **Automatic filter + shadow-hide + two-report auto-hide; Frank reviews the hidden queue from a CLI** | Nothing a stranger sees is unfiltered; nothing a player types teaches them how to beat the filter |
-| Privacy | **No accounts, no cookies of our own, no email required, 18+ for the email field, salted-and-rotated IP hashes purged at 30 days, Google Analytics 4 for visits** | The audience is the generation that played the original; the lead list is adults who run businesses, so the email field says so plainly |
+| Privacy | **No accounts, no email required, 18+ for the email field, salted-and-rotated IP hashes purged at 30 days, opt-in Google Analytics 4** | The audience is the generation that played the original; analytics remains off until accepted and the lead list is adults who run businesses, so both choices are stated plainly |
 | Identity | **Client-generated run id + a per-browser player token in localStorage; rank computed server-side and returned on POST** | No login, no PII, and the player still sees "you are #37" |
 | Rollout | **4A memorials → 4B leaderboard + leads → 4C share cards**, every network call behind a flag, the game whole with the API down | Delight first, lead list second, unfurls third; nothing regresses the offline game |
 
@@ -52,7 +52,7 @@ worth an interface boundary in the code (`server/src/db.ts`) and no more.
 ### 1.2 The pieces
 
 ```
-browser ──── Cloudflare (Turnstile, edge cache) · Google Analytics 4 (visits)
+browser ──── Cloudflare (Turnstile, edge cache) · opt-in Google Analytics 4
                 │  tunnel
                 ▼
       coastline :1985  eight-west-trail (nginx, static game)
@@ -273,10 +273,11 @@ player), no ML moderation.
 
 - **No cookies of our own.** No session, no login. Visits are counted by **Google Analytics 4**
   (Frank's call, 2026-08-25: the players are the generation that played the original, and
-  GA4 is what 8 Westalytics already reads). GA4 sets its own cookies; the privacy note says
-  so. The tag is loaded with `anonymize_ip` on and Google signals off, and the game sends no
-  custom events that carry names, epitaphs, or emails — only screen/phase names and outcomes
-  (died / made the cliffs / claimed).
+  GA4 is what 8 Westalytics already reads). The GA4 tag stays unloaded until the player chooses
+  **Accept analytics**; declining stores only that preference. When accepted, the tag runs with
+  `anonymize_ip` on and Google signals off. An explicit key/value allowlist permits only bounded
+  outcomes, `mile`, `day`, `rank`, moderation status/reason, and the three ending surfaces. Crew
+  nicknames, leaderboard names, epitaphs, and email addresses cannot pass the allowlist.
 - **No email is ever required, shown, or hinted at.** The leaderboard shows `display_name`
   only. `leads` is never joined into a public response.
 - **18+ for the email field.** The consent sentence says so (§6). The site is general
@@ -317,10 +318,12 @@ note; it is meant to be read by a twelve-year-old and their parent.
 > occasional news about the company and the game. Every email has an unsubscribe link, and so
 > does the screen where you signed up. Your email is never shown to anyone and never sold.
 >
-> We use Google Analytics to see how many people play and how far they get. It sets cookies,
-> and it doesn't tell us who you are. To stop bots, the game uses Cloudflare Turnstile when
-> you post. To stop spam, we keep a scrambled version of your internet address for 30 days and then delete
-> it; nobody can turn it back into you.
+> Google Analytics stays off unless you choose “Accept analytics.” If you accept, it counts
+> visits, game outcomes, and which ending button you use. It never receives crew nicknames,
+> leaderboard names, email addresses, or epitaphs. Your choice is stored on this device; clear
+> your site data to reset it. To stop bots, the game uses Cloudflare Turnstile when you post. To
+> stop spam, we keep a scrambled version of your internet address for 30 days and then delete it;
+> nobody can turn it back into you.
 >
 > Want something removed, or your email gone? Write to privacy@8westit.com and say which
 > memorial or which address. We'll do it within a week.
@@ -379,7 +382,7 @@ real-name):
 
 **Leaderboard screen footer (the CTA):**
 > Every run on this board got here on a 1985 van. Your business should be on something newer.
-> 8 West IT 365 — flat-rate IT for small business — 8westit.com/365
+> 8 West IT 365 — alerts, tickets, time, and invoices in one connected workflow — 8westit.com/trail/
 
 **Score / dead screen CTA** (one line, same on both endings; replaces nothing, appended
 after the choices):
@@ -439,8 +442,9 @@ Deploy, seed the board with a handful of Frank's own runs so it is not empty on 
 `public/assets/van/`), `/r/:runId`, the `?r=` title-screen line, "Copy your story" gains the
 `/r/` link. Verify the unfurl in Slack, Teams, iMessage, and X's card validator.
 
-**4D — Funnel polish (small, after 4B has a week of data).** Where the CTA sits is decided in
-§6; 4D is copy tuning, a UTM on the CTA links, and the analytics goals. Nothing structural.
+**4D — Funnel polish.** The ending bridge pairs replay with the real workflow in both themes.
+Campaign links use fixed source/medium/campaign values and a three-value outcome surface; GA4
+events use the same bounded surface only after analytics consent. Nothing player-entered is sent.
 
 Each step is its own PR with its own deploy; none is merged with a red test.
 
@@ -520,8 +524,13 @@ without a running server.
 3. Create the **GA4 property** (web stream for `8wt.8westit.com`) and send the Measurement ID for `VITE_GA4_ID`. Done 2026-08-25: `G-5FT9ZWRB08`. Search Console has no
    property for `8wt.8westit.com` yet — optional; add it when 8 Westalytics should watch the game.
 4. `privacy@8westit.com` — created as an Office 365 shared mailbox, 2026-08-25.
-5. The CTA link: `8westit.com/365` does not exist (404 on 2026-08-25). Frank's call 2026-08-25:
-   every CTA links to `https://8westit.com/?utm_source=8wt&utm_medium=game`; swap when a page exists.
+5. The CTA link now targets `https://8westit.com/trail/#workflow`. Runtime links place the campaign
+   query before that fragment and default to `utm_content=postgame_<surface>`, where surface is only
+   `victory`, `dead`, or `leaderboard`. Existing valid creative content is preserved. Links may preserve only valid, 64-character-or-shorter
+   incoming `utm_id`, `utm_source`, `utm_medium`, `utm_campaign`, `utm_source_platform`, and
+   `utm_term`, and `utm_content`; seed, names, emails, epitaphs, referrers, and free text are
+   never propagated. Campaign ID, source, medium, campaign, and source platform receive the approved
+   `8w365-ft-2026-09` / `founding_trail_sep_2026` defaults when absent.
 6. Nothing changes in the tunnel.
 
 ## 11. Open questions (defaults chosen; say so if wrong)
@@ -536,4 +545,4 @@ without a running server.
   needs an email provider.
 - **Audience (settled 2026-08-25).** Frank: this is not a kids' game; the players are the
   generation that played the original. The nickname rules and the 18+ email line stay because
-  they cost nothing, but analytics is GA4, not a cookieless counter.
+  they cost nothing. Analytics is GA4, but its tag and cookies stay off until explicitly accepted.

@@ -16,7 +16,8 @@ describe('the privacy note', () => {
     expect(PRIVACY_NOTE[0]).toBe('What The 8 West Trail keeps');
     expect(text).toContain('The game runs in your browser.');
     expect(text).toContain('Giving us your email is optional, and it’s for grown-ups');
-    expect(text).toContain('We use Google Analytics');
+    expect(text).toContain('Google Analytics stays off unless you choose “Accept analytics.”');
+    expect(text).toContain('It never receives crew nicknames, leaderboard names, email addresses, or epitaphs.');
     expect(text).toContain(PRIVACY_MAILBOX);
     expect(PRIVACY_MAILBOX).toBe('privacy@8westit.com');
     expect(PRIVACY_NOTE.at(-1)).toBe('8 West Ventures, LLC · updated August 2026');
@@ -32,7 +33,7 @@ describe('the privacy note', () => {
     const html = flat(read('public/privacy.html'));
     for (const line of PRIVACY_NOTE) expect(html).toContain(flat(line).replace(/&/g, '&amp;'));
     expect(html).toContain('href="/"');
-    expect(html).toContain('https://8westit.com/?utm_source=8wt&amp;utm_medium=game');
+    expect(html).toContain('utm_id=8w365-ft-2026-09&amp;utm_source=8wt&amp;utm_medium=game&amp;utm_campaign=founding_trail_sep_2026&amp;utm_source_platform=8wt&amp;utm_content=privacy#workflow');
     expect(html).not.toMatch(NOT_OURS);
   });
 });

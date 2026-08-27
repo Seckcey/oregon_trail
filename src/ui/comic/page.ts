@@ -6,7 +6,8 @@ import type { SetPiece, StatusData } from '../../sim/game';
 import { fmtCents } from '../../sim/store';
 import { T1D_LINKS } from '../../sim/t1d';
 import { type AssetResolver, type CrewSheet } from '../assets';
-import type { UiHandlers } from '../renderer';
+import { PRODUCT_BRIDGE_COPY, PRODUCT_BRIDGE_STEPS } from '../marketing';
+import type { ExtraAction, UiHandlers } from '../renderer';
 import { artSource } from './art';
 import { crewHeadSvg } from './art-crew';
 import { billboardSvg } from './art-scenes';
@@ -146,20 +147,85 @@ function crewHtml(page: ComicPage, resolver: AssetResolver): string {
 }
 
 function balloonHtml(b: Balloon, page: ComicPage, resolver: AssetResolver): string {
-  const button = `<button type="button" class="balloon ${b.shape}" data-key="${esc(b.key)}" role="menuitem"><span class="key">${esc(b.key)}</span><span class="words">${esc(b.label)}</span></button>`;
+  const action = b.action.type === 'RESTART' ? ' choice--replay' : '';
+  const button = `<button type="button" class="balloon ${b.shape}${action}" data-key="${esc(b.key)}" role="menuitem"><span class="key">${esc(b.key)}</span><span class="words">${esc(b.label)}</span></button>`;
   if (b.speakerIndex === null) return button;
   const mood = moodOf(page.status?.crew[b.speakerIndex]?.label ?? 'GOOD');
   const who = `<div class="who" title="${esc(b.speaker ?? '')}">${headHtml(page.cast[b.speakerIndex] ?? b.speakerIndex + 1, mood, resolver)}</div>`;
-  return `<div class="say ${b.shape}">${who}${button}</div>`;
+  return `<div class="say ${b.shape}${action ? ' choice-wrap--replay' : ''}">${who}${button}</div>`;
 }
 
 function signHtml(b: Balloon): string {
-  const cls = b.action.type === 'BUY' || b.action.type === 'REPAIR' ? 'sign buy' : 'sign';
+  const cls = [
+    'sign',
+    b.action.type === 'BUY' || b.action.type === 'REPAIR' ? 'buy' : '',
+    b.action.type === 'RESTART' ? 'choice--replay' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   return `<button type="button" class="${cls}" data-key="${esc(b.key)}" role="menuitem"><span class="key">${esc(b.key)}</span>${esc(b.label)}</button>`;
 }
 
-function extrasHtml(extras: { label: string }[]): string {
-  return extras.map((e, i) => `<button type="button" class="sign extra" data-extra="${i}">${esc(e.label)}</button>`).join('');
+interface IndexedExtra {
+  extra: ExtraAction;
+  index: number;
+}
+
+function extraHtml({ extra, index }: IndexedExtra): string {
+  const cls = `sign extra extra-action extra-action--${extra.kind}`;
+  const surface = extra.surface ? ` data-surface="${extra.surface}"` : '';
+  if (extra.href) {
+    return `<a class="${cls}" href="${esc(extra.href)}" target="_blank" rel="noopener noreferrer" data-extra="${index}"${surface} role="menuitem">${esc(extra.label)}</a>`;
+  }
+  const live = extra.kind === 'share' ? ' aria-live="polite"' : '';
+  return `<button type="button" class="${cls}" data-extra="${index}"${surface}${live} role="menuitem">${esc(extra.label)}</button>`;
+}
+
+function extrasHtml(extras: IndexedExtra[]): string {
+  return extras.map(extraHtml).join('');
+}
+
+function workflowIcon(step: (typeof PRODUCT_BRIDGE_STEPS)[number]): string {
+  const common = 'viewBox="0 0 32 32" aria-hidden="true" focusable="false"';
+  if (step === 'Alert') {
+    return `<svg ${common}><path d="M9 13a7 7 0 0 1 14 0v5l3 4H6l3-4v-5Z"/><path d="M13 25h6"/></svg>`;
+  }
+  if (step === 'Ticket') {
+    return `<svg ${common}><path d="M5 12a3 3 0 0 0 0 6v5h22v-5a3 3 0 0 0 0-6V7H5v5Z"/><path d="M16 9v12"/></svg>`;
+  }
+  if (step === 'Time') {
+    return `<svg ${common}><circle cx="16" cy="16" r="11"/><path d="M16 9v8l5 3"/></svg>`;
+  }
+  return `<svg ${common}><rect x="7" y="4" width="18" height="24" rx="1"/><path d="M11 10h10M11 15h10M11 20h6M21 20v4"/></svg>`;
+}
+
+function productBridgeHtml(extras: readonly ExtraAction[]): string {
+  const product = extras.find((extra) => extra.kind === 'product');
+  if (!product) return '';
+  const steps = PRODUCT_BRIDGE_STEPS.map(
+    (step) => `<li><span class="product-bridge__icon">${workflowIcon(step)}</span><span>${step}</span></li>`,
+  ).join('');
+  return `<section class="product-bridge" data-surface="${product.surface ?? ''}" aria-labelledby="product-bridge-title">
+<p class="product-bridge__label">8 West IT 365</p>
+<h3 id="product-bridge-title">${esc(PRODUCT_BRIDGE_COPY)}</h3>
+<ol class="product-bridge__steps" aria-label="The connected workflow">${steps}</ol>
+</section>`;
+}
+
+function postgameActionsHtml(page: ComicPage, extras: readonly ExtraAction[], resolver: AssetResolver): string {
+  const indexed = extras.map((extra, index) => ({ extra, index }));
+  const replayBalloons = page.balloons.filter((choice) => choice.action.type === 'RESTART');
+  const otherBalloons = page.balloons.filter((choice) => choice.action.type !== 'RESTART');
+  const replaySigns = page.signs.filter((choice) => choice.action.type === 'RESTART');
+  const otherSigns = page.signs.filter((choice) => choice.action.type !== 'RESTART');
+  const primaryExtras = indexed.filter(({ extra }) => extra.kind === 'replay' || extra.kind === 'product');
+  const secondaryExtras = indexed.filter(({ extra }) => extra.kind !== 'replay' && extra.kind !== 'product');
+  const primary = `${replayBalloons.map((b) => balloonHtml(b, page, resolver)).join('')}${replaySigns.map(signHtml).join('')}${extrasHtml(primaryExtras)}`;
+  const secondary = `${otherBalloons.map((b) => balloonHtml(b, page, resolver)).join('')}${otherSigns.map(signHtml).join('')}${extrasHtml(secondaryExtras)}`;
+  return `<div class="postgame-actions">
+${primary ? `<div class="postgame-actions__primary" role="menu">${primary}</div>` : ''}
+${secondary ? `<div class="postgame-actions__secondary" role="menu">${secondary}</div>` : ''}
+</div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -275,7 +341,7 @@ function askHtml(page: ComicPage, maxLength: number): string {
 // ---------------------------------------------------------------------------
 
 export interface RenderOptions {
-  extras: { label: string; onClick(): void }[];
+  extras: ExtraAction[];
   inputMaxLength: number;
 }
 
@@ -286,27 +352,33 @@ export function renderPage(host: HTMLElement, page: ComicPage, ctx: PageContext,
   const status = page.status && page.kind !== 'store' && page.kind !== 'overlay' ? statusHtml(page.status) : '';
   const crew = page.kind === 'road' || page.kind === 'grade' || page.kind === 'crossing' || page.kind === 'postcard' ? crewHtml(page, ctx.resolver) : '';
   const balloons = page.balloons.map((b) => balloonHtml(b, page, ctx.resolver)).join('');
-  const signs = `${page.signs.map(signHtml).join('')}${extrasHtml(opts.extras)}`;
+  const indexedExtras = opts.extras.map((extra, index) => ({ extra, index }));
+  const signs = `${page.signs.map(signHtml).join('')}${extrasHtml(indexedExtras)}`;
+  const productBridge = productBridgeHtml(opts.extras);
+  const postgame = productBridge.length > 0;
+  const endingGrid =
+    postgame && (page.kind === 'victory' || page.kind === 'grave')
+      ? `<div class="postgame-grid"><div class="postgame-story">${panels}${narrationHtml(page)}</div><div class="postgame-summary">${setPieceHtml(page)}${status}${productBridge}</div></div>`
+      : '';
+  const actions = postgame
+    ? postgameActionsHtml(page, opts.extras, ctx.resolver)
+    : `${balloons ? `<div class="balloons" role="menu">${balloons}</div>` : ''}${signs ? `<div class="signs" role="menu">${signs}</div>` : ''}`;
 
   host.innerHTML = `
 <h2 class="title-caption">${esc(page.title)}</h2>
-${panels}
-${narrationHtml(page)}
-${setPieceHtml(page)}
-${status}
+${endingGrid || `${panels}${narrationHtml(page)}${setPieceHtml(page)}${status}${productBridge}`}
 ${crew}
 ${askHtml(page, opts.inputMaxLength)}
-${balloons ? `<div class="balloons" role="menu">${balloons}</div>` : ''}
-${signs ? `<div class="signs" role="menu">${signs}</div>` : ''}`;
+${actions}`;
 
   for (const btn of host.querySelectorAll<HTMLButtonElement>('button[data-key]')) {
     const key = btn.dataset['key'];
     const choice = [...page.balloons, ...page.signs].find((b) => b.key === key);
     if (choice) btn.addEventListener('click', () => ctx.fire(choice.action));
   }
-  for (const btn of host.querySelectorAll<HTMLButtonElement>('button[data-extra]')) {
-    const extra = opts.extras[Number(btn.dataset['extra'])];
-    if (extra) btn.addEventListener('click', extra.onClick);
+  for (const control of host.querySelectorAll<HTMLElement>('[data-extra]')) {
+    const extra = opts.extras[Number(control.dataset['extra'])];
+    if (extra) control.addEventListener('click', extra.onClick);
   }
   const t1dNote = host.querySelector<HTMLElement>('[data-t1d="note"]');
   for (const btn of host.querySelectorAll<HTMLButtonElement>('button[data-t1d="toggle"]')) {

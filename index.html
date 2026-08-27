@@ -14,28 +14,91 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap" />
   <!-- Paint the canvas before any theme mounts; each renderer injects its own stylesheet. -->
-  <style>html { background: #050805; } html[data-theme="comic"] { background: #f3ebd3; } .turnstile-host { position: fixed; right: 0.5rem; bottom: 0.5rem; z-index: 50; }</style>
+  <style>
+    html { background: #050805; }
+    html[data-theme="comic"] { background: #f3ebd3; }
+    .turnstile-host { position: fixed; right: 0.5rem; bottom: 0.5rem; z-index: 50; }
+    .analytics-consent {
+      position: fixed;
+      z-index: 100;
+      right: 1rem;
+      bottom: 1rem;
+      width: min(31rem, calc(100% - 2rem));
+      padding: 1rem;
+      color: #fff;
+      background: #0c1830;
+      border: 3px solid #111;
+      box-shadow: 5px 5px 0 #111;
+      font: 16px/1.4 system-ui, sans-serif;
+    }
+    .analytics-consent h2 { margin: 0 0 0.35rem; font-size: 1.15rem; }
+    .analytics-consent p { margin: 0; }
+    .analytics-consent a { color: #5bc0eb; }
+    .analytics-consent__actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.8rem; }
+    .analytics-consent button { padding: 0.55rem 0.8rem; border: 2px solid #111; font: 700 0.95rem/1 system-ui, sans-serif; cursor: pointer; }
+    .analytics-consent [data-consent="grant"] { color: #111; background: #ffc72c; }
+    .analytics-consent [data-consent="deny"] { color: #fff; background: transparent; border-color: #5bc0eb; }
+    .analytics-consent button:focus-visible { outline: 3px solid #5bc0eb; outline-offset: 3px; }
+  </style>
   <!--
     Phase 4 (docs/PHASE4-PLAN.md §5): Google Analytics 4 for visits and Cloudflare
     Turnstile for the POSTs. Both are build-time ids (Vite fills %VITE_…% from the
     environment); an empty id loads nothing, so dev and the offline game carry no tags.
-    GA4 runs with IP anonymised and Google signals off; the game sends only outcomes.
+    GA4 loads only after an explicit choice, with IP anonymised and Google signals off;
+    the game sends only allowlisted outcomes. Offline mode loads neither service.
   -->
   <script>
     (function () {
       var ga = '%VITE_GA4_ID%';
-      if (ga && ga.indexOf('%') < 0) {
+      var offline = /(^|[?&])offline=1(&|$)/.test(location.search);
+      var consentKey = '8wt.analytics-consent.v1';
+      function savedConsent() {
+        try { return localStorage.getItem(consentKey); } catch (_) { return null; }
+      }
+      function saveConsent(value) {
+        try { localStorage.setItem(consentKey, value); } catch (_) { /* the choice still applies to this page */ }
+      }
+      function loadGa() {
+        if (!ga || ga.indexOf('%') >= 0 || offline || window.gtag) return;
         var s = document.createElement('script');
         s.async = true;
         s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ga);
+        s.dataset.analytics = 'ga4';
         document.head.appendChild(s);
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () { window.dataLayer.push(arguments); };
         window.gtag('js', new Date());
         window.gtag('config', ga, { anonymize_ip: true, allow_google_signals: false, allow_ad_personalization_signals: false });
       }
+      function offerConsent() {
+        if (document.querySelector('.analytics-consent')) return;
+        var note = document.createElement('aside');
+        note.className = 'analytics-consent';
+        note.setAttribute('role', 'region');
+        note.setAttribute('aria-labelledby', 'analytics-consent-title');
+        note.setAttribute('aria-live', 'polite');
+        note.innerHTML = '<h2 id="analytics-consent-title">Help us improve the Trail?</h2><p>Optional analytics counts visits, game outcomes, and which ending button is used. It never receives names, emails, or epitaphs. <a href="/privacy">Privacy details</a>.</p><div class="analytics-consent__actions"><button type="button" data-consent="grant">Accept analytics</button><button type="button" data-consent="deny">No thanks</button></div>';
+        note.querySelector('[data-consent="grant"]').addEventListener('click', function () {
+          saveConsent('granted');
+          note.remove();
+          loadGa();
+        });
+        note.querySelector('[data-consent="deny"]').addEventListener('click', function () {
+          saveConsent('denied');
+          note.remove();
+        });
+        document.body.appendChild(note);
+      }
+      if (ga && ga.indexOf('%') < 0 && !offline) {
+        var consent = savedConsent();
+        if (consent === 'granted') loadGa();
+        else if (consent !== 'denied') {
+          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', offerConsent, { once: true });
+          else offerConsent();
+        }
+      }
       var ts = '%VITE_TURNSTILE_SITE_KEY%';
-      if (ts && ts.indexOf('%') < 0 && /(^|[?&])offline=1(&|$)/.test(location.search) === false) {
+      if (ts && ts.indexOf('%') < 0 && !offline) {
         var t = document.createElement('script');
         t.async = true;
         t.defer = true;
